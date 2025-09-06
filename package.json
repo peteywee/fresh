@@ -7,5 +7,12 @@
     "dev:api": "pnpm --filter @services/api dev",
     "build": "pnpm -r build",
     "start": "pnpm -r start"
+  },
+  "devDependencies": {
+    "tsx": "4.16.2",
+    "typedoc": "^0.28.12"
+  },
+  "dependencies": {
+    "zod": "3.23.8"
   }
 }
