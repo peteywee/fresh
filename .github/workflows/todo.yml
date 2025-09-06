@@ -1,0 +1,22 @@
+name: Create Issues from TODOs
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  todos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan for TODOs
+        run: |
+          grep -R "TODO" ./apps ./services ./packages || true > todos.txt
+
+      - name: Create Issues
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "TODOs found in commit ${{ github.sha }}"
+          content-filepath: ./todos.txt
+          labels: "todo"
