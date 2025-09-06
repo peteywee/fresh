@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
+    "dev:web": "pnpm --filter @apps/web dev",
+    "dev:api": "pnpm --filter @services/api dev",
     "typecheck": "pnpm -r --parallel --if-present typecheck",
     "lint": "pnpm -r --parallel --if-present lint",
     "build": "pnpm -r --parallel --if-present build",
