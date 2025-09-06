@@ -1,50 +1,56 @@
 import express from "express";
 import cors from "cors";
-import pino from "pino";
+import { randomUUID } from "node:crypto";
+import { OnboardingRequest, OnboardingResponse, Organization, User } from "../../../packages/types/src/index.js";
+import { z } from "zod";
 
-const log = pino({ level: process.env.LOG_LEVEL || "info" });
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Liveness
-app.get("/health", (_req, res) => {
-  res.status(200).json({ ok: true, service: "scheduler-api" });
+// Root status endpoint (helps browsers and curl avoid "Cannot GET /")
+app.get("/", (_req, res) => {
+  res.json({ ok: true, endpoints: ["/health", "/api/onboarding/complete"] });
 });
 
-// Extended status
-app.get("/status", (_req, res) => {
-  res.status(200).json({
-    ok: true,
-    env: process.env.NODE_ENV || "development",
-    time: new Date().toISOString()
-  });
-});
+// In-memory "db" (replace later with Postgres/Firestore)
+const orgs = new Map<string, z.infer<typeof Organization>>();
+const users = new Map<string, z.infer<typeof User>>();
 
-// Probe must be TRUE and show a runId (from header)
-app.get("/__/probe", (req, res) => {
-  const runId = req.header("x-run-id") || null;
-  res.status(200).json({ ok: true, runId, probedAt: new Date().toISOString() });
-});
+app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Echo must include a hierarchy object (driven by headers)
-app.get("/hierarchy/echo", (req, res) => {
-  const hierarchy = {
-    runId: req.header("x-run-id") || "run-unknown",
-    user: req.header("x-user") || "anonymous",
-    object: req.header("x-obj") || "unspecified",
-    task: req.header("x-task") || "unspecified",
-    step: req.header("x-step") || "unspecified"
+app.post("/api/onboarding/complete", (req, res) => {
+  const parsed = OnboardingRequest.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid payload", details: parsed.error.flatten() });
+  }
+  const { user: u, org: o } = parsed.data;
+
+  const orgId = randomUUID();
+  const userId = randomUUID();
+  const now = new Date().toISOString();
+
+  const org = {
+    id: orgId,
+    name: o.name,
+    createdAt: now
   };
-  res.status(200).json({
-    ok: true,
-    hierarchy,
-    headers: req.headers
-  });
+  orgs.set(orgId, org);
+
+  const user = {
+    id: userId,
+    email: u.email,
+    displayName: u.displayName,
+    orgId,
+    role: "owner" as const
+  };
+  users.set(userId, user);
+
+  const resp: z.infer<typeof OnboardingResponse> = { user, org };
+  return res.status(201).json(resp);
 });
 
-// Start server
-const PORT = Number(process.env.PORT || 3333);
-app.listen(PORT, () => {
-  log.info({ port: PORT }, "scheduler-api listening");
+const port = process.env.PORT ? Number(process.env.PORT) : 3001;
+app.listen(port, () => {
+  console.log(`[api] listening on http://localhost:${port}`);
 });
