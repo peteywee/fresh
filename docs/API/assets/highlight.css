@@ -1,4 +1,5 @@
 :root {
+<<<<<<< HEAD
     --light-hl-0: #795E26;
     --dark-hl-0: #DCDCAA;
     --light-hl-1: #000000;
@@ -9,38 +10,50 @@
     --dark-hl-3: #D7BA7D;
     --light-hl-4: #A31515;
     --dark-hl-4: #CE9178;
+=======
+>>>>>>> 9731cea (doc workflow)
     --light-code-background: #FFFFFF;
     --dark-code-background: #1E1E1E;
 }
 
 @media (prefers-color-scheme: light) { :root {
+<<<<<<< HEAD
     --hl-0: var(--light-hl-0);
     --hl-1: var(--light-hl-1);
     --hl-2: var(--light-hl-2);
     --hl-3: var(--light-hl-3);
     --hl-4: var(--light-hl-4);
+=======
+>>>>>>> 9731cea (doc workflow)
     --code-background: var(--light-code-background);
 } }
 
 @media (prefers-color-scheme: dark) { :root {
+<<<<<<< HEAD
     --hl-0: var(--dark-hl-0);
     --hl-1: var(--dark-hl-1);
     --hl-2: var(--dark-hl-2);
     --hl-3: var(--dark-hl-3);
     --hl-4: var(--dark-hl-4);
+=======
+>>>>>>> 9731cea (doc workflow)
     --code-background: var(--dark-code-background);
 } }
 
 :root[data-theme='light'] {
+<<<<<<< HEAD
     --hl-0: var(--light-hl-0);
     --hl-1: var(--light-hl-1);
     --hl-2: var(--light-hl-2);
     --hl-3: var(--light-hl-3);
     --hl-4: var(--light-hl-4);
+=======
+>>>>>>> 9731cea (doc workflow)
     --code-background: var(--light-code-background);
 }
 
 :root[data-theme='dark'] {
+<<<<<<< HEAD
     --hl-0: var(--dark-hl-0);
     --hl-1: var(--dark-hl-1);
     --hl-2: var(--dark-hl-2);
@@ -54,4 +67,9 @@
 .hl-2 { color: var(--hl-2); }
 .hl-3 { color: var(--hl-3); }
 .hl-4 { color: var(--hl-4); }
+=======
+    --code-background: var(--dark-code-background);
+}
+
+>>>>>>> 9731cea (doc workflow)
 pre, code { background: var(--code-background); }
