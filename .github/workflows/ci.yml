@@ -10,26 +10,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "pnpm"
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9 # Use the version appropriate for your project
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm lint || true
+        run: pnpm lint
 
       - name: Typecheck
-        run: pnpm typecheck || true
+        run: pnpm typecheck
 
       - name: Test
-        run: pnpm test || echo "No tests yet"
+        run: pnpm test
 
       - name: Build
         run: pnpm build
