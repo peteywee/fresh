@@ -1,0 +1,11 @@
+{
+  "name": "scheduler-monorepo",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev:web": "pnpm --filter @apps/web dev",
+    "dev:api": "pnpm --filter @services/api dev",
+    "build": "pnpm -r build",
+    "start": "pnpm -r start"
+  }
+}
