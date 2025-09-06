@@ -46,7 +46,15 @@ importers:
         specifier: 5.5.4
         version: 5.5.4
 
-  packages/types: {}
+  packages/types:
+    dependencies:
+      zod:
+        specifier: 3.23.8
+        version: 3.23.8
+    devDependencies:
+      typescript:
+        specifier: 5.5.4
+        version: 5.5.4
 
   services/api:
     dependencies:

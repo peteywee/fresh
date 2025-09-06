@@ -1,8 +1,9 @@
-export default function Home() {
-  return (
-    <main style={{ padding: 24 }}>
-      <h1>GPT Assistant — Scheduler (Web)</h1>
-      <p>Next.js app is running. Visit the API at <code>http://localhost:3333/health</code>.</p>
-    </main>
-  );
+import { redirect } from "next/navigation";
+import { getSession } from "../lib/session";
+
+export default async function Home() {
+  const session = await getSession();
+  if (!session?.loggedIn) return redirect("/login");
+  if (!session?.onboarded) return redirect("/onboarding");
+  return redirect("/dashboard");
 }
