@@ -20,4 +20,4 @@ jobs:
         with:
           title: "TODOs found in commit ${{ github.sha }}"
           content-filepath: ./todos.txt
-          labels: ["todo"]
+          labels: todo
