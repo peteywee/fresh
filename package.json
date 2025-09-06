@@ -9,7 +9,7 @@
     "start": "pnpm -r start"
   },
   "devDependencies": {
-    "tsx": "4.16.2",
+    "tsx": "4.20.5",
     "typedoc": "^0.28.12"
   },
   "dependencies": {
