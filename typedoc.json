@@ -1,5 +1,6 @@
 {
-  "entryPoints": ["packages/types/src/index.ts"],
+  "entryPointStrategy": "expand",
+  "entryPoints": ["packages/types/src"],
   "out": "docs/API",
   "tsconfig": "packages/types/tsconfig.json"
 }
