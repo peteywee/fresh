@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { Organization, UserProfile } from "../../../packages/types/src/onboarding.js";
+import { Organization, UserProfile } from "@packages/types/onboarding";
 
 export const orgs = new Map<string, Organization>();
 export const users = new Map<string, UserProfile>();
