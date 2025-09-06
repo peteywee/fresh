@@ -1,5 +1,11 @@
 packages:
-  - "apps/*"
-  - "services/*"
-  - "packages/*"
-  - "scripts"
+  - apps/*
+  - services/*
+  - packages/*
+  - scripts
+
+ignoredBuiltDependencies:
+  - sharp
+
+onlyBuiltDependencies:
+  - esbuild

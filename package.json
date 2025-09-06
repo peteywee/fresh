@@ -10,6 +10,9 @@
     "docs": "typedoc --out docs/API packages"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "eslint": "^9.35.0",
     "typedoc": "^0.28.12"
   }
 }
