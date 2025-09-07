@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "==> Updating login page to wire Register + Forgot Password..."
+cat > apps/web/app/(public)/login/page.tsx <<'EOF'
 "use client";
 
 import { useState } from "react";
@@ -76,3 +81,6 @@ export default function LoginPage() {
     </main>
   );
 }
+EOF
+
+echo "==> Done. Buttons now call backend endpoints."

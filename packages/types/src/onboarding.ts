@@ -1,10 +1,22 @@
+
 import { z } from "zod";
+
+export const Role = z.enum(["manager", "user"]);
+export type Role = z.infer<typeof Role>;
 
 export const LoginRequest = z.object({
   email: z.string().email(),
   password: z.string().min(8)
 });
 export type LoginRequest = z.infer<typeof LoginRequest>;
+
+export const LoginResponse = z.object({
+  id: z.string().uuid(),
+  displayName: z.string(),
+  email: z.string().email(),
+  role: Role
+});
+export type LoginResponse = z.infer<typeof LoginResponse>;
 
 export const Organization = z.object({
   id: z.string().uuid(),
