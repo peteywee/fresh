@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
   return (
     <main>
       <h1>Forgot Password</h1>
-      <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+      <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
       <button onClick={doForgot}>Send Reset Link</button>
       <button onClick={() => router.push("/login")}>Back to Login</button>
       {message && <p>{message}</p>}
