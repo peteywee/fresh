@@ -14,43 +14,32 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [20, 22]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 20
           cache: pnpm
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 10
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: |
-          # Build in dependency order to ensure packages/types is built first
-          pnpm --filter @packages/types build
-          pnpm --filter @services/api build
-          pnpm --filter @apps/web build
+        run: pnpm build
 
-      - name: Typecheck (if present)
-        run: |
-          pnpm -r --parallel --if-present typecheck
+      - name: Typecheck
+        run: pnpm typecheck
 
-      - name: Lint (if present)  
-        run: |
-          pnpm -r --parallel --if-present lint
+      - name: Lint
+        run: pnpm lint
 
-      - name: Test (if present)
-        run: |
-          pnpm -r --parallel --if-present test
+      - name: Test
+        run: pnpm test
