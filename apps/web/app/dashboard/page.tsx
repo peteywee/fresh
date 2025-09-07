@@ -31,7 +31,10 @@ export default function Dashboard() {
       <p>Your role: {session.role ?? "unknown"}</p>
       {session.role === "manager" && <p>You have manager-level access.</p>}
       {session.role === "user" && <p>You have user-level access.</p>}
-      <button onClick={logout} style={{ marginTop: "16px", padding: "8px 16px" }}>
+      <button
+        onClick={logout}
+        style={{ marginTop: "16px", padding: "8px 16px" }}
+      >
         Logout
       </button>
     </main>
