@@ -2,8 +2,7 @@
 set -euo pipefail
 
 echo "==> [007A] Fixing Login page redirects..."
-mkdir -p 'apps/web/app/(public)/login'
-cat > 'apps/web/app/(public)/login/page.tsx' <<'TSX'
+cat > apps/web/app/(public)/login/page.tsx <<'TSX'
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -49,8 +48,7 @@ export default function LoginPage() {
 TSX
 
 echo "==> [007B] Fixing Register page redirects..."
-mkdir -p 'apps/web/app/(public)/register'
-cat > 'apps/web/app/(public)/register/page.tsx' <<'TSX'
+cat > apps/web/app/(public)/register/page.tsx <<'TSX'
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -89,8 +87,7 @@ export default function RegisterPage() {
 TSX
 
 echo "==> [007C] Fixing Forgot Password page redirects..."
-mkdir -p 'apps/web/app/(public)/forgot-password'
-cat > 'apps/web/app/(public)/forgot-password/page.tsx' <<'TSX'
+cat > apps/web/app/(public)/forgot-password/page.tsx <<'TSX'
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -127,8 +124,7 @@ export default function ForgotPasswordPage() {
 TSX
 
 echo "==> [007D] Fixing Reset Password page redirects..."
-mkdir -p 'apps/web/app/(public)/reset-password'
-cat > 'apps/web/app/(public)/reset-password/page.tsx' <<'TSX'
+cat > apps/web/app/(public)/reset-password/page.tsx <<'TSX'
 "use client";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -167,7 +163,6 @@ export default function ResetPasswordPage() {
 TSX
 
 echo "==> [007E] Creating dev-fast.sh..."
-mkdir -p scripts
 cat > scripts/dev-fast.sh <<'BASH'
 #!/usr/bin/env bash
 # Run API + Web in parallel
@@ -191,10 +186,10 @@ BASH
 chmod +x scripts/checkpoint.sh
 
 echo "==> [007G] Scaffolding onboarding stubs..."
-mkdir -p 'apps/web/app/(onboarding)/user'
-mkdir -p 'apps/web/app/(onboarding)/org'
+mkdir -p apps/web/app/(onboarding)/user
+mkdir -p apps/web/app/(onboarding)/org
 
-cat > 'apps/web/app/(onboarding)/user/page.tsx' <<'TSX'
+cat > apps/web/app/(onboarding)/user/page.tsx <<'TSX'
 export default function UserOnboarding() {
   return (
     <main>
@@ -205,7 +200,7 @@ export default function UserOnboarding() {
 }
 TSX
 
-cat > 'apps/web/app/(onboarding)/org/page.tsx' <<'TSX'
+cat > apps/web/app/(onboarding)/org/page.tsx <<'TSX'
 export default function OrgOnboarding() {
   return (
     <main>
