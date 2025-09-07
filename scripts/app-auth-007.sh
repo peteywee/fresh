@@ -164,7 +164,8 @@ export default function ResetPasswordPage() {
 TSX
 
 echo "==> [007E] Creating dev-fast.sh..."
-
+mkdir -p scripts
+cat > scripts/dev-fast.sh <<'BASH'
 cat > scripts/dev-fast.sh <<'BASH'
 #!/usr/bin/env bash
 # Run API + Web in parallel
