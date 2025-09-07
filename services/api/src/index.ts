@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import { pino } from "pino";
 import { randomUUID } from "node:crypto";
-import { OnboardingRequest, OnboardingResponse, Organization, User } from "../../../packages/types/src/index.js";
+import { OnboardingRequest, OnboardingResponse, Organization, User } from "@packages/types";
 import { z } from "zod";
 
 const app = express();
