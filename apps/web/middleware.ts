@@ -23,9 +23,15 @@ function isAsset(pathname: string) {
   );
 }
 
-// TODO: replace with real session detection when cookies are implemented
-function hasSession(_req: NextRequest): boolean {
-  return false;
+function hasSession(req: NextRequest): boolean {
+  const raw = req.cookies.get("__session")?.value;
+  if (!raw) return false;
+  try {
+    const s = JSON.parse(raw);
+    return !!s?.loggedIn;
+  } catch {
+    return false;
+  }
 }
 
 export function middleware(req: NextRequest) {
