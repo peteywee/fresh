@@ -6,13 +6,13 @@ export const demoUsers = [
     displayName: "Mary Manager",
     email: "manager@example.com",
     password: "manager123",
-    role: "manager" as const
+    role: "admin" as const,
   },
   {
     id: randomUUID(),
     displayName: "Ulysses User",
     email: "user@example.com",
     password: "user123",
-    role: "user" as const
-  }
+    role: "member" as const,
+  },
 ];

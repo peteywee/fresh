@@ -1,31 +1,62 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+const PUBLIC_PATHS = new Set([
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/api/health",
+  "/api/status",
+  "/api/login",
+  "/api/register",
+  "/api/forgot-password",
+  "/api/reset-password",
+  "/favicon.ico",
+]);
+
+function isAsset(pathname: string) {
+  return (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.startsWith("/assets")
+  );
+}
+
+function hasSession(req: NextRequest): boolean {
+  const raw = req.cookies.get("__session")?.value;
+  if (!raw) return false;
+  try {
+    const s = JSON.parse(raw);
+    return !!s?.loggedIn;
+  } catch {
+    return false;
+  }
+}
 
 export function middleware(req: NextRequest) {
-  const url = new URL(req.url);
-  const path = url.pathname;
-  const sessionRaw = req.cookies.get("__session")?.value;
+  const { pathname } = new URL(req.url);
 
-  let session: any = null;
-  try { session = sessionRaw ? JSON.parse(sessionRaw) : null; } catch {}
-
-  const isPublic = path.startsWith("/login") || path.startsWith("/api/session");
-  if (isPublic) return NextResponse.next();
-
-  const loggedIn = !!session?.loggedIn;
-  const onboarded = !!session?.onboarded;
-
-  if (!loggedIn && path !== "/login") {
-    return NextResponse.redirect(new URL("/login", req.url));
+  // Always let static and public paths through
+  if (isAsset(pathname) || PUBLIC_PATHS.has(pathname)) {
+    return NextResponse.next();
   }
-  if (loggedIn && !onboarded && !path.startsWith("/onboarding")) {
-    return NextResponse.redirect(new URL("/onboarding", req.url));
+
+  // Only gate real app areas; keep public flows open
+  const requiresAuth =
+    pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/app");
+
+  if (requiresAuth && !hasSession(req)) {
+    const url = new URL("/login", req.url);
+    return NextResponse.redirect(url);
   }
-  if (loggedIn && onboarded && (path === "/" || path === "/login" || path === "/onboarding")) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
+
   return NextResponse.next();
 }
 
+// Match everything that isn't an actual file (has a dot)
 export const config = {
-  matcher: ["/((?!_next|favicon.ico|api/session).*)"]
+  matcher: ["/((?!.*\\.).*)"],
 };

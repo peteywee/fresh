@@ -14,7 +14,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Scan for TODOs
         run: |
-          grep -R "TODO" ./apps ./services ./packages || true > todos.txt
+          # Write grep output to file regardless of exit code, and ensure file exists
+          (grep -R "TODO" ./apps ./services ./packages || true) > todos.txt
+          # Ensure the file is non-empty for the next step (optional)
+          if [ ! -s todos.txt ]; then echo "No TODOs found" > todos.txt; fi
       - name: Create Issues
         uses: peter-evans/create-issue-from-file@v5
         with:

@@ -13,7 +13,7 @@ export default function ResetPasswordClient() {
     const r = await fetch("/api/reset-password", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ token, newPassword })
+      body: JSON.stringify({ token, newPassword }),
     });
     const d = await r.json().catch(() => ({}));
     if (r.ok) {
@@ -26,7 +26,12 @@ export default function ResetPasswordClient() {
   return (
     <main>
       <h1>Reset Password</h1>
-      <input type="password" placeholder="New Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+      <input
+        type="password"
+        placeholder="New Password"
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+      />
       <button onClick={doReset}>Reset</button>
       <button onClick={() => router.push("/login")}>Back to Login</button>
       {message && <p>{message}</p>}
