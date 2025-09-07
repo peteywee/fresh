@@ -3,17 +3,9 @@ import {
   LoginRequest,
   LoginResponse,
 } from "../../../packages/types/dist/login.js";
+import type { User } from "../../../packages/types/dist/user.js";
 import { demoUsers } from "./seed.js";
 import { users as registeredUsers } from "./index.js";
-
-interface User {
-  id: string;
-  displayName: string;
-  email: string;
-  password: string;
-  role: string;
-}
-
 const router = Router();
 
 router.post("/api/login", (req, res) => {
