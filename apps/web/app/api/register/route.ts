@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   if (!body) return NextResponse.json({ error: "Bad JSON" }, { status: 400 });
 
   const r = await fetch(
-    process.env.API_BASE_URL ?? "http://localhost:3001/api/register",
+    process.env.API_BASE_URL ?? "http://localhost:3333/api/register",
     {
       method: "POST",
       headers: { "content-type": "application/json" },

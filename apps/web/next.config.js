@@ -4,6 +4,10 @@ const API_URL = process.env.API_URL || "http://localhost:3333";
 const nextConfig = {
   reactStrictMode: true,
   trailingSlash: false,
+  eslint: {
+    // We run ESLint separately in CI; skip during Next build to avoid plugin detection warnings
+    ignoreDuringBuilds: true,
+  },
   // Add headers for static assets to improve PWA caching
   async headers() {
     return [
@@ -20,7 +24,13 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    return [{ source: "/api/:path*", destination: `${API_URL}/api/:path*` }];
+    return [
+      { source: "/api/login", destination: `${API_URL}/api/login` },
+      { source: "/api/register", destination: `${API_URL}/api/register` },
+      { source: "/api/forgot-password", destination: `${API_URL}/api/forgot-password` },
+      { source: "/api/reset-password", destination: `${API_URL}/api/reset-password` },
+      { source: "/api/onboarding/complete", destination: `${API_URL}/api/onboarding/complete` },
+    ];
   },
 };
 

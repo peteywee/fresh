@@ -113,4 +113,28 @@ router.post("/reset-password", (req, res) => {
   return res.status(200).json({ message: "password reset" });
 });
 
+router.post("/onboarding/complete", (req, res) => {
+  const email = norm(req.body?.email);
+  const u = email ? users.get(email) : null;
+  if (!u) {
+    return res.status(401).json({ error: "user not found" });
+  }
+
+  // Mark onboarding as complete
+  u.onboardingComplete = true;
+  
+  // Return updated user info
+  return res.status(200).json({
+    message: "onboarding completed",
+    user: {
+      id: u.id,
+      email: u.email,
+      role: u.role,
+      displayName: u.displayName,
+      onboardingComplete: u.onboardingComplete,
+    },
+    org: u.orgId ? { id: u.orgId, name: "Default Organization" } : null,
+  });
+});
+
 export default router;
