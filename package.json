@@ -5,9 +5,13 @@
   "scripts": {
     "dev:web": "pnpm --filter @apps/web dev",
     "dev:api": "pnpm --filter @services/api dev",
+    "dev:restart": "./scripts/restart-dev.sh",
+    "dev:quick-restart": "./scripts/quick-restart.sh",
+    "dev:kill": "./scripts/kill-dev-processes.sh",
+    "dev:status": "./scripts/dev-status.sh",
     "typecheck": "pnpm -r --parallel --if-present typecheck",
     "lint": "pnpm -r --parallel --if-present lint",
-    "build": "pnpm -r --parallel --if-present build",
+    "build": "pnpm --filter @packages/types build && pnpm -r --parallel --if-present build",
     "test": "pnpm -r --parallel --if-present test",
     "docs": "typedoc --out docs/API packages"
   },
@@ -15,6 +19,7 @@
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
     "eslint": "^9.35.0",
+    "eslint-config-next": "^15.5.2",
     "typescript": "^5.5.4",
     "typedoc": "^0.28.12"
   }
