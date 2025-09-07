@@ -163,6 +163,7 @@ export default function ResetPasswordPage() {
 TSX
 
 echo "==> [007E] Creating dev-fast.sh..."
+
 cat > scripts/dev-fast.sh <<'BASH'
 #!/usr/bin/env bash
 # Run API + Web in parallel
@@ -174,7 +175,7 @@ BASH
 chmod +x scripts/dev-fast.sh
 
 echo "==> [007F] Creating checkpoint.sh..."
-cat > scripts/checkpoint.sh <<'BASH'
+cat > 'scripts/checkpoint.sh' <<'BASH'
 #!/usr/bin/env bash
 set -euo pipefail
 MSG=${1:-"Checkpoint: save state"}

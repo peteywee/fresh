@@ -1,52 +1,140 @@
+import { Router } from "express";
 import { randomUUID } from "node:crypto";
 
-type Org = { id: string; name: string; taxId: string };
-type User = {
+type Role = "admin" | "member";
+type UserRecord = {
   id: string;
   email: string;
-  displayName: string;
-  password: string;
-  role: "owner" | "member";
-  orgId: string;
-  ssn?: string;
-  address?: string;
-  withholdingAllowances?: number;
+  password: string; // dev-only plain text; replace with hash in prod
+  role: Role;
+  displayName?: string;
+  orgId?: string | null;
+  onboardingComplete?: boolean;
 };
 
-export const orgs = new Map<string, Org>();
-export const users = new Map<string, User>();
+const users = new Map<string, UserRecord>(); // key by normalized email
+const resetTokens = new Map<string, string>(); // token -> normalized email
 
-// Demo register (create or join org)
-export function registerUser(data: any): { user: User; org: Org } {
-  let org: Org;
-  if (data.orgChoice === "create") {
-    org = { id: randomUUID(), name: data.org.name, taxId: data.org.taxId };
-    orgs.set(org.id, org);
-  } else {
-    const existing = orgs.get(data.org.id);
-    if (!existing) throw new Error("Org not found");
-    org = existing;
+const norm = (s: unknown) =>
+  typeof s === "string" ? s.trim().toLowerCase() : "";
+
+const seedEmail = norm("cravenwspatrick@gmail.com");
+if (!users.has(seedEmail)) {
+  users.set(seedEmail, {
+    id: randomUUID(),
+    email: seedEmail,
+    password: "pass456",
+    role: "admin",
+    displayName: "Admin",
+    orgId: null,
+    onboardingComplete: false,
+  });
+}
+
+const router = Router();
+
+router.post("/register", (req, res) => {
+  const email = norm(req.body?.email);
+  const password = String(req.body?.password ?? "");
+  const displayName = String(req.body?.displayName ?? "");
+  const orgChoice = String(req.body?.orgChoice ?? "create");
+  const org = req.body?.org ?? null;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "email and password are required" });
+  }
+  if (users.has(email)) {
+    return res.status(409).json({ error: "email already registered" });
   }
 
-  const user: User = {
+  const u: UserRecord = {
     id: randomUUID(),
-    email: data.email,
-    displayName: data.displayName,
-    password: data.password,
-    role: data.orgChoice === "create" ? "owner" : "member",
-    orgId: org.id,
-    ssn: data.w4?.ssn,
-    address: data.w4?.address,
-    withholdingAllowances: data.w4?.withholdingAllowances
+    email,
+    password,
+    role: "member",
+    displayName: displayName || email.split("@")[0],
+    orgId: orgChoice === "join" ? (org?.id ?? null) : null,
+    onboardingComplete: false,
   };
-  users.set(user.id, user);
+  users.set(email, u);
+  return res.status(201).json({ message: "registered", userId: u.id });
+});
 
-  return { user, org };
-}
+router.post("/login", (req, res) => {
+  const email = norm(req.body?.email);
+  const password = String(req.body?.password ?? "");
+  const u = email ? users.get(email) : null;
+  if (!u || u.password !== password) {
+    return res.status(401).json({ error: "invalid credentials" });
+  }
+  return res.status(200).json({
+    message: "ok",
+    user: {
+      id: u.id,
+      email: u.email,
+      role: u.role,
+      onboardingComplete: !!u.onboardingComplete,
+    },
+  });
+});
 
-// Demo forgot-password
-export function forgotPassword(email: string): string {
-  const user = Array.from(users.values()).find(u => u.email === email);
-  if (!user) throw new Error("User not found");
-  return `Password reset link sent to ${email} (demo only).`;
-}
+router.post("/forgot-password", (req, res) => {
+  const email = norm(req.body?.email);
+  const u = email ? users.get(email) : null;
+  // Do not leak existence; always return 200
+  if (!u)
+    return res
+      .status(200)
+      .json({ message: "if the account exists, a token has been sent" });
+
+  const token = randomUUID();
+  resetTokens.set(token, email);
+  // Dev-only: return token to speed up local testing
+  return res.status(200).json({ message: "reset token created", token });
+});
+
+router.post("/reset-password", (req, res) => {
+  const token = String(req.body?.token ?? "");
+  const newPassword = String(req.body?.newPassword ?? "");
+  if (!token || !newPassword) {
+    return res
+      .status(400)
+      .json({ error: "token and newPassword are required" });
+  }
+  const email = resetTokens.get(token);
+  if (!email) {
+    return res.status(400).json({ error: "invalid or expired token" });
+  }
+  const u = users.get(email);
+  if (!u) return res.status(400).json({ error: "invalid state" });
+
+  u.password = newPassword;
+  resetTokens.delete(token);
+  return res.status(200).json({ message: "password reset" });
+});
+
+router.post("/onboarding/complete", (req, res) => {
+  const email = norm(req.body?.email);
+  const u = email ? users.get(email) : null;
+  if (!u) {
+    return res.status(401).json({ error: "user not found" });
+  }
+
+  // Mark onboarding as complete
+  u.onboardingComplete = true;
+  
+  // Return updated user info
+  return res.status(200).json({
+    message: "onboarding completed",
+    user: {
+      id: u.id,
+      email: u.email,
+      role: u.role,
+      displayName: u.displayName,
+      onboardingComplete: u.onboardingComplete,
+    },
+    org: u.orgId ? { id: u.orgId, name: "Default Organization" } : null,
+  });
+});
+
+export default router;

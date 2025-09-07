@@ -10,7 +10,10 @@ export default function OnboardingClient() {
     const r = await fetch("/api/onboarding/complete", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ user: { email, displayName }, org: { name: orgName } })
+      body: JSON.stringify({
+        user: { email, displayName },
+        org: { name: orgName },
+      }),
     });
     if (!r.ok) {
       const d = await r.json().catch(() => ({}));
@@ -27,17 +30,31 @@ export default function OnboardingClient() {
       <div style={{ display: "grid", gap: 12, maxWidth: 420 }}>
         <label>
           Name
-          <input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Jane Doe" />
+          <input
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Jane Doe"
+          />
         </label>
         <label>
           Email
-          <input value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@example.com" />
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="jane@example.com"
+          />
         </label>
         <label>
           Organization
-          <input value={orgName} onChange={e => setOrgName(e.target.value)} placeholder="Acme, Inc." />
+          <input
+            value={orgName}
+            onChange={(e) => setOrgName(e.target.value)}
+            placeholder="Acme, Inc."
+          />
         </label>
-        <button onClick={complete} style={{ padding: "8px 16px" }}>Complete</button>
+        <button onClick={complete} style={{ padding: "8px 16px" }}>
+          Complete
+        </button>
       </div>
     </main>
   );

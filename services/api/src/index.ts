@@ -1,59 +1,63 @@
 import express from "express";
 import cors from "cors";
 import { pino } from "pino";
-import { randomUUID } from "node:crypto";
-import { OnboardingRequest, OnboardingResponse, Organization, User } from "@packages/types";
-import { z } from "zod";
+import authRouter from "./auth.js";
 
+// Named shared stores exported for route modules to consume
+export const orgs: Map<string, any> = new Map();
+export const users: Map<string, any> = new Map();
+
+const log = pino({ level: process.env.LOG_LEVEL || "info" });
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-const log = pino({ level: process.env.LOG_LEVEL || "info" });
-
-// Root status endpoint (helps browsers and curl avoid "Cannot GET /")
-app.get("/", (_req, res) => {
-  res.json({ ok: true, endpoints: ["/health", "/api/onboarding/complete"] });
+// Root probes
+app.get("/health", (_req, res) => {
+  res.status(200).json({ ok: true, service: "scheduler-api" });
+});
+app.get("/status", (_req, res) => {
+  res.status(200).json({
+    ok: true,
+    env: process.env.NODE_ENV || "development",
+    time: new Date().toISOString(),
+  });
 });
 
-// In-memory "db" (replace later with Postgres/Firestore)
-const orgs = new Map<string, z.infer<typeof Organization>>();
-const users = new Map<string, z.infer<typeof User>>();
-
-app.get("/health", (_req, res) => res.json({ ok: true }));
-
-app.post("/api/onboarding/complete", (req, res) => {
-  const parsed = OnboardingRequest.safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({ error: "Invalid payload", details: parsed.error.flatten() });
-  }
-  const { user: u, org: o } = parsed.data;
-
-  const orgId = randomUUID();
-  const userId = randomUUID();
-  const now = new Date().toISOString();
-
-  const org = {
-    id: orgId,
-    name: o.name,
-    createdAt: now
-  };
-  orgs.set(orgId, org);
-
-  const user = {
-    id: userId,
-    email: u.email,
-    displayName: u.displayName,
-    orgId,
-    role: "owner" as const
-  };
-  users.set(userId, user);
-
-  const resp: z.infer<typeof OnboardingResponse> = { user, org };
-  return res.status(201).json(resp);
+// API probe aliases (so /api/health and /api/status are valid)
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({ ok: true, service: "scheduler-api" });
+});
+app.get("/api/status", (_req, res) => {
+  res.status(200).json({
+    ok: true,
+    env: process.env.NODE_ENV || "development",
+    time: new Date().toISOString(),
+  });
 });
 
-const port = process.env.PORT ? Number(process.env.PORT) : 3001;
-app.listen(port, () => {
-  log.info({ port }, `scheduler-api listening`);
+// Diagnostics
+app.get("/__/probe", (req, res) => {
+  const runId = req.header("x-run-id") || null;
+  res.status(200).json({ ok: true, runId, probedAt: new Date().toISOString() });
+});
+app.get("/hierarchy/echo", (req, res) => {
+  const hierarchy = {
+    runId: req.header("x-run-id") || "run-unknown",
+    user: req.header("x-user") || "anonymous",
+    object: req.header("x-obj") || "unspecified",
+    task: req.header("x-task") || "unspecified",
+    step: req.header("x-step") || "unspecified",
+  };
+  res.status(200).json({ ok: true, hierarchy, headers: req.headers });
+});
+
+// Auth API
+app.use("/api", authRouter);
+
+// Start
+const PORT = Number(process.env.PORT || 3333);
+app.listen(PORT, () => {
+  log.info({ port: PORT }, "scheduler-api listening");
 });

@@ -39,7 +39,7 @@ export default function LoginPage() {
     });
     const d = await r.json().catch(() => ({}));
     if (r.ok) {
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     } else {
       setAttempts(attempts + 1);
       setMessage("Login failed: " + (d.error ?? "unknown"));
