@@ -25,7 +25,7 @@ export default function RegisterPage() {
   return (
     <main>
       <h1>Sign Up</h1>
-      <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+      <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
       <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
       <button onClick={doRegister}>Create Account</button>
       <button onClick={() => router.push("/login")}>Back to Login</button>
