@@ -19,7 +19,7 @@ router.post("/api/login", (req, res) => {
   const { email, password } = parsed.data;
   // check registered users map first (users created via /api/register)
   let user: User | null = null;
-  for (const [, u] of registeredUsers as Map<string, User>) {
+  for (const [, u] of registeredUsers) {
     if (u.email === email && u.password === password) {
       user = u;
       break;
