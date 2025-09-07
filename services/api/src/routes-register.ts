@@ -1,37 +1,47 @@
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
-import { RegistrationRequest, RegistrationResponse, ForgotPasswordRequest, ForgotPasswordResponse } from "../../../packages/types/dist/register.js";
+import {
+  RegistrationRequest,
+  RegistrationResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+} from "../../../packages/types/dist/register.js";
 
 const router = Router();
-const orgs = new Map<string, any>();
-const users = new Map<string, any>();
+import { orgs as sharedOrgs, users as sharedUsers } from "./index.js";
 
 router.post("/api/register", (req, res) => {
   const parsed = RegistrationRequest.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: "Invalid registration", details: parsed.error.flatten() });
+    return res
+      .status(400)
+      .json({ error: "Invalid registration", details: parsed.error.flatten() });
   }
   const data = parsed.data;
 
   let orgId = data.org?.id;
   if (data.orgChoice === "create") {
     orgId = randomUUID();
-    orgs.set(orgId, { id: orgId, name: data.org?.name, taxId: data.org?.taxId });
-  } else if (data.orgChoice === "join" && orgId && orgs.has(orgId)) {
+    (sharedOrgs as any).set(orgId, {
+      id: orgId,
+      name: data.org!.name!,
+      taxId: data.org!.taxId!,
+    });
+  } else if (data.orgChoice === "join" && orgId && sharedOrgs.has(orgId)) {
     // join existing org
   } else {
     return res.status(400).json({ error: "Invalid org choice" });
   }
 
   const userId = randomUUID();
-  users.set(userId, {
+  (sharedUsers as any).set(userId, {
     id: userId,
     email: data.email,
     password: data.password,
     displayName: data.displayName,
-    role: "user",
+    role: "user" as any,
     orgId,
-    w4: data.w4
+    w4: data.w4,
   });
 
   const resp = RegistrationResponse.parse({ userId, orgId });
@@ -46,7 +56,7 @@ router.post("/api/forgot-password", (req, res) => {
 
   const resp = ForgotPasswordResponse.parse({
     ok: true,
-    message: `Password reset link would be sent to ${parsed.data.email}`
+    message: `Password reset link would be sent to ${parsed.data.email}`,
   });
   return res.status(200).json(resp);
 });

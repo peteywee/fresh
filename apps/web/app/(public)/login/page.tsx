@@ -1,42 +1,58 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [attempts, setAttempts] = useState(0);
-  const router = useRouter();
+  const [msg, setMsg] = useState("");
 
-  async function doLogin() {
-    if (attempts >= 5) {
-      setMessage("Too many failed attempts. Please wait before trying again.");
-      return;
-    }
+  async function doLogin(e?: React.FormEvent) {
+    e?.preventDefault();
+    setMsg("");
     const r = await fetch("/api/login", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
-    const d = await r.json().catch(() => ({}));
     if (r.ok) {
-      window.location.href = "/dashboard";
+      router.push("/onboarding");
     } else {
-      setAttempts(attempts + 1);
-      setMessage("Login failed: " + (d.error ?? "unknown"));
+      const d = await r.json().catch(() => ({}));
+      setMsg(d?.error || "Login failed");
     }
   }
 
   return (
-    <main>
+    <main style={{ padding: 24, maxWidth: 420 }}>
       <h1>Login</h1>
-      <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-      <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-      <button onClick={doLogin}>Login</button>
-      <button onClick={() => router.push("/register")}>Sign Up</button>
-      <button onClick={() => router.push("/forgot-password")}>Forgot Password</button>
-      {message && <p>{message}</p>}
+      <form onSubmit={doLogin} style={{ display: "grid", gap: 12 }}>
+        <input
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+        />
+        <input
+          placeholder="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
+        />
+        <button type="submit">Login</button>
+      </form>
+
+      <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
+        <button onClick={() => router.push("/register")}>Sign Up</button>
+        <button onClick={() => router.push("/forgot-password")}>
+          Forgot Password
+        </button>
+      </div>
+
+      {msg && <p style={{ color: "crimson", marginTop: 12 }}>{msg}</p>}
     </main>
   );
 }
