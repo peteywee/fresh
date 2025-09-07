@@ -3,9 +3,9 @@ import {
   LoginRequest,
   LoginResponse,
 } from "../../../packages/types/dist/login.js";
+import type { User } from "../../../packages/types/dist/user.js";
 import { demoUsers } from "./seed.js";
 import { users as registeredUsers } from "./index.js";
-
 const router = Router();
 
 router.post("/api/login", (req, res) => {
@@ -18,18 +18,17 @@ router.post("/api/login", (req, res) => {
 
   const { email, password } = parsed.data;
   // check registered users map first (users created via /api/register)
-  let user = null as any;
+  let user: User | null = null;
   for (const [, u] of registeredUsers) {
-    const uu = u as any;
-    if (uu.email === email && uu.password === password) {
-      user = uu;
+    if (u.email === email && u.password === password) {
+      user = u;
       break;
     }
   }
   // fall back to demo users
   if (!user) {
     user =
-      demoUsers.find((u) => u.email === email && u.password === password) ??
+      demoUsers.find((u: User) => u.email === email && u.password === password) ??
       null;
   }
   if (!user) {
