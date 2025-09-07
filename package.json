@@ -5,6 +5,10 @@
   "scripts": {
     "dev:web": "pnpm --filter @apps/web dev",
     "dev:api": "pnpm --filter @services/api dev",
+    "dev:restart": "./scripts/restart-dev.sh",
+    "dev:quick-restart": "./scripts/quick-restart.sh",
+    "dev:kill": "./scripts/kill-dev-processes.sh",
+    "dev:status": "./scripts/dev-status.sh",
     "typecheck": "pnpm -r --parallel --if-present typecheck",
     "lint": "pnpm -r --parallel --if-present lint",
     "build": "pnpm --filter @packages/types build && pnpm -r --parallel --if-present build",
