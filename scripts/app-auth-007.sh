@@ -202,7 +202,7 @@ export default function UserOnboarding() {
   );
 }
 TSX
-
+cat > 'apps/web/app/(onboarding)/org/page.tsx' <<'TSX'
 cat > apps/web/app/(onboarding)/org/page.tsx <<'TSX'
 export default function OrgOnboarding() {
   return (
