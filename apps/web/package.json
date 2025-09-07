@@ -6,8 +6,8 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint \"app/**/*.{js,jsx,ts,tsx}\" \"lib/**/*.{js,jsx,ts,tsx}\""
+    "typecheck": "tsc -p tsconfig.json --noEmit
+    "lint": "eslint \"app/**/*.{js,jsx,ts,tsx}\" \"lib/**/*.{js,jsx,ts,tsx}\" \"src/**/*.{js,jsx,ts,tsx}\" \"middleware.ts\""
   },
   "dependencies": {
     "next": "15.5.2",
