@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true
+  reactStrictMode: true,
+  experimental: {
+    outputFileTracingRoot: require('path').join(__dirname, '../../')
+  }
 };
 module.exports = nextConfig;
