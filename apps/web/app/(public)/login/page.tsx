@@ -1,78 +1,42 @@
 "use client";
-
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [attempts, setAttempts] = useState(0);
+  const router = useRouter();
 
   async function doLogin() {
-    const r = await fetch("/api/session/login", {
+    if (attempts >= 5) {
+      setMessage("Too many failed attempts. Please wait before trying again.");
+      return;
+    }
+    const r = await fetch("/api/login", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ email, password })
     });
-    if (r.ok) {
-      window.location.href = "/onboarding";
-    } else {
-      setMessage("Login failed");
-    }
-  }
-
-  async function doRegister() {
-    const r = await fetch("/api/register", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        email,
-        password,
-        displayName: email.split("@")[0],
-        orgChoice: "create",
-        org: { name: "New Org", taxId: "99-9999999" },
-        w4: { ssn: "000-00-0000", address: "123 Demo St", withholdingAllowances: 1 }
-      })
-    });
     const d = await r.json().catch(() => ({}));
     if (r.ok) {
-      setMessage("Registered successfully. Please login.");
+      window.location.href = "/dashboard";
     } else {
-      setMessage("Register failed: " + (d.error ?? "unknown"));
-    }
-  }
-
-  async function doForgot() {
-    if (!email) return setMessage("Enter your email first.");
-    const r = await fetch("/api/forgot-password", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email })
-    });
-    const d = await r.json().catch(() => ({}));
-    if (r.ok) {
-      setMessage(d.message ?? "Check your email.");
-    } else {
-      setMessage("Forgot password failed: " + (d.error ?? "unknown"));
+      setAttempts(attempts + 1);
+      setMessage("Login failed: " + (d.error ?? "unknown"));
     }
   }
 
   return (
     <main>
       <h1>Login</h1>
-      <div style={{ display: "grid", gap: 12, maxWidth: 420 }}>
-        <label>
-          Email
-          <input value={email} onChange={e => setEmail(e.target.value)} />
-        </label>
-        <label>
-          Password
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
-        </label>
-        <button onClick={doLogin} style={{ padding: "8px 16px" }}>Login</button>
-        <button onClick={doRegister} style={{ padding: "8px 16px" }}>Register</button>
-        <button onClick={doForgot} style={{ padding: "8px 16px" }}>Forgot Password</button>
-        {message && <p>{message}</p>}
-      </div>
+      <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+      <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
+      <button onClick={doLogin}>Login</button>
+      <button onClick={() => router.push("/register")}>Sign Up</button>
+      <button onClick={() => router.push("/forgot-password")}>Forgot Password</button>
+      {message && <p>{message}</p>}
     </main>
   );
 }
