@@ -2,7 +2,8 @@
 set -euo pipefail
 
 echo "==> [007A] Fixing Login page redirects..."
-cat > apps/web/app/(public)/login/page.tsx <<'TSX'
+mkdir -p 'apps/web/app/(public)/login'
+cat > 'apps/web/app/(public)/login/page.tsx' <<'TSX'
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
