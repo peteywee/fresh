@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { pino } from "pino";
 import { randomUUID } from "node:crypto";
 import { OnboardingRequest, OnboardingResponse, Organization, User } from "../../../packages/types/src/index.js";
 import { z } from "zod";
@@ -7,6 +8,8 @@ import { z } from "zod";
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const log = pino({ level: process.env.LOG_LEVEL || "info" });
 
 // Root status endpoint (helps browsers and curl avoid "Cannot GET /")
 app.get("/", (_req, res) => {

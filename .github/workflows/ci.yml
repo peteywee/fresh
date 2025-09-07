@@ -33,20 +33,24 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
 
-      - name: Install
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: |
+          # Build in dependency order to ensure packages/types is built first
+          pnpm --filter @packages/types build
+          pnpm --filter @services/api build
+          pnpm --filter @apps/web build
 
       - name: Typecheck (if present)
         run: |
           pnpm -r --parallel --if-present typecheck
 
-      - name: Lint (if present)
+      - name: Lint (if present)  
         run: |
           pnpm -r --parallel --if-present lint
 
       - name: Test (if present)
         run: |
           pnpm -r --parallel --if-present test
-
-      - name: Build
-        run: pnpm -r --parallel --if-present build
