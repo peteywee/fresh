@@ -13,7 +13,10 @@
     "lint": "pnpm -r --parallel --if-present lint",
     "build": "pnpm --filter @packages/types build && pnpm -r --parallel --if-present build",
     "test": "pnpm -r --parallel --if-present test",
-    "docs": "typedoc --out docs/API packages"
+    "docs": "typedoc --out docs/API packages",
+    "verify": "./scripts/verify-all.sh",
+    "pre-push": "./scripts/pre-push-check.sh",
+    "test-routes": "./scripts/test-routes.sh"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
