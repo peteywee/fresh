@@ -1,62 +1,37 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = new Set([
-  "/",
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/reset-password",
-  "/api/health",
-  "/api/status",
-  "/api/login",
-  "/api/register",
-  "/api/forgot-password",
-  "/api/reset-password",
-  "/favicon.ico",
-]);
-
-function isAsset(pathname: string) {
-  return (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/static") ||
-    pathname.startsWith("/assets")
-  );
-}
-
-function hasSession(req: NextRequest): boolean {
-  const raw = req.cookies.get("__session")?.value;
-  if (!raw) return false;
-  try {
-    const s = JSON.parse(raw);
-    return !!s?.loggedIn;
-  } catch {
-    return false;
-  }
-}
+const COOKIE = process.env.SESSION_COOKIE_NAME || "__session";
+const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password", "/api/session", "/onboarding"];
 
 export function middleware(req: NextRequest) {
-  const { pathname } = new URL(req.url);
+  const { pathname } = req.nextUrl;
 
-  // Always let static and public paths through
-  if (isAsset(pathname) || PUBLIC_PATHS.has(pathname)) {
+  // Skip middleware for static files and API routes
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/api/') ||
+    pathname.includes('.') ||
+    pathname.startsWith('/favicon')
+  ) {
     return NextResponse.next();
   }
 
-  // Only gate real app areas; keep public flows open
-  const requiresAuth =
-    pathname.startsWith("/onboarding") ||
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/app");
+  // Public routes that don't require authentication
+  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
 
-  if (requiresAuth && !hasSession(req)) {
-    const url = new URL("/login", req.url);
-    return NextResponse.redirect(url);
+  const sessionCookie = req.cookies.get(COOKIE);
+  const hasSession = !!sessionCookie?.value;
+
+  // Protected routes require session - redirect to homepage (which is login)
+  if (!hasSession) {
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   return NextResponse.next();
 }
 
-// Match everything that isn't an actual file (has a dot)
 export const config = {
-  matcher: ["/((?!.*\\.).*)"],
+  matcher: ["/((?!_next|favicon.ico|assets).*)"],
 };

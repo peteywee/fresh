@@ -1,20 +1,24 @@
 import "server-only";
+import { cookies } from "next/headers";
+import { adminAuth } from "./firebase.admin";
 
-export type Session = {
-  loggedIn: boolean;
-  onboarded: boolean;
-  displayName?: string;
-  orgName?: string;
-} | null;
+export type ServerSession =
+  | (import("firebase-admin/auth").DecodedIdToken & {
+      onboardingComplete?: boolean;
+      role?: string;
+    })
+  | null;
 
-export async function getSession(): Promise<Session> {
-  // Next 15 App Router: use headers() rather than cookies() on the server to avoid edge/runtime quirks
-  const { cookies } = await import("next/headers");
+const COOKIE = process.env.SESSION_COOKIE_NAME || "__session";
+
+export async function getServerSession(): Promise<ServerSession> {
   const jar = await cookies();
-  const raw = jar.get("__session")?.value;
-  if (!raw) return null;
+  const token = jar.get(COOKIE)?.value;
+  if (!token) return null;
   try {
-    return JSON.parse(raw);
+    const auth = adminAuth();
+    const decoded = await auth.verifySessionCookie(token, true);
+    return decoded as ServerSession;
   } catch {
     return null;
   }

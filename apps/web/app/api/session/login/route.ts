@@ -1,43 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { adminAuth } from "@/lib/firebase.admin";
+
+const COOKIE = process.env.SESSION_COOKIE_NAME || "__session";
+const DAYS = Number(process.env.SESSION_COOKIE_DAYS || 5);
+const EXPIRES_MS = DAYS * 24 * 60 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const r = await fetch(
-    process.env.API_BASE_URL ?? "http://localhost:3333/api/login",
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    },
-  );
+  const { idToken } = await req.json().catch(() => ({}));
+  if (!idToken) return NextResponse.json({ error: "Missing idToken" }, { status: 400 });
 
-  if (!r.ok) {
-    const e = await r.json().catch(() => ({}));
-    return NextResponse.json(
-      { error: "API login failed", details: e },
-      { status: r.status },
-    );
-  }
+  const auth = adminAuth();
+  const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn: EXPIRES_MS });
 
-  const data = await r.json();
   const res = NextResponse.json({ ok: true });
-  // align with API response shape { user: { ... } }
-  const u = (data && data.user) || {};
-  res.cookies.set(
-    "__session",
-    JSON.stringify({
-      loggedIn: true,
-      onboarded: !!u.onboardingComplete,
-      displayName: u.displayName || u.email,
-      role: u.role,
-      userId: u.id,
-    }),
-    {
-      httpOnly: true,
-      path: "/",
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    },
-  );
+  res.cookies.set(COOKIE, sessionCookie, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== "development",
+    sameSite: "lax",
+    path: "/",
+    maxAge: Math.floor(EXPIRES_MS / 1000),
+  });
   return res;
 }

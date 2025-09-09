@@ -12,7 +12,10 @@
     "noEmit": true,
     "strict": true,
     "baseUrl": ".",
-    "paths": {},
+    "paths": {
+      "@/*": ["./app/*"],
+      "@/lib/*": ["./lib/*"]
+    },
     "types": [
       "node"
     ],
