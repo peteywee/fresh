@@ -1,7 +1,6 @@
 import { z } from "zod";
-
-export const Role = z.enum(["owner", "admin", "member"]);
-export type Role = z.infer<typeof Role>;
+export { Role } from "./roles.js";
+export type { Role as RoleType } from "./roles.js";
 
 export const Organization = z.object({
   id: z.string().uuid(),
@@ -10,12 +9,14 @@ export const Organization = z.object({
 });
 export type Organization = z.infer<typeof Organization>;
 
+import { Role as RoleEnum } from "./roles.js";
+
 export const User = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
   displayName: z.string().min(1),
   orgId: z.string().uuid().optional(),
-  role: Role.optional()
+  role: RoleEnum.optional()
 });
 export type User = z.infer<typeof User>;
 

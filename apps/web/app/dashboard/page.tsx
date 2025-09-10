@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const Calendar = dynamic(() => import("../../components/Calendar"), { ssr: false });
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -47,7 +50,7 @@ export default function DashboardPage() {
         <p style={{ color: "#64748b" }}>You've successfully completed onboarding.</p>
       </div>
 
-      <div style={{ 
+  <div style={{ 
         display: "grid", 
         gap: "1.5rem", 
         gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" 
@@ -117,11 +120,20 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Calendar Section */}
+      <div style={{ marginTop: "2rem" }}>
+        <h2 style={{ margin: "0 0 1rem 0", color: "#1e293b" }}>🗓 Calendar</h2>
+  <Calendar onChange={(r: { start: Date | null; end: Date | null }) => console.log("Selected range:", r)} />
+        <p style={{ color: "#64748b", fontSize: "0.9rem", marginTop: 8 }}>
+          Tip: Click any day to open a popup and pick a start/end date.
+        </p>
+      </div>
+
       {/* Quick Actions */}
       <div style={{ marginTop: "2rem" }}>
         <h2 style={{ margin: "0 0 1rem 0", color: "#1e293b" }}>🚀 Quick Actions</h2>
         <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-          {user.role === "owner" && (
+          {(user.role === "owner" || user.role === "admin") && (
             <button
               onClick={() => alert("Feature coming soon! You'll be able to invite team members.")}
               style={{
@@ -134,10 +146,28 @@ export default function DashboardPage() {
                 fontWeight: 600
               }}
             >
-              📧 Invite Members
+              📧 Invite Members (Admins & Owners)
             </button>
           )}
           
+          {/* Example of write-protected action visible only to admins/owners */}
+          {(user.role === "owner" || user.role === "admin") && (
+            <button
+              onClick={() => alert("Write action simulated: only admins/owners can perform this.")}
+              style={{
+                padding: "0.75rem 1rem",
+                backgroundColor: "#7c3aed",
+                color: "white",
+                border: "none",
+                borderRadius: 6,
+                cursor: "pointer",
+                fontWeight: 600
+              }}
+            >
+              ✏️ Create Project (Restricted)
+            </button>
+          )}
+
           <button
             onClick={() => alert("Feature coming soon! Project management tools will be here.")}
             style={{
@@ -177,7 +207,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Invitation Code Generator for Owners */}
-      {user.role === "owner" && (
+  {(user.role === "owner" || user.role === "admin") && (
         <div style={{ 
           marginTop: "2rem", 
           padding: "1.5rem", 

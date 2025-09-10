@@ -1,0 +1,297 @@
+name: 🔒 Security CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security checks daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '20.19.4'
+  PNPM_VERSION: '9.0.0'
+
+jobs:
+  # Existing build and test job (enhanced)
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: 🔒 Harden Runner
+      uses: step-security/harden-runner@v2
+      with:
+        egress-policy: audit
+        allowed-endpoints: >
+          api.github.com:443
+          github.com:443
+          registry.npmjs.org:443
+          nodejs.org:443
+          raw.githubusercontent.com:443
+
+    - name: 📦 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for security analysis
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: 📦 Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: 📥 Install dependencies with audit
+      run: |
+        # Install with frozen lockfile for security
+        pnpm install --frozen-lockfile
+        
+        # Run security audit
+        echo "🔍 Running security audit..."
+        pnpm audit --audit-level moderate || true
+        
+        # Generate audit report
+        pnpm audit --json > audit-report.json || true
+
+    - name: 🔨 Build all packages
+      run: |
+        echo "🔨 Building packages..."
+        timeout 120 pnpm build
+
+    - name: 🔍 TypeScript validation
+      run: pnpm typecheck
+
+    - name: 🧹 Lint checks
+      run: pnpm lint
+
+    - name: 🧪 Run tests
+      run: pnpm test
+
+    - name: 📊 Upload audit report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-audit-report
+        path: audit-report.json
+        retention-days: 30
+
+  # Dependency vulnerability scanning
+  dependency-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+    - name: 🔒 Harden Runner
+      uses: step-security/harden-runner@v2
+      with:
+        egress-policy: audit
+
+    - name: 📦 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: 📦 Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: 🔍 Install Snyk CLI
+      run: npm install -g snyk
+
+    - name: 📥 Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: 🛡️ Snyk dependency scan
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      run: |
+        if [ -n "$SNYK_TOKEN" ]; then
+          echo "🔍 Running Snyk vulnerability scan..."
+          snyk test --all-projects --severity-threshold=high
+          snyk monitor --all-projects
+        else
+          echo "⚠️ Snyk token not configured - skipping scan"
+          pnpm audit --audit-level high
+        fi
+
+  # Code quality and security analysis
+  code-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - name: 🔒 Harden Runner
+      uses: step-security/harden-runner@v2
+      with:
+        egress-policy: audit
+
+    - name: 📦 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 🔍 Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript
+        queries: security-extended
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: 📦 Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: 📥 Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: 🔨 Build for analysis
+      run: pnpm build
+
+    - name: 🔍 Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:javascript"
+
+  # Container security (if using Docker)
+  container-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: contains(github.event.head_commit.modified, 'Dockerfile') || contains(github.event.head_commit.added, 'Dockerfile')
+
+    steps:
+    - name: 🔒 Harden Runner
+      uses: step-security/harden-runner@v2
+      with:
+        egress-policy: audit
+
+    - name: 📦 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔍 Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: 📊 Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Security notifications
+  security-notifications:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, dependency-security, code-analysis]
+    if: failure() && github.ref == 'refs/heads/main'
+    timeout-minutes: 5
+
+    steps:
+    - name: 🔒 Harden Runner  
+      uses: step-security/harden-runner@v2
+      with:
+        egress-policy: audit
+
+    - name: 🚨 Security Alert
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const issue = await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 Security CI/CD Pipeline Failure',
+            body: `
+            ## 🚨 Security Pipeline Alert
+            
+            The security CI/CD pipeline has failed on the main branch.
+            
+            **Commit:** ${context.sha}
+            **Workflow:** ${context.workflow}
+            **Run ID:** ${context.runId}
+            
+            Please investigate immediately:
+            - Check dependency vulnerabilities
+            - Review code analysis results
+            - Verify container security (if applicable)
+            
+            **Action Required:** Fix security issues before merging additional changes.
+            `,
+            labels: ['security', 'urgent', 'ci-failure']
+          });
+          
+          console.log('Security alert issue created:', issue.data.number);
+
+  # Compliance and reporting
+  compliance-report:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, dependency-security, code-analysis]
+    if: always() && github.ref == 'refs/heads/main'
+    timeout-minutes: 10
+
+    steps:
+    - name: 🔒 Harden Runner
+      uses: step-security/harden-runner@v2
+      with:
+        egress-policy: audit
+
+    - name: 📦 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 📊 Generate Security Report
+      run: |
+        echo "# 🔒 Security Compliance Report" > security-report.md
+        echo "**Generated:** $(date -u)" >> security-report.md
+        echo "**Commit:** ${{ github.sha }}" >> security-report.md
+        echo "**Branch:** ${{ github.ref_name }}" >> security-report.md
+        echo "" >> security-report.md
+        
+        echo "## 📋 Security Checklist" >> security-report.md
+        echo "- [x] Build pipeline hardening enabled" >> security-report.md
+        echo "- [x] Dependency vulnerability scanning" >> security-report.md
+        echo "- [x] Static code analysis (CodeQL)" >> security-report.md
+        echo "- [x] Container security scanning (when applicable)" >> security-report.md
+        echo "- [x] Audit logging enabled" >> security-report.md
+        echo "- [x] Security notifications configured" >> security-report.md
+        echo "" >> security-report.md
+        
+        echo "## 🎯 Pipeline Results" >> security-report.md
+        echo "- **Build & Test:** ${{ needs.build-and-test.result }}" >> security-report.md
+        echo "- **Dependency Security:** ${{ needs.dependency-security.result }}" >> security-report.md  
+        echo "- **Code Analysis:** ${{ needs.code-analysis.result }}" >> security-report.md
+        echo "" >> security-report.md
+        
+        if [ "${{ needs.build-and-test.result }}" = "failure" ] || [ "${{ needs.dependency-security.result }}" = "failure" ] || [ "${{ needs.code-analysis.result }}" = "failure" ]; then
+          echo "## ⚠️ Security Issues Detected" >> security-report.md
+          echo "**Action Required:** Review failed security checks before deployment." >> security-report.md
+        else
+          echo "## ✅ Security Checks Passed" >> security-report.md
+          echo "All security validations completed successfully." >> security-report.md
+        fi
+
+    - name: 📤 Upload Security Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-compliance-report
+        path: security-report.md
+        retention-days: 90
