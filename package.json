@@ -3,10 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
+    "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:web": "pnpm --filter @apps/web dev",
     "dev:api": "pnpm --filter @services/api dev",
     "dev:restart": "./scripts/restart-dev.sh",
-    "dev:quick-restart": "./scripts/quick-restart.sh",
     "dev:kill": "./scripts/kill-dev-processes.sh",
     "dev:status": "./scripts/dev-status.sh",
     "typecheck": "pnpm -r --parallel --if-present typecheck",
@@ -14,22 +14,13 @@
     "build": "pnpm --filter @packages/types build && pnpm -r --parallel --if-present build",
     "test": "pnpm -r --parallel --if-present test",
     "docs": "typedoc --out docs/API packages",
-    "verify": "./scripts/verify-all.sh",
-    "pre-push": "./scripts/pre-push-check.sh",
-    "test-routes": "./scripts/test-routes.sh"
+    "doctor": "./scripts/doctor.sh"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "5.0.3",
-    "@types/node": "24.3.1",
-    "@types/pino": "^7.0.5",
-    "@types/react": "19.1.12",
-    "@types/react-dom": "^19.1.9",
-    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
-    "eslint": "^9.35.0",
-    "eslint-config-next": "^15.5.2",
+    "eslint": "^9.9.0",
     "typedoc": "^0.28.12",
-    "typescript": "^5.9.2"
+    "concurrently": "^9.0.1"
   }
 }

@@ -1,48 +1,113 @@
-
 import { z } from "zod";
+import { RoleSchema } from "./index.js";
 
-export const Role = z.enum(["manager", "user"]);
-export type Role = z.infer<typeof Role>;
+export const OnboardingStepSchema = z.enum([
+  "welcome",
+  "personal-info", 
+  "organization-choice",
+  "create-organization",
+  "join-organization",
+  "preferences",
+  "complete"
+]);
+export type OnboardingStep = z.infer<typeof OnboardingStepSchema>;
 
-export const LoginRequest = z.object({
-  email: z.string().email(),
-  password: z.string().min(8)
+export const PersonalInfoSchema = z.object({
+  displayName: z.string().min(1, "Display name is required"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  jobTitle: z.string().optional(),
+  department: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  timezone: z.string().default("UTC"),
+  profilePicture: z.string().url().optional()
 });
-export type LoginRequest = z.infer<typeof LoginRequest>;
+export type PersonalInfo = z.infer<typeof PersonalInfoSchema>;
 
-export const LoginResponse = z.object({
-  id: z.string().uuid(),
-  displayName: z.string(),
-  email: z.string().email(),
-  role: Role
+export const OrganizationDetailsSchema = z.object({
+  name: z.string().min(2, "Organization name must be at least 2 characters"),
+  displayName: z.string().optional(),
+  description: z.string().optional(),
+  website: z.string().url().optional(),
+  industry: z.enum([
+    "technology",
+    "healthcare",
+    "finance", 
+    "education",
+    "retail",
+    "manufacturing",
+    "consulting",
+    "non-profit",
+    "government",
+    "other"
+  ]).optional(),
+  size: z.enum(["1-10", "11-50", "51-200", "201-1000", "1000+"]).optional(),
+  address: z.object({
+    street: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    postalCode: z.string().optional(),
+    country: z.string().optional()
+  }).optional()
 });
-export type LoginResponse = z.infer<typeof LoginResponse>;
+export type OrganizationDetails = z.infer<typeof OrganizationDetailsSchema>;
 
-export const Organization = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(2),
-  taxId: z.string().regex(/^\d{2}-\d{7}$/, "Must match format: 12-3456789")
+export const CreateOrgRequestSchema = z.object({
+  user: PersonalInfoSchema,
+  org: OrganizationDetailsSchema,
+  type: z.literal("create").default("create")
 });
-export type Organization = z.infer<typeof Organization>;
+export type CreateOrgRequest = z.infer<typeof CreateOrgRequestSchema>;
 
-export const I9Info = z.object({
-  ssn: z.string().regex(/^\d{3}-\d{2}-\d{4}$/, "SSN format: 123-45-6789"),
-  citizenshipStatus: z.enum(["citizen", "permanent_resident", "authorized_worker"])
+export const JoinOrgRequestSchema = z.object({
+  user: PersonalInfoSchema,
+  inviteCode: z.string().min(6, "Invite code must be at least 6 characters"),
+  type: z.literal("join").default("join")
 });
-export type I9Info = z.infer<typeof I9Info>;
+export type JoinOrgRequest = z.infer<typeof JoinOrgRequestSchema>;
 
-export const UserProfile = z.object({
-  id: z.string().uuid(),
-  displayName: z.string().min(1),
-  email: z.string().email(),
-  role: z.enum(["owner", "admin", "member"]),
-  orgId: z.string().uuid().optional(),
-  i9: I9Info.optional()
+export const OnboardingPreferencesSchema = z.object({
+  emailNotifications: z.boolean().default(true),
+  browserNotifications: z.boolean().default(true),
+  weeklyDigest: z.boolean().default(true),
+  marketingEmails: z.boolean().default(false),
+  theme: z.enum(["light", "dark", "system"]).default("system"),
+  language: z.string().default("en"),
+  workingHours: z.object({
+    start: z.string().default("09:00"),
+    end: z.string().default("17:00"),
+    timezone: z.string().default("UTC"),
+    workDays: z.array(z.number().min(0).max(6)).default([1, 2, 3, 4, 5])
+  }).optional()
 });
-export type UserProfile = z.infer<typeof UserProfile>;
+export type OnboardingPreferences = z.infer<typeof OnboardingPreferencesSchema>;
 
-export const OnboardingRequest = z.object({
-  user: UserProfile.omit({ id: true, orgId: true }),
-  org: Organization.omit({ id: true })
+export const OnboardingStateSchema = z.object({
+  currentStep: OnboardingStepSchema.default("welcome"),
+  completedSteps: z.array(OnboardingStepSchema).default([]),
+  personalInfo: PersonalInfoSchema.optional(),
+  organizationChoice: z.enum(["create", "join"]).optional(),
+  organizationDetails: OrganizationDetailsSchema.optional(),
+  inviteCode: z.string().optional(),
+  preferences: OnboardingPreferencesSchema.optional(),
+  isComplete: z.boolean().default(false)
 });
-export type OnboardingRequest = z.infer<typeof OnboardingRequest>;
+export type OnboardingState = z.infer<typeof OnboardingStateSchema>;
+
+export const OnboardingResponseSchema = z.object({
+  success: z.boolean(),
+  user: z.object({
+    id: z.string().min(1),
+    email: z.string().email(),
+    displayName: z.string(),
+    role: RoleSchema
+  }),
+  organization: z.object({
+    id: z.string().min(1),
+    name: z.string().min(2),
+    role: RoleSchema
+  }),
+  nextStep: z.string().optional(),
+  error: z.string().optional()
+});
+export type OnboardingResponse = z.infer<typeof OnboardingResponseSchema>;

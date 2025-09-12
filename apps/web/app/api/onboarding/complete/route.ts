@@ -1,51 +1,79 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { adminAuth } from "@/lib/firebase.admin";
 import { getServerSession } from "@/lib/session";
+import { adminAuth, adminDb } from "@/lib/firebase.admin";
 
-const Body = z.object({
-  user: z.object({
-    displayName: z.string().min(1),
-  }),
-  org: z.object({
-    name: z.string().min(2),
-  }),
-  type: z.enum(["create", "join"]).optional().default("create"),
-});
+const FLAGS_COOKIE = process.env.FLAGS_COOKIE_NAME || "fresh_flags";
 
 export async function POST(req: NextRequest) {
-  try {
-    const session = await getServerSession();
-    if (!session?.sub) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await getServerSession();
+  if (!session?.sub) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-    const parsed = Body.safeParse(await req.json().catch(() => ({})));
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid payload", details: parsed.error.flatten() }, { status: 400 });
+  const body = await req.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: "Bad JSON" }, { status: 400 });
+
+  try {
+  // Create organization and membership records in Firestore
+  const auth = adminAuth();
+  const db = adminDb();
+    
+    const now = Date.now();
+    const orgId = body.type === "create" ? `org_${now}` : "demo-org-id";
+    const orgName = body.type === "create" ? (body.org?.name || "Untitled Org") : "Demo Organization";
+    const role = body.type === "create" ? "owner" : "member";
+
+    if (body.type === "create") {
+      // Create org document and initial membership
+      await db.collection("orgs").doc(orgId).set({
+        name: orgName,
+        createdAt: now,
+        ownerId: session.sub,
+        managers: [session.sub],
+        memberCount: 1,
+      });
+      await db.collection("orgs").doc(orgId).collection("members").doc(session.sub).set({
+        role: "owner",
+        displayName: body.user?.displayName || session.displayName || "",
+        email: session.email || "",
+        joinedAt: now,
+      });
     }
 
-    const { user, org, type } = parsed.data;
-    const auth = adminAuth();
-
-    // Generate organization ID based on the organization name and timestamp
-    const orgId = `org_${org.name.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}`;
-
-    // For "create" type, user becomes admin/owner; for "join" type, user becomes member
-    const role = type === "create" ? "owner" : "member";
-
-    // Set custom claims without Firestore (for demo/testing)
+    // Update user's custom claims to mark onboarding as complete
     await auth.setCustomUserClaims(session.sub, {
       onboardingComplete: true,
-      role: role,
-      displayName: user.displayName,
-      orgName: org.name,
-      orgId: orgId,
+      role,
+      displayName: body.user?.displayName,
+      orgName,
+      orgId,
     });
 
-    return NextResponse.json({ 
-      ok: true, 
-      org: { name: org.name, id: orgId }, 
-      user: { displayName: user.displayName, role: role }
+    const res = NextResponse.json({
+      success: true,
+      message: "Onboarding completed",
+      user: {
+        id: session.sub,
+        email: session.email,
+        displayName: body.user?.displayName || session.displayName,
+  role
+      },
+      organization: {
+  id: orgId,
+  name: orgName,
+  role
+      }
     });
+
+    // Update flags cookie to reflect onboarding completion
+    res.cookies.set(FLAGS_COOKIE, JSON.stringify({ li: true, ob: true }), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== "development",
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return res;
   } catch (error) {
     console.error("Onboarding error:", error);
     return NextResponse.json({ 

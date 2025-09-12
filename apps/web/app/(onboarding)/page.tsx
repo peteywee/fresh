@@ -783,15 +783,11 @@ function InvitationStep({
           >
             <option value="">Select expected role</option>
             <option value="member">Team Member</option>
-            <option value="lead">Team Lead</option>
+            <option value="admin">Administrator</option>
             <option value="manager">Manager</option>
-            <option value="org_admin">Organization Admin</option>
-            <option value="readonly">Read-Only Access</option>
-            <option value="guest">Guest Access</option>
+            <option value="contributor">Contributor</option>
+            <option value="viewer">Viewer</option>
           </select>
-          <p style={{ fontSize: "0.9em", color: "#64748b", margin: "0.5rem 0 0 0" }}>
-            Your actual role will be assigned by the organization admin
-          </p>
         </div>
 
         <div>

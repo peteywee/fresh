@@ -1,61 +1,87 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { adminAuth } from "@/lib/firebase.admin";
 import { getServerSession } from "@/lib/session";
+import { adminAuth, adminDb } from "@/lib/firebase.admin";
 
-const Body = z.object({
-  user: z.object({
-    displayName: z.string().min(1),
-  }),
-  inviteCode: z.string().min(1),
-});
+const FLAGS_COOKIE = process.env.FLAGS_COOKIE_NAME || "fresh_flags";
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session?.sub) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await req.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: "Bad JSON" }, { status: 400 });
+
+  if (!body.inviteCode) {
+    return NextResponse.json({ error: "Invite code is required" }, { status: 400 });
+  }
+
   try {
-    const session = await getServerSession();
-    if (!session?.sub) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const parsed = Body.safeParse(await req.json().catch(() => ({})));
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid payload", details: parsed.error.flatten() }, { status: 400 });
+  // Validate invite code (demo validation)
+    const validCodes = ["DEMO-123456", "JOIN-123456"];
+    if (!validCodes.some(code => code.toLowerCase() === body.inviteCode.toLowerCase())) {
+      return NextResponse.json({ error: "Invalid invite code" }, { status: 400 });
     }
 
-    const { user, inviteCode } = parsed.data;
-    const auth = adminAuth();
-
-    // For demo purposes, validate invite codes that start with "FRESH-"
-    if (!inviteCode.toUpperCase().startsWith("FRESH-")) {
-      return NextResponse.json(
-        { error: "Invalid invitation code format. Codes should start with FRESH-" },
-        { status: 400 }
-      );
+  const auth = adminAuth();
+  const db = adminDb();
+    
+    // Determine role for the first joiner
+    const orgId = "demo-org-id";
+    const orgRef = db.collection("orgs").doc(orgId);
+    const orgSnap = await orgRef.get();
+    if (!orgSnap.exists) {
+      await orgRef.set({ name: "Demo Organization", createdAt: Date.now(), ownerId: session.sub, managers: [session.sub], memberCount: 1 });
     }
+    const membersSnap = await orgRef.collection("members").get();
+    const isFirstJoiner = membersSnap.empty;
+    const role = isFirstJoiner ? "admin" : "member"; // First joiner becomes manager (admin)
+    await orgRef.collection("members").doc(session.sub).set({
+      role,
+      displayName: body.user?.displayName || session.displayName || "",
+      email: session.email || "",
+      joinedAt: Date.now(),
+    });
 
-    // Extract organization name from invite code (demo logic)
-    // Expected format: FRESH-ORGNAME-XXXXX
-    const codeParts = inviteCode.toUpperCase().split("-");
-    const orgName = codeParts.length >= 2 ? codeParts[1].replace(/_/g, " ") : "Demo Organization";
-    const orgId = `org_${orgName.toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
-
-    // Set custom claims to mark user as joined organization member
+    // Update user's custom claims to mark onboarding as complete
     await auth.setCustomUserClaims(session.sub, {
       onboardingComplete: true,
-      role: "member",
-      displayName: user.displayName,
-      orgName: orgName,
-      orgId: orgId,
+      role,
+      displayName: body.user?.displayName,
+      orgName: "Demo Organization",
+      orgId,
     });
 
-    return NextResponse.json({
-      ok: true,
-      org: { name: orgName, id: orgId },
-      user: { displayName: user.displayName, role: "member" }
+    const res = NextResponse.json({
+      success: true,
+      message: "Joined organization successfully",
+      user: {
+        id: session.sub,
+        email: session.email,
+        displayName: body.user?.displayName || session.displayName,
+  role
+      },
+      organization: {
+  id: orgId,
+        name: "Demo Organization",
+  role
+      }
     });
+
+    // Update flags cookie to reflect onboarding completion
+    res.cookies.set(FLAGS_COOKIE, JSON.stringify({ li: true, ob: true }), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== "development",
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return res;
   } catch (error) {
     console.error("Join organization error:", error);
-    return NextResponse.json(
-      { error: "Failed to join organization - make sure Firebase Authentication is enabled" },
-      { status: 500 }
-    );
+    return NextResponse.json({ 
+      error: "Failed to join organization" 
+    }, { status: 500 });
   }
 }

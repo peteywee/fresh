@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
-const API_URL = process.env.API_URL || "http://localhost:3333";
+// Prefer API_BASE_URL, fallback to API_URL, then default to local dev port 3001
+const API_URL = process.env.API_BASE_URL || process.env.API_URL || "http://localhost:3001";
 
 const nextConfig = {
   reactStrictMode: true,
@@ -7,6 +8,16 @@ const nextConfig = {
   eslint: {
     // We run ESLint separately in CI; skip during Next build to avoid plugin detection warnings
     ignoreDuringBuilds: true,
+  },
+  // Build-time optimizations
+  experimental: {
+    optimizePackageImports: ['firebase', 'firebase-admin', 'zod'],
+  },
+  // Reduce bundle size
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error']
+    } : false,
   },
   // Add headers for static assets to improve PWA caching
   async headers() {
@@ -18,7 +29,7 @@ const nextConfig = {
         ],
       },
       {
-        source: '/manifest.json',
+        source: '/manifest.webmanifest',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
       },
     ];
@@ -29,7 +40,6 @@ const nextConfig = {
       { source: "/api/register", destination: `${API_URL}/api/register` },
       { source: "/api/forgot-password", destination: `${API_URL}/api/forgot-password` },
       { source: "/api/reset-password", destination: `${API_URL}/api/reset-password` },
-      { source: "/api/onboarding/complete", destination: `${API_URL}/api/onboarding/complete` },
     ];
   },
 };

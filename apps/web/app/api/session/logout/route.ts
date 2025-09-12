@@ -1,21 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase.admin";
+import { redirect } from "next/navigation";
 
 const COOKIE = process.env.SESSION_COOKIE_NAME || "__session";
+const FLAGS_COOKIE = process.env.FLAGS_COOKIE_NAME || "fresh_flags";
 
-export async function POST(req: NextRequest) {
-  const cookie = req.cookies.get(COOKIE)?.value;
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set(COOKIE, "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
-
-  if (cookie) {
-    try {
-      const auth = adminAuth();
-      const decoded = await auth.verifySessionCookie(cookie, true);
-      await auth.revokeRefreshTokens(decoded.sub);
-    } catch {
-      // ignore
-    }
-  }
-  return res;
+export async function GET(req: NextRequest) {
+  const response = NextResponse.redirect(new URL("/login", req.url));
+  
+  // Clear session cookies
+  response.cookies.set(COOKIE, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== "development",
+    sameSite: "lax",
+    path: "/",
+    expires: new Date(0),
+  });
+  
+  response.cookies.set(FLAGS_COOKIE, JSON.stringify({ li: false }), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== "development",
+    sameSite: "lax",
+    path: "/",
+    expires: new Date(0),
+  });
+  
+  return response;
 }

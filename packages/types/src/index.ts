@@ -1,38 +1,61 @@
 import { z } from "zod";
-export { Role } from "./roles.js";
-export type { Role as RoleType } from "./roles.js";
 
-export const Organization = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(2),
-  createdAt: z.string()
-});
-export type Organization = z.infer<typeof Organization>;
+export const RoleSchema = z.enum(["owner", "admin", "member", "staff", "viewer"]);
+export type Role = z.infer<typeof RoleSchema>;
 
-import { Role as RoleEnum } from "./roles.js";
-
-export const User = z.object({
-  id: z.string().uuid(),
+export const UserSchema = z.object({
+  id: z.string().min(1),
   email: z.string().email(),
-  displayName: z.string().min(1),
-  orgId: z.string().uuid().optional(),
-  role: RoleEnum.optional()
+  displayName: z.string().min(1).optional(),
+  orgId: z.string().min(1).nullable(),
+  role: RoleSchema,
+  onboardingComplete: z.boolean().default(false),
+  createdAt: z.string().datetime().optional(),
+  lastLoginAt: z.string().datetime().optional()
 });
-export type User = z.infer<typeof User>;
+export type User = z.infer<typeof UserSchema>;
 
-export const OnboardingRequest = z.object({
-  user: z.object({
-    email: z.string().email(),
-    displayName: z.string().min(1)
-  }),
-  org: z.object({
-    name: z.string().min(2)
-  })
+export const OrganizationSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(2),
+  displayName: z.string().min(1).optional(),
+  description: z.string().optional(),
+  website: z.string().url().optional(),
+  industry: z.string().optional(),
+  size: z.enum(["1-10", "11-50", "51-200", "201-1000", "1000+"]).optional(),
+  createdAt: z.string().datetime(),
+  ownerId: z.string().min(1)
 });
-export type OnboardingRequest = z.infer<typeof OnboardingRequest>;
+export type Organization = z.infer<typeof OrganizationSchema>;
 
-export const OnboardingResponse = z.object({
-  user: User,
-  org: Organization
+export const InviteSchema = z.object({
+  id: z.string().min(1),
+  orgId: z.string().min(1),
+  invitedBy: z.string().min(1),
+  email: z.string().email().optional(),
+  role: RoleSchema.default("member"),
+  code: z.string().min(6),
+  expiresAt: z.string().datetime(),
+  usedAt: z.string().datetime().optional(),
+  usedBy: z.string().min(1).optional()
 });
-export type OnboardingResponse = z.infer<typeof OnboardingResponse>;
+export type Invite = z.infer<typeof InviteSchema>;
+
+export const ScheduleEntrySchema = z.object({
+  id: z.string().min(1),
+  userId: z.string().min(1),
+  orgId: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  startTime: z.string().datetime(),
+  endTime: z.string().datetime(),
+  role: z.string().min(1).optional(),
+  location: z.string().optional(),
+  isRecurring: z.boolean().default(false),
+  recurringPattern: z.string().optional()
+});
+export type ScheduleEntry = z.infer<typeof ScheduleEntrySchema>;
+
+// Re-export from other modules
+export * from "./auth.js";
+export * from "./onboarding.js";

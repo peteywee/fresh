@@ -1,38 +1,22 @@
-// Flat ESLint config (ESLint v8+ / v9) for workspace TypeScript + React
-// - Uses @typescript-eslint parser & plugin
-// - Ignores common build and generated directories
-
+/** @type {import('eslint').Linter.FlatConfig[]} */
 module.exports = [
+  { ignores: ["**/dist/**", "**/.next/**", "**/node_modules/**", "docs/**", "sac.json"] },
   {
-    ignores: [
-      'node_modules/**',
-      'dist/**',
-      'build/**',
-      '.next/**',
-      'docs/**'
-    ]
+    files: ["**/*.{ts,tsx,js,jsx}"],
+    languageOptions: {
+      parserOptions: { ecmaVersion: "latest", sourceType: "module" }
+    },
+    rules: {}
   },
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
+    files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module',
-      parser: require('@typescript-eslint/parser'),
-      parserOptions: {
-        ecmaFeatures: { jsx: true }
-      }
+      parser: require("@typescript-eslint/parser"),
+      parserOptions: { ecmaVersion: "latest", sourceType: "module" }
     },
-    plugins: {
-      '@typescript-eslint': require('@typescript-eslint/eslint-plugin')
-    },
+    plugins: { "@typescript-eslint": require("@typescript-eslint/eslint-plugin") },
     rules: {
-      // Basic TypeScript-friendly rules
-      'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'no-undef': 'off'
-    },
-    settings: {
-      react: { version: 'detect' }
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "ignoreRestSiblings": true }]
     }
   }
 ];

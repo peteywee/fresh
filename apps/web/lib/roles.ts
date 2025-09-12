@@ -1,16 +1,18 @@
 import { type ServerSession } from "./session";
 
-export type Role = "owner" | "admin" | "member";
+export type Role = "owner" | "admin" | "member" | "staff" | "viewer";
 
 const RANK: Record<Role, number> = {
-  owner: 3,
-  admin: 2,
-  member: 1,
+  owner: 5,
+  admin: 4,
+  member: 3,
+  staff: 2,
+  viewer: 1,
 };
 
 export function getRole(session: ServerSession): Role | null {
   const r = (session?.role as string | undefined)?.toLowerCase();
-  if (r === "owner" || r === "admin" || r === "member") return r;
+  if (r === "owner" || r === "admin" || r === "member" || r === "staff" || r === "viewer") return r;
   return null;
 }
 
@@ -30,7 +32,7 @@ export function ensureRole(session: ServerSession, required: Role): { status: nu
 }
 
 /**
- * Convenience: management is owner or admin. Staff is member.
+ * Convenience: management is owner or admin.
  */
 export function isManagement(session: ServerSession): boolean {
   return hasRoleAtLeast(session, "admin");

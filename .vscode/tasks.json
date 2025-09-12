@@ -6,114 +6,64 @@
       "type": "shell",
       "command": "./scripts/restart-dev.sh",
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      },
-      "problemMatcher": [],
-      "detail": "Start both web and API development servers with health checks"
+      "detail": "Start both web and API development servers with health checks",
+      "problemMatcher": []
     },
     {
       "label": "⚡ Quick Restart Development",
       "type": "shell", 
       "command": "./scripts/quick-restart.sh",
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always", 
-        "focus": false,
-        "panel": "shared"
-      },
-      "problemMatcher": [],
-      "detail": "Quickly restart development servers (faster than full restart)"
+      "detail": "Quickly restart development servers (faster than full restart)",
+      "problemMatcher": []
     },
     {
       "label": "🛑 Kill Development Processes",
       "type": "shell",
       "command": "./scripts/kill-dev-processes.sh", 
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      },
-      "problemMatcher": [],
-      "detail": "Kill all running development processes and free up ports"
+      "detail": "Kill all running development processes and free up ports",
+      "problemMatcher": []
     },
     {
       "label": "📊 Development Status",
       "type": "shell",
       "command": "./scripts/dev-status.sh",
-      "group": "test",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      },
-      "problemMatcher": [],
-      "detail": "Check status of development servers and processes"
+      "group": "test", 
+      "detail": "Check status of development servers and processes",
+      "problemMatcher": []
     },
     {
       "label": "🌐 Start Web Only",
       "type": "shell",
       "command": "pnpm dev:web",
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "dedicated",
-        "showReuseMessage": false
-      },
-      "problemMatcher": [],
-      "detail": "Start only the web development server (Next.js)"
+      "detail": "Start only the web development server (Next.js)",
+      "problemMatcher": []
     },
     {
       "label": "🔧 Start API Only", 
       "type": "shell",
-      "command": "pnpm dev:api",
+      "command": "PORT=3001 pnpm dev:api",
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "dedicated",
-        "showReuseMessage": false
-      },
-      "problemMatcher": [],
-      "detail": "Start only the API development server (Express)"
+      "detail": "Start only the API development server (Express)",
+      "problemMatcher": []
     },
     {
       "label": "🔨 Build All",
       "type": "shell",
       "command": "pnpm build",
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      },
-      "problemMatcher": ["$tsc"],
-      "detail": "Build all packages (types, api, web)"
+      "group": "build", 
+      "detail": "Build all packages (types, api, web)",
+      "problemMatcher": ["$tsc"]
     },
     {
       "label": "🔍 Type Check",
-      "type": "shell", 
-      "command": "pnpm typecheck",
+      "type": "shell",
+      "command": "pnpm typecheck", 
       "group": "test",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      },
-      "problemMatcher": ["$tsc"],
-      "detail": "Run TypeScript type checking on all packages"
+      "detail": "Run TypeScript type checking on all packages",
+      "problemMatcher": ["$tsc"]
     }
   ]
 }

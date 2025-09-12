@@ -1,5 +1,21 @@
 const CACHE_NAME = 'v1';
-const PRECACHE_URLS = ['/', '/login', '/register', '/forgot-password', '/manifest.json'];
+const PRECACHE_URLS = [
+  '/', 
+  '/login', 
+  '/register', 
+  '/forgot-password', 
+  '/manifest.json',
+  '/_next/static/css/',
+  '/_next/static/js/',
+];
+
+// API endpoints that should be network-first
+const API_ENDPOINTS = [
+  '/api/session',
+  '/api/onboarding',
+  '/api/roles',
+  '/api/projects'
+];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -22,7 +38,39 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Stale-while-revalidate: respond from cache, update cache in background
+  const url = new URL(e.request.url);
+  
+  // Network-first for API calls
+  if (API_ENDPOINTS.some(endpoint => url.pathname.startsWith(endpoint))) {
+    e.respondWith(
+      fetch(e.request)
+        .then(response => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(e.request, responseClone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+  
+  // Cache-first for static assets
+  if (url.pathname.startsWith('/_next/static/')) {
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        return cached || fetch(e.request).then(response => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, responseClone));
+          return response;
+        });
+      })
+    );
+    return;
+  }
+  
+  // Stale-while-revalidate for everything else
   e.respondWith(
     caches.match(e.request).then((cached) => {
       const networkFetch = fetch(e.request)
