@@ -18,17 +18,6 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['firebase', 'firebase-admin', 'zod'],
   },
-  // Performance budgets
-  budgets: [
-    {
-      name: 'Page Initial JS',
-      max: '512kB',
-    },
-    {
-      name: 'Page Initial CSS',
-      max: '64kB',
-    },
-  ],
   // Reduce bundle size
   compiler: {
     removeConsole:
