@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 // Prefer API_BASE_URL, fallback to API_URL, then default to local dev port 3001
-const API_URL = process.env.API_BASE_URL || process.env.API_URL || "http://localhost:3001";
+const API_URL = process.env.API_BASE_URL || process.env.API_URL || 'http://localhost:3001';
+
+// Bundle analyzer setup
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 const nextConfig = {
   reactStrictMode: true,
@@ -13,20 +18,32 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['firebase', 'firebase-admin', 'zod'],
   },
+  // Performance budgets
+  budgets: [
+    {
+      name: 'Page Initial JS',
+      max: '512kB',
+    },
+    {
+      name: 'Page Initial CSS',
+      max: '64kB',
+    },
+  ],
   // Reduce bundle size
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error']
-    } : false,
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? {
+            exclude: ['error'],
+          }
+        : false,
   },
   // Add headers for static assets to improve PWA caching
   async headers() {
     return [
       {
         source: '/_next/static/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
         source: '/manifest.webmanifest',
@@ -36,12 +53,12 @@ const nextConfig = {
   },
   async rewrites() {
     return [
-      { source: "/api/login", destination: `${API_URL}/api/login` },
-      { source: "/api/register", destination: `${API_URL}/api/register` },
-      { source: "/api/forgot-password", destination: `${API_URL}/api/forgot-password` },
-      { source: "/api/reset-password", destination: `${API_URL}/api/reset-password` },
+      { source: '/api/login', destination: `${API_URL}/api/login` },
+      { source: '/api/register', destination: `${API_URL}/api/register` },
+      { source: '/api/forgot-password', destination: `${API_URL}/api/forgot-password` },
+      { source: '/api/reset-password', destination: `${API_URL}/api/reset-password` },
     ];
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

@@ -1,30 +1,23 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    ignore:
-      - dependency-name: "next"
-        versions: ["<15.0.0"]
-version: 2
-updates:
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+      interval: 'weekly'
     # Keep the queue small to avoid simultaneous lockfile collisions
     open-pull-requests-limit: 2
     # Group framework updates to avoid split PRs that conflict
     groups:
       next-and-react:
         patterns:
-          - "next"
-          - "react"
-          - "react-dom"
+          - 'next'
+          - 'react'
+          - 'react-dom'
       express:
         patterns:
-          - "express"
+          - 'express'
     commit-message:
-      prefix: "deps"
+      prefix: 'deps'
+    ignore:
+      - dependency-name: 'next'
+        versions: ['<15.0.0']

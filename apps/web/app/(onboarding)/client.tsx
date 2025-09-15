@@ -1,15 +1,16 @@
-"use client";
-import { useState } from "react";
+'use client';
+
+import { useState } from 'react';
 
 export default function OnboardingClient() {
-  const [displayName, setDisplayName] = useState("");
-  const [orgName, setOrgName] = useState("");
-  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState('');
+  const [orgName, setOrgName] = useState('');
+  const [email, setEmail] = useState('');
 
   async function complete() {
-    const r = await fetch("/api/onboarding/complete", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
+    const r = await fetch('/api/onboarding/complete', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         user: { email, displayName },
         org: { name: orgName },
@@ -17,22 +18,22 @@ export default function OnboardingClient() {
     });
     if (!r.ok) {
       const d = await r.json().catch(() => ({}));
-      alert("Onboarding failed: " + (d.error ?? r.statusText));
+      alert('Onboarding failed: ' + (d.error ?? r.statusText));
       return;
     }
-    window.location.href = "/dashboard";
+    window.location.href = '/dashboard';
   }
 
   return (
     <main>
       <h1>Onboarding</h1>
       <p>Create your organization and finalize your profile.</p>
-      <div style={{ display: "grid", gap: 12, maxWidth: 420 }}>
+      <div style={{ display: 'grid', gap: 12, maxWidth: 420 }}>
         <label>
           Name
           <input
             value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            onChange={e => setDisplayName(e.target.value)}
             placeholder="Jane Doe"
           />
         </label>
@@ -40,7 +41,7 @@ export default function OnboardingClient() {
           Email
           <input
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
             placeholder="jane@example.com"
           />
         </label>
@@ -48,11 +49,11 @@ export default function OnboardingClient() {
           Organization
           <input
             value={orgName}
-            onChange={(e) => setOrgName(e.target.value)}
+            onChange={e => setOrgName(e.target.value)}
             placeholder="Acme, Inc."
           />
         </label>
-        <button onClick={complete} style={{ padding: "8px 16px" }}>
+        <button onClick={complete} style={{ padding: '8px 16px' }}>
           Complete
         </button>
       </div>

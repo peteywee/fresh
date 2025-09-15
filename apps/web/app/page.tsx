@@ -1,16 +1,17 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "@/lib/session";
+import { redirect } from 'next/navigation';
+
+import { getServerSession } from '@/lib/session';
 
 export default async function Home() {
   const session = await getServerSession();
-  
+
   if (!session?.sub) {
-    return redirect("/login");
+    return redirect('/login');
   }
-  
+
   if (!session.onboardingComplete) {
-    return redirect("/onboarding");
+    return redirect('/onboarding');
   }
-  
-  return redirect("/dashboard");
+
+  return redirect('/dashboard');
 }

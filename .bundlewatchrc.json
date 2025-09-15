@@ -1,0 +1,21 @@
+{
+  "files": [
+    {
+      "path": "apps/web/.next/static/chunks/**/*.js",
+      "maxSize": "500kb"
+    },
+    {
+      "path": "apps/web/.next/static/css/**/*.css",
+      "maxSize": "100kb"
+    },
+    {
+      "path": "apps/web/.next/server/chunks/**/*.js",
+      "maxSize": "2mb"
+    }
+  ],
+  "defaultCompression": "gzip",
+  "ci": {
+    "trackBranches": ["main"],
+    "repoBranchBase": "main"
+  }
+}

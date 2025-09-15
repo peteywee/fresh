@@ -11,7 +11,7 @@
     },
     {
       "label": "⚡ Quick Restart Development",
-      "type": "shell", 
+      "type": "shell",
       "command": "./scripts/quick-restart.sh",
       "group": "build",
       "detail": "Quickly restart development servers (faster than full restart)",
@@ -20,7 +20,7 @@
     {
       "label": "🛑 Kill Development Processes",
       "type": "shell",
-      "command": "./scripts/kill-dev-processes.sh", 
+      "command": "./scripts/kill-dev-processes.sh",
       "group": "build",
       "detail": "Kill all running development processes and free up ports",
       "problemMatcher": []
@@ -29,7 +29,7 @@
       "label": "📊 Development Status",
       "type": "shell",
       "command": "./scripts/dev-status.sh",
-      "group": "test", 
+      "group": "test",
       "detail": "Check status of development servers and processes",
       "problemMatcher": []
     },
@@ -42,7 +42,7 @@
       "problemMatcher": []
     },
     {
-      "label": "🔧 Start API Only", 
+      "label": "🔧 Start API Only",
       "type": "shell",
       "command": "PORT=3001 pnpm dev:api",
       "group": "build",
@@ -53,14 +53,14 @@
       "label": "🔨 Build All",
       "type": "shell",
       "command": "pnpm build",
-      "group": "build", 
+      "group": "build",
       "detail": "Build all packages (types, api, web)",
       "problemMatcher": ["$tsc"]
     },
     {
       "label": "🔍 Type Check",
       "type": "shell",
-      "command": "pnpm typecheck", 
+      "command": "pnpm typecheck",
       "group": "test",
       "detail": "Run TypeScript type checking on all packages",
       "problemMatcher": ["$tsc"]

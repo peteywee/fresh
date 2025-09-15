@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-export const RoleSchema = z.enum(["owner", "admin", "member", "staff", "viewer"]);
+export const RoleSchema = z.enum(['owner', 'admin', 'member', 'staff', 'viewer']);
 export type Role = z.infer<typeof RoleSchema>;
 
 export const UserSchema = z.object({
@@ -11,7 +11,7 @@ export const UserSchema = z.object({
   role: RoleSchema,
   onboardingComplete: z.boolean().default(false),
   createdAt: z.string().datetime().optional(),
-  lastLoginAt: z.string().datetime().optional()
+  lastLoginAt: z.string().datetime().optional(),
 });
 export type User = z.infer<typeof UserSchema>;
 
@@ -22,9 +22,9 @@ export const OrganizationSchema = z.object({
   description: z.string().optional(),
   website: z.string().url().optional(),
   industry: z.string().optional(),
-  size: z.enum(["1-10", "11-50", "51-200", "201-1000", "1000+"]).optional(),
+  size: z.enum(['1-10', '11-50', '51-200', '201-1000', '1000+']).optional(),
   createdAt: z.string().datetime(),
-  ownerId: z.string().min(1)
+  ownerId: z.string().min(1),
 });
 export type Organization = z.infer<typeof OrganizationSchema>;
 
@@ -33,11 +33,11 @@ export const InviteSchema = z.object({
   orgId: z.string().min(1),
   invitedBy: z.string().min(1),
   email: z.string().email().optional(),
-  role: RoleSchema.default("member"),
+  role: RoleSchema.default('member'),
   code: z.string().min(6),
   expiresAt: z.string().datetime(),
   usedAt: z.string().datetime().optional(),
-  usedBy: z.string().min(1).optional()
+  usedBy: z.string().min(1).optional(),
 });
 export type Invite = z.infer<typeof InviteSchema>;
 
@@ -52,10 +52,10 @@ export const ScheduleEntrySchema = z.object({
   role: z.string().min(1).optional(),
   location: z.string().optional(),
   isRecurring: z.boolean().default(false),
-  recurringPattern: z.string().optional()
+  recurringPattern: z.string().optional(),
 });
 export type ScheduleEntry = z.infer<typeof ScheduleEntrySchema>;
 
 // Re-export from other modules
-export * from "./auth.js";
-export * from "./onboarding.js";
+export * from './auth.js';
+export * from './onboarding.js';

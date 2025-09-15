@@ -1,13 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from 'react';
 
-type OnboardingStep = "welcome" | "create-org" | "join-org";
-type CreateOrgStep = "personal" | "organization" | "preferences" | "review";
-type JoinOrgStep = "personal" | "invitation" | "profile" | "review";
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export const dynamic = "force-dynamic";
+type OnboardingStep = 'welcome' | 'create-org' | 'join-org';
+type CreateOrgStep = 'personal' | 'organization' | 'preferences' | 'review';
+type JoinOrgStep = 'personal' | 'invitation' | 'profile' | 'review';
+
+export const dynamic = 'force-dynamic';
 
 interface PersonalInfo {
   displayName: string;
@@ -47,25 +48,25 @@ export default function OnboardingPage() {
   const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<OnboardingStep>("welcome");
-  
+  const [step, setStep] = useState<OnboardingStep>('welcome');
+
   // Form data states
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
-    displayName: "",
-    title: "",
-    department: "",
-    phone: "",
-    bio: "",
+    displayName: '',
+    title: '',
+    department: '',
+    phone: '',
+    bio: '',
   });
-  
+
   const [orgInfo, setOrgInfo] = useState<OrganizationInfo>({
-    name: "",
-    industry: "",
-    size: "",
-    description: "",
-    website: "",
+    name: '',
+    industry: '',
+    size: '',
+    description: '',
+    website: '',
   });
-  
+
   const [preferences, setPreferences] = useState<PreferencesInfo>({
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     notifications: {
@@ -73,25 +74,25 @@ export default function OnboardingPage() {
       push: true,
       mentions: true,
     },
-    startTime: "09:00",
-    endTime: "17:00",
+    startTime: '09:00',
+    endTime: '17:00',
   });
-  
+
   const [joinInfo, setJoinInfo] = useState<JoinInfo>({
-    inviteCode: "",
-    expectedRole: "",
-    referrer: "",
+    inviteCode: '',
+    expectedRole: '',
+    referrer: '',
   });
 
   useEffect(() => {
     // Check authentication status
-    fetch("/api/session/current")
-      .then((res) => res.json())
-      .then((data) => {
+    fetch('/api/session/current')
+      .then(res => res.json())
+      .then(data => {
         if (!data.loggedIn) {
-          router.push("/login");
+          router.push('/login');
         } else if (data.user.onboardingComplete) {
-          router.push("/dashboard");
+          router.push('/dashboard');
         } else {
           setUser(data.user);
           // Pre-fill display name if available
@@ -99,22 +100,22 @@ export default function OnboardingPage() {
             setPersonalInfo(prev => ({ ...prev, displayName: data.user.displayName }));
           }
           // Check if there's a specific step in URL params
-          const urlStep = searchParams.get("step") as OnboardingStep;
-          if (urlStep && ["welcome", "create-org", "join-org"].includes(urlStep)) {
+          const urlStep = searchParams.get('step') as OnboardingStep;
+          if (urlStep && ['welcome', 'create-org', 'join-org'].includes(urlStep)) {
             setStep(urlStep);
           }
         }
         setLoading(false);
       })
       .catch(() => {
-        router.push("/login");
+        router.push('/login');
         setLoading(false);
       });
   }, [router, searchParams]);
 
   if (loading) {
     return (
-      <div style={{ padding: 24, textAlign: "center" }}>
+      <div style={{ padding: 24, textAlign: 'center' }}>
         <h1>Loading...</h1>
         <p>Setting up your workspace...</p>
       </div>
@@ -126,9 +127,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main style={{ padding: 24, maxWidth: 800, margin: "0 auto" }}>
-      {step === "welcome" && <WelcomeStep user={user} onNext={setStep} />}
-      {step === "create-org" && (
+    <main style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
+      {step === 'welcome' && <WelcomeStep user={user} onNext={setStep} />}
+      {step === 'create-org' && (
         <CreateOrgFlow
           user={user}
           personalInfo={personalInfo}
@@ -140,7 +141,7 @@ export default function OnboardingPage() {
           router={router}
         />
       )}
-      {step === "join-org" && (
+      {step === 'join-org' && (
         <JoinOrgFlow
           user={user}
           personalInfo={personalInfo}
@@ -156,47 +157,47 @@ export default function OnboardingPage() {
 
 function WelcomeStep({ user, onNext }: { user: any; onNext: (step: OnboardingStep) => void }) {
   return (
-    <div style={{ textAlign: "center" }}>
+    <div style={{ textAlign: 'center' }}>
       <h1>Welcome to Fresh! 👋</h1>
-      <p style={{ fontSize: "1.1em", marginBottom: "2rem" }}>
+      <p style={{ fontSize: '1.1em', marginBottom: '2rem' }}>
         Hi {user.email}! Let's get you set up with your workspace.
       </p>
-      
-      <div style={{ display: "grid", gap: "1rem", maxWidth: 400, margin: "0 auto" }}>
-        <div 
-          style={{ 
-            border: "2px solid #e2e8f0", 
-            borderRadius: 8, 
-            padding: "1.5rem", 
-            cursor: "pointer",
-            transition: "border-color 0.2s",
-            backgroundColor: "#f8fafc"
+
+      <div style={{ display: 'grid', gap: '1rem', maxWidth: 400, margin: '0 auto' }}>
+        <div
+          style={{
+            border: '2px solid #e2e8f0',
+            borderRadius: 8,
+            padding: '1.5rem',
+            cursor: 'pointer',
+            transition: 'border-color 0.2s',
+            backgroundColor: '#f8fafc',
           }}
-          onClick={() => onNext("create-org")}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#3b82f6")}
-          onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#e2e8f0")}
+          onClick={() => onNext('create-org')}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = '#3b82f6')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = '#e2e8f0')}
         >
-          <h3 style={{ margin: "0 0 0.5rem 0", color: "#1e293b" }}>🏢 Create Organization</h3>
-          <p style={{ margin: 0, color: "#64748b", fontSize: "0.9em" }}>
+          <h3 style={{ margin: '0 0 0.5rem 0', color: '#1e293b' }}>🏢 Create Organization</h3>
+          <p style={{ margin: 0, color: '#64748b', fontSize: '0.9em' }}>
             Start fresh with your own organization and invite team members later.
           </p>
         </div>
 
-        <div 
-          style={{ 
-            border: "2px solid #e2e8f0", 
-            borderRadius: 8, 
-            padding: "1.5rem", 
-            cursor: "pointer",
-            transition: "border-color 0.2s",
-            backgroundColor: "#f8fafc"
+        <div
+          style={{
+            border: '2px solid #e2e8f0',
+            borderRadius: 8,
+            padding: '1.5rem',
+            cursor: 'pointer',
+            transition: 'border-color 0.2s',
+            backgroundColor: '#f8fafc',
           }}
-          onClick={() => onNext("join-org")}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#10b981")}
-          onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#e2e8f0")}
+          onClick={() => onNext('join-org')}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = '#10b981')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = '#e2e8f0')}
         >
-          <h3 style={{ margin: "0 0 0.5rem 0", color: "#1e293b" }}>🤝 Join Organization</h3>
-          <p style={{ margin: 0, color: "#64748b", fontSize: "0.9em" }}>
+          <h3 style={{ margin: '0 0 0.5rem 0', color: '#1e293b' }}>🤝 Join Organization</h3>
+          <p style={{ margin: 0, color: '#64748b', fontSize: '0.9em' }}>
             Join an existing organization using an invitation code or organization name.
           </p>
         </div>
@@ -206,15 +207,15 @@ function WelcomeStep({ user, onNext }: { user: any; onNext: (step: OnboardingSte
 }
 
 // Multi-step Create Organization Flow
-function CreateOrgFlow({ 
-  user, 
-  personalInfo, 
-  setPersonalInfo, 
-  orgInfo, 
-  setOrgInfo, 
-  preferences, 
-  setPreferences, 
-  router 
+function CreateOrgFlow({
+  user,
+  personalInfo,
+  setPersonalInfo,
+  orgInfo,
+  setOrgInfo,
+  preferences,
+  setPreferences,
+  router,
 }: {
   user: any;
   personalInfo: PersonalInfo;
@@ -225,7 +226,7 @@ function CreateOrgFlow({
   setPreferences: (prefs: PreferencesInfo) => void;
   router: any;
 }) {
-  const [currentStep, setCurrentStep] = useState<CreateOrgStep>("personal");
+  const [currentStep, setCurrentStep] = useState<CreateOrgStep>('personal');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -234,72 +235,72 @@ function CreateOrgFlow({
     setError(null);
 
     try {
-      const res = await fetch("/api/onboarding/complete", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ 
+      const res = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
           user: personalInfo,
           org: orgInfo,
           preferences,
-          type: "create"
+          type: 'create',
         }),
       });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to create organization");
+        throw new Error(errorData.error || 'Failed to create organization');
       }
 
-      router.push("/dashboard");
+      router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || "Failed to create organization");
+      setError(err.message || 'Failed to create organization');
     } finally {
       setBusy(false);
     }
   };
 
-  if (currentStep === "personal") {
+  if (currentStep === 'personal') {
     return (
       <PersonalInfoStep
         personalInfo={personalInfo}
         setPersonalInfo={setPersonalInfo}
-        onNext={() => setCurrentStep("organization")}
+        onNext={() => setCurrentStep('organization')}
         title="Tell us about yourself"
         subtitle="Let's start with your personal information"
       />
     );
   }
 
-  if (currentStep === "organization") {
+  if (currentStep === 'organization') {
     return (
       <OrganizationInfoStep
         orgInfo={orgInfo}
         setOrgInfo={setOrgInfo}
-        onNext={() => setCurrentStep("preferences")}
-        onBack={() => setCurrentStep("personal")}
+        onNext={() => setCurrentStep('preferences')}
+        onBack={() => setCurrentStep('personal')}
       />
     );
   }
 
-  if (currentStep === "preferences") {
+  if (currentStep === 'preferences') {
     return (
       <PreferencesStep
         preferences={preferences}
         setPreferences={setPreferences}
-        onNext={() => setCurrentStep("review")}
-        onBack={() => setCurrentStep("organization")}
+        onNext={() => setCurrentStep('review')}
+        onBack={() => setCurrentStep('organization')}
       />
     );
   }
 
-  if (currentStep === "review") {
+  if (currentStep === 'review') {
     return (
       <ReviewStep
         personalInfo={personalInfo}
         orgInfo={orgInfo}
         preferences={preferences}
         onSubmit={handleSubmit}
-        onBack={() => setCurrentStep("preferences")}
+        onBack={() => setCurrentStep('preferences')}
         busy={busy}
         error={error}
         type="create"
@@ -310,14 +311,14 @@ function CreateOrgFlow({
   return null;
 }
 
-// Multi-step Join Organization Flow  
+// Multi-step Join Organization Flow
 function JoinOrgFlow({
   user,
   personalInfo,
   setPersonalInfo,
   joinInfo,
   setJoinInfo,
-  router
+  router,
 }: {
   user: any;
   personalInfo: PersonalInfo;
@@ -326,7 +327,7 @@ function JoinOrgFlow({
   setJoinInfo: (info: JoinInfo) => void;
   router: any;
 }) {
-  const [currentStep, setCurrentStep] = useState<JoinOrgStep>("personal");
+  const [currentStep, setCurrentStep] = useState<JoinOrgStep>('personal');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -335,73 +336,73 @@ function JoinOrgFlow({
     setError(null);
 
     try {
-      const res = await fetch("/api/onboarding/join", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ 
+      const res = await fetch('/api/onboarding/join', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
           user: personalInfo,
           inviteCode: joinInfo.inviteCode.trim(),
           additionalInfo: {
             expectedRole: joinInfo.expectedRole,
             referrer: joinInfo.referrer,
-          }
+          },
         }),
       });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to join organization");
+        throw new Error(errorData.error || 'Failed to join organization');
       }
 
-      router.push("/dashboard");
+      router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || "Failed to join organization");
+      setError(err.message || 'Failed to join organization');
     } finally {
       setBusy(false);
     }
   };
 
-  if (currentStep === "personal") {
+  if (currentStep === 'personal') {
     return (
       <PersonalInfoStep
         personalInfo={personalInfo}
         setPersonalInfo={setPersonalInfo}
-        onNext={() => setCurrentStep("invitation")}
+        onNext={() => setCurrentStep('invitation')}
         title="Complete your profile"
         subtitle="Help your new team get to know you"
       />
     );
   }
 
-  if (currentStep === "invitation") {
+  if (currentStep === 'invitation') {
     return (
       <InvitationStep
         joinInfo={joinInfo}
         setJoinInfo={setJoinInfo}
-        onNext={() => setCurrentStep("profile")}
-        onBack={() => setCurrentStep("personal")}
+        onNext={() => setCurrentStep('profile')}
+        onBack={() => setCurrentStep('personal')}
       />
     );
   }
 
-  if (currentStep === "profile") {
+  if (currentStep === 'profile') {
     return (
       <ProfileCompletionStep
         personalInfo={personalInfo}
         setPersonalInfo={setPersonalInfo}
-        onNext={() => setCurrentStep("review")}
-        onBack={() => setCurrentStep("invitation")}
+        onNext={() => setCurrentStep('review')}
+        onBack={() => setCurrentStep('invitation')}
       />
     );
   }
 
-  if (currentStep === "review") {
+  if (currentStep === 'review') {
     return (
       <ReviewStep
         personalInfo={personalInfo}
         joinInfo={joinInfo}
         onSubmit={handleSubmit}
-        onBack={() => setCurrentStep("profile")}
+        onBack={() => setCurrentStep('profile')}
         busy={busy}
         error={error}
         type="join"
@@ -413,12 +414,12 @@ function JoinOrgFlow({
 }
 
 // Step Components
-function PersonalInfoStep({ 
-  personalInfo, 
-  setPersonalInfo, 
-  onNext, 
-  title, 
-  subtitle 
+function PersonalInfoStep({
+  personalInfo,
+  setPersonalInfo,
+  onNext,
+  title,
+  subtitle,
 }: {
   personalInfo: PersonalInfo;
   setPersonalInfo: (info: PersonalInfo) => void;
@@ -431,17 +432,17 @@ function PersonalInfoStep({
   return (
     <div>
       <h1>{title} 👤</h1>
-      <p style={{ color: "#64748b", marginBottom: "2rem" }}>{subtitle}</p>
+      <p style={{ color: '#64748b', marginBottom: '2rem' }}>{subtitle}</p>
 
-      <div style={{ display: "grid", gap: "1.5rem" }}>
+      <div style={{ display: 'grid', gap: '1.5rem' }}>
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Full Name *
           </label>
           <input
             type="text"
             value={personalInfo.displayName}
-            onChange={(e) => setPersonalInfo({ ...personalInfo, displayName: e.target.value })}
+            onChange={e => setPersonalInfo({ ...personalInfo, displayName: e.target.value })}
             placeholder="John Doe"
             style={inputStyle}
             required
@@ -449,13 +450,13 @@ function PersonalInfoStep({
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Job Title *
           </label>
           <input
             type="text"
             value={personalInfo.title}
-            onChange={(e) => setPersonalInfo({ ...personalInfo, title: e.target.value })}
+            onChange={e => setPersonalInfo({ ...personalInfo, title: e.target.value })}
             placeholder="Software Engineer, Product Manager, etc."
             style={inputStyle}
             required
@@ -463,36 +464,32 @@ function PersonalInfoStep({
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Department
           </label>
           <input
             type="text"
             value={personalInfo.department}
-            onChange={(e) => setPersonalInfo({ ...personalInfo, department: e.target.value })}
+            onChange={e => setPersonalInfo({ ...personalInfo, department: e.target.value })}
             placeholder="Engineering, Marketing, Sales, etc."
             style={inputStyle}
           />
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Phone Number
           </label>
           <input
             type="tel"
             value={personalInfo.phone}
-            onChange={(e) => setPersonalInfo({ ...personalInfo, phone: e.target.value })}
+            onChange={e => setPersonalInfo({ ...personalInfo, phone: e.target.value })}
             placeholder="+1 (555) 123-4567"
             style={inputStyle}
           />
         </div>
 
-        <button
-          onClick={onNext}
-          disabled={!isValid}
-          style={buttonStyle(isValid)}
-        >
+        <button onClick={onNext} disabled={!isValid} style={buttonStyle(isValid)}>
           Next: Organization Details
         </button>
       </div>
@@ -500,11 +497,11 @@ function PersonalInfoStep({
   );
 }
 
-function OrganizationInfoStep({ 
-  orgInfo, 
-  setOrgInfo, 
-  onNext, 
-  onBack 
+function OrganizationInfoStep({
+  orgInfo,
+  setOrgInfo,
+  onNext,
+  onBack,
 }: {
   orgInfo: OrganizationInfo;
   setOrgInfo: (info: OrganizationInfo) => void;
@@ -516,19 +513,17 @@ function OrganizationInfoStep({
   return (
     <div>
       <h1>Organization Details 🏢</h1>
-      <p style={{ color: "#64748b", marginBottom: "2rem" }}>
-        Tell us about your organization
-      </p>
+      <p style={{ color: '#64748b', marginBottom: '2rem' }}>Tell us about your organization</p>
 
-      <div style={{ display: "grid", gap: "1.5rem" }}>
+      <div style={{ display: 'grid', gap: '1.5rem' }}>
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Organization Name *
           </label>
           <input
             type="text"
             value={orgInfo.name}
-            onChange={(e) => setOrgInfo({ ...orgInfo, name: e.target.value })}
+            onChange={e => setOrgInfo({ ...orgInfo, name: e.target.value })}
             placeholder="Acme Corporation"
             style={inputStyle}
             required
@@ -536,12 +531,12 @@ function OrganizationInfoStep({
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Industry *
           </label>
           <select
             value={orgInfo.industry}
-            onChange={(e) => setOrgInfo({ ...orgInfo, industry: e.target.value })}
+            onChange={e => setOrgInfo({ ...orgInfo, industry: e.target.value })}
             style={inputStyle}
             required
           >
@@ -560,12 +555,12 @@ function OrganizationInfoStep({
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Company Size *
           </label>
           <select
             value={orgInfo.size}
-            onChange={(e) => setOrgInfo({ ...orgInfo, size: e.target.value })}
+            onChange={e => setOrgInfo({ ...orgInfo, size: e.target.value })}
             style={inputStyle}
             required
           >
@@ -579,39 +574,35 @@ function OrganizationInfoStep({
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Website
           </label>
           <input
             type="url"
             value={orgInfo.website}
-            onChange={(e) => setOrgInfo({ ...orgInfo, website: e.target.value })}
+            onChange={e => setOrgInfo({ ...orgInfo, website: e.target.value })}
             placeholder="https://www.example.com"
             style={inputStyle}
           />
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Description
           </label>
           <textarea
             value={orgInfo.description}
-            onChange={(e) => setOrgInfo({ ...orgInfo, description: e.target.value })}
+            onChange={e => setOrgInfo({ ...orgInfo, description: e.target.value })}
             placeholder="Brief description of your organization..."
-            style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
+            style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
           />
         </div>
 
-        <div style={{ display: "flex", gap: "1rem" }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={onBack} style={secondaryButtonStyle}>
             Back
           </button>
-          <button
-            onClick={onNext}
-            disabled={!isValid}
-            style={buttonStyle(isValid)}
-          >
+          <button onClick={onNext} disabled={!isValid} style={buttonStyle(isValid)}>
             Next: Preferences
           </button>
         </div>
@@ -620,11 +611,11 @@ function OrganizationInfoStep({
   );
 }
 
-function PreferencesStep({ 
-  preferences, 
-  setPreferences, 
-  onNext, 
-  onBack 
+function PreferencesStep({
+  preferences,
+  setPreferences,
+  onNext,
+  onBack,
 }: {
   preferences: PreferencesInfo;
   setPreferences: (prefs: PreferencesInfo) => void;
@@ -634,18 +625,16 @@ function PreferencesStep({
   return (
     <div>
       <h1>Workspace Preferences ⚙️</h1>
-      <p style={{ color: "#64748b", marginBottom: "2rem" }}>
-        Configure your workspace settings
-      </p>
+      <p style={{ color: '#64748b', marginBottom: '2rem' }}>Configure your workspace settings</p>
 
-      <div style={{ display: "grid", gap: "1.5rem" }}>
+      <div style={{ display: 'grid', gap: '1.5rem' }}>
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Time Zone
           </label>
           <select
             value={preferences.timezone}
-            onChange={(e) => setPreferences({ ...preferences, timezone: e.target.value })}
+            onChange={e => setPreferences({ ...preferences, timezone: e.target.value })}
             style={inputStyle}
           >
             <option value="America/New_York">Eastern Time (EST)</option>
@@ -660,68 +649,74 @@ function PreferencesStep({
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Working Hours
           </label>
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <input
               type="time"
               value={preferences.startTime}
-              onChange={(e) => setPreferences({ ...preferences, startTime: e.target.value })}
-              style={{ ...inputStyle, width: "auto" }}
+              onChange={e => setPreferences({ ...preferences, startTime: e.target.value })}
+              style={{ ...inputStyle, width: 'auto' }}
             />
             <span>to</span>
             <input
               type="time"
               value={preferences.endTime}
-              onChange={(e) => setPreferences({ ...preferences, endTime: e.target.value })}
-              style={{ ...inputStyle, width: "auto" }}
+              onChange={e => setPreferences({ ...preferences, endTime: e.target.value })}
+              style={{ ...inputStyle, width: 'auto' }}
             />
           </div>
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "1rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 600 }}>
             Notification Preferences
           </label>
-          <div style={{ display: "grid", gap: "0.5rem" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{ display: 'grid', gap: '0.5rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <input
                 type="checkbox"
                 checked={preferences.notifications.email}
-                onChange={(e) => setPreferences({
-                  ...preferences,
-                  notifications: { ...preferences.notifications, email: e.target.checked }
-                })}
+                onChange={e =>
+                  setPreferences({
+                    ...preferences,
+                    notifications: { ...preferences.notifications, email: e.target.checked },
+                  })
+                }
               />
               Email notifications
             </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <input
                 type="checkbox"
                 checked={preferences.notifications.push}
-                onChange={(e) => setPreferences({
-                  ...preferences,
-                  notifications: { ...preferences.notifications, push: e.target.checked }
-                })}
+                onChange={e =>
+                  setPreferences({
+                    ...preferences,
+                    notifications: { ...preferences.notifications, push: e.target.checked },
+                  })
+                }
               />
               Push notifications
             </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <input
                 type="checkbox"
                 checked={preferences.notifications.mentions}
-                onChange={(e) => setPreferences({
-                  ...preferences,
-                  notifications: { ...preferences.notifications, mentions: e.target.checked }
-                })}
+                onChange={e =>
+                  setPreferences({
+                    ...preferences,
+                    notifications: { ...preferences.notifications, mentions: e.target.checked },
+                  })
+                }
               />
               Mentions and direct messages
             </label>
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: "1rem" }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={onBack} style={secondaryButtonStyle}>
             Back
           </button>
@@ -734,11 +729,11 @@ function PreferencesStep({
   );
 }
 
-function InvitationStep({ 
-  joinInfo, 
-  setJoinInfo, 
-  onNext, 
-  onBack 
+function InvitationStep({
+  joinInfo,
+  setJoinInfo,
+  onNext,
+  onBack,
 }: {
   joinInfo: JoinInfo;
   setJoinInfo: (info: JoinInfo) => void;
@@ -750,35 +745,35 @@ function InvitationStep({
   return (
     <div>
       <h1>Join Your Team 🎯</h1>
-      <p style={{ color: "#64748b", marginBottom: "2rem" }}>
+      <p style={{ color: '#64748b', marginBottom: '2rem' }}>
         Enter your invitation details to join the organization
       </p>
 
-      <div style={{ display: "grid", gap: "1.5rem" }}>
+      <div style={{ display: 'grid', gap: '1.5rem' }}>
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Invitation Code *
           </label>
           <input
             type="text"
             value={joinInfo.inviteCode}
-            onChange={(e) => setJoinInfo({ ...joinInfo, inviteCode: e.target.value })}
+            onChange={e => setJoinInfo({ ...joinInfo, inviteCode: e.target.value })}
             placeholder="FRESH-ACME-ABC123"
-            style={{ ...inputStyle, textTransform: "uppercase" }}
+            style={{ ...inputStyle, textTransform: 'uppercase' }}
             required
           />
-          <p style={{ fontSize: "0.9em", color: "#64748b", margin: "0.5rem 0 0 0" }}>
+          <p style={{ fontSize: '0.9em', color: '#64748b', margin: '0.5rem 0 0 0' }}>
             Get this from your team admin or the invitation email
           </p>
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Expected Role
           </label>
           <select
             value={joinInfo.expectedRole}
-            onChange={(e) => setJoinInfo({ ...joinInfo, expectedRole: e.target.value })}
+            onChange={e => setJoinInfo({ ...joinInfo, expectedRole: e.target.value })}
             style={inputStyle}
           >
             <option value="">Select expected role</option>
@@ -791,27 +786,23 @@ function InvitationStep({
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Who referred you?
           </label>
           <input
             type="text"
             value={joinInfo.referrer}
-            onChange={(e) => setJoinInfo({ ...joinInfo, referrer: e.target.value })}
+            onChange={e => setJoinInfo({ ...joinInfo, referrer: e.target.value })}
             placeholder="Name of the person who invited you"
             style={inputStyle}
           />
         </div>
 
-        <div style={{ display: "flex", gap: "1rem" }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={onBack} style={secondaryButtonStyle}>
             Back
           </button>
-          <button
-            onClick={onNext}
-            disabled={!isValid}
-            style={buttonStyle(isValid)}
-          >
+          <button onClick={onNext} disabled={!isValid} style={buttonStyle(isValid)}>
             Next: Complete Profile
           </button>
         </div>
@@ -820,11 +811,11 @@ function InvitationStep({
   );
 }
 
-function ProfileCompletionStep({ 
-  personalInfo, 
-  setPersonalInfo, 
-  onNext, 
-  onBack 
+function ProfileCompletionStep({
+  personalInfo,
+  setPersonalInfo,
+  onNext,
+  onBack,
 }: {
   personalInfo: PersonalInfo;
   setPersonalInfo: (info: PersonalInfo) => void;
@@ -834,37 +825,39 @@ function ProfileCompletionStep({
   return (
     <div>
       <h1>Complete Your Profile 🌟</h1>
-      <p style={{ color: "#64748b", marginBottom: "2rem" }}>
+      <p style={{ color: '#64748b', marginBottom: '2rem' }}>
         Add additional information to help your team get to know you
       </p>
 
-      <div style={{ display: "grid", gap: "1.5rem" }}>
+      <div style={{ display: 'grid', gap: '1.5rem' }}>
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
             Professional Bio
           </label>
           <textarea
             value={personalInfo.bio}
-            onChange={(e) => setPersonalInfo({ ...personalInfo, bio: e.target.value })}
+            onChange={e => setPersonalInfo({ ...personalInfo, bio: e.target.value })}
             placeholder="Brief professional background, interests, or what you're excited to work on..."
-            style={{ ...inputStyle, minHeight: "100px", resize: "vertical" }}
+            style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }}
           />
         </div>
 
-        <div style={{ 
-          padding: "1rem", 
-          backgroundColor: "#f8fafc", 
-          borderRadius: 6, 
-          border: "1px solid #e2e8f0" 
-        }}>
-          <h3 style={{ margin: "0 0 0.5rem 0", color: "#1e293b" }}>💡 Pro Tip</h3>
-          <p style={{ margin: 0, color: "#64748b", fontSize: "0.9em" }}>
-            A good bio helps your new teammates understand your experience and interests. 
-            You can always update this later in your profile settings.
+        <div
+          style={{
+            padding: '1rem',
+            backgroundColor: '#f8fafc',
+            borderRadius: 6,
+            border: '1px solid #e2e8f0',
+          }}
+        >
+          <h3 style={{ margin: '0 0 0.5rem 0', color: '#1e293b' }}>💡 Pro Tip</h3>
+          <p style={{ margin: 0, color: '#64748b', fontSize: '0.9em' }}>
+            A good bio helps your new teammates understand your experience and interests. You can
+            always update this later in your profile settings.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "1rem" }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={onBack} style={secondaryButtonStyle}>
             Back
           </button>
@@ -877,7 +870,7 @@ function ProfileCompletionStep({
   );
 }
 
-function ReviewStep({ 
+function ReviewStep({
   personalInfo,
   orgInfo,
   preferences,
@@ -886,7 +879,7 @@ function ReviewStep({
   onBack,
   busy,
   error,
-  type
+  type,
 }: {
   personalInfo: PersonalInfo;
   orgInfo?: OrganizationInfo;
@@ -896,16 +889,19 @@ function ReviewStep({
   onBack: () => void;
   busy: boolean;
   error: string | null;
-  type: "create" | "join";
+  type: 'create' | 'join';
 }) {
   return (
     <div>
-      <h1>{type === "create" ? "Review & Create Organization" : "Review & Join Organization"} ✅</h1>
-      <p style={{ color: "#64748b", marginBottom: "2rem" }}>
-        Please review your information before {type === "create" ? "creating your organization" : "joining the team"}
+      <h1>
+        {type === 'create' ? 'Review & Create Organization' : 'Review & Join Organization'} ✅
+      </h1>
+      <p style={{ color: '#64748b', marginBottom: '2rem' }}>
+        Please review your information before{' '}
+        {type === 'create' ? 'creating your organization' : 'joining the team'}
       </p>
 
-      <div style={{ display: "grid", gap: "1.5rem", marginBottom: "2rem" }}>
+      <div style={{ display: 'grid', gap: '1.5rem', marginBottom: '2rem' }}>
         {/* Personal Info */}
         <div style={reviewSectionStyle}>
           <h3>👤 Personal Information</h3>
@@ -933,7 +929,7 @@ function ReviewStep({
         </div>
 
         {/* Organization Info (Create path) */}
-        {type === "create" && orgInfo && (
+        {type === 'create' && orgInfo && (
           <div style={reviewSectionStyle}>
             <h3>🏢 Organization</h3>
             <div style={reviewItemStyle}>
@@ -959,7 +955,7 @@ function ReviewStep({
         )}
 
         {/* Join Info (Join path) */}
-        {type === "join" && joinInfo && (
+        {type === 'join' && joinInfo && (
           <div style={reviewSectionStyle}>
             <h3>🎯 Invitation Details</h3>
             <div style={reviewItemStyle}>
@@ -979,7 +975,7 @@ function ReviewStep({
         )}
 
         {/* Preferences (Create path) */}
-        {type === "create" && preferences && (
+        {type === 'create' && preferences && (
           <div style={reviewSectionStyle}>
             <h3>⚙️ Preferences</h3>
             <div style={reviewItemStyle}>
@@ -991,41 +987,44 @@ function ReviewStep({
             <div style={reviewItemStyle}>
               <strong>Notifications:</strong>{' '}
               {[
-                preferences.notifications.email && "Email",
-                preferences.notifications.push && "Push", 
-                preferences.notifications.mentions && "Mentions"
-              ].filter(Boolean).join(", ") || "None"}
+                preferences.notifications.email && 'Email',
+                preferences.notifications.push && 'Push',
+                preferences.notifications.mentions && 'Mentions',
+              ]
+                .filter(Boolean)
+                .join(', ') || 'None'}
             </div>
           </div>
         )}
       </div>
 
       {error && (
-        <div style={{ 
-          padding: "1rem", 
-          backgroundColor: "#fee2e2", 
-          border: "1px solid #fecaca",
-          borderRadius: 6, 
-          color: "#dc2626",
-          marginBottom: "1rem"
-        }}>
+        <div
+          style={{
+            padding: '1rem',
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fecaca',
+            borderRadius: 6,
+            color: '#dc2626',
+            marginBottom: '1rem',
+          }}
+        >
           {error}
         </div>
       )}
 
-      <div style={{ display: "flex", gap: "1rem" }}>
+      <div style={{ display: 'flex', gap: '1rem' }}>
         <button onClick={onBack} style={secondaryButtonStyle} disabled={busy}>
           Back
         </button>
-        <button
-          onClick={onSubmit}
-          disabled={busy}
-          style={buttonStyle(!busy)}
-        >
-          {busy 
-            ? (type === "create" ? "Creating Organization..." : "Joining Organization...")
-            : (type === "create" ? "Create Organization" : "Join Organization")
-          }
+        <button onClick={onSubmit} disabled={busy} style={buttonStyle(!busy)}>
+          {busy
+            ? type === 'create'
+              ? 'Creating Organization...'
+              : 'Joining Organization...'
+            : type === 'create'
+              ? 'Create Organization'
+              : 'Join Organization'}
         </button>
       </div>
     </div>
@@ -1034,46 +1033,46 @@ function ReviewStep({
 
 // Styles
 const inputStyle = {
-  width: "100%",
-  padding: "0.75rem",
-  border: "2px solid #e2e8f0",
+  width: '100%',
+  padding: '0.75rem',
+  border: '2px solid #e2e8f0',
   borderRadius: 6,
-  fontSize: "1rem",
-  outline: "none",
-  transition: "border-color 0.2s",
+  fontSize: '1rem',
+  outline: 'none',
+  transition: 'border-color 0.2s',
 } as const;
 
 const buttonStyle = (enabled: boolean) => ({
-  padding: "0.75rem 1.5rem",
-  backgroundColor: enabled ? "#3b82f6" : "#9ca3af",
-  color: "white",
-  border: "none",
+  padding: '0.75rem 1.5rem',
+  backgroundColor: enabled ? '#3b82f6' : '#9ca3af',
+  color: 'white',
+  border: 'none',
   borderRadius: 6,
-  fontSize: "1rem",
-  cursor: enabled ? "pointer" : "not-allowed",
+  fontSize: '1rem',
+  cursor: enabled ? 'pointer' : 'not-allowed',
   fontWeight: 600,
   flex: 1,
 });
 
 const secondaryButtonStyle = {
-  padding: "0.75rem 1.5rem",
-  backgroundColor: "transparent",
-  color: "#6b7280",
-  border: "2px solid #e5e7eb",
+  padding: '0.75rem 1.5rem',
+  backgroundColor: 'transparent',
+  color: '#6b7280',
+  border: '2px solid #e5e7eb',
   borderRadius: 6,
-  fontSize: "1rem",
-  cursor: "pointer",
+  fontSize: '1rem',
+  cursor: 'pointer',
   fontWeight: 600,
 };
 
 const reviewSectionStyle = {
-  padding: "1.5rem",
-  border: "1px solid #e2e8f0",
+  padding: '1.5rem',
+  border: '1px solid #e2e8f0',
   borderRadius: 8,
-  backgroundColor: "#f8fafc",
+  backgroundColor: '#f8fafc',
 };
 
 const reviewItemStyle = {
-  marginBottom: "0.5rem",
-  color: "#374151",
+  marginBottom: '0.5rem',
+  color: '#374151',
 };

@@ -1,6 +1,8 @@
-import "server-only";
-import { cookies } from "next/headers";
-import { adminAuth } from "./firebase.admin";
+import { cookies } from 'next/headers';
+
+import 'server-only';
+
+import { adminAuth } from './firebase.admin';
 
 export type ServerSession = {
   sub: string; // Firebase user ID
@@ -14,7 +16,7 @@ export type ServerSession = {
   exp?: number;
 } | null;
 
-const COOKIE = process.env.SESSION_COOKIE_NAME || "__session";
+const COOKIE = process.env.SESSION_COOKIE_NAME || '__session';
 
 export async function getServerSession(): Promise<ServerSession> {
   try {
@@ -24,20 +26,20 @@ export async function getServerSession(): Promise<ServerSession> {
 
     const auth = adminAuth();
     const claims = await auth.verifySessionCookie(sessionCookie);
-    
+
     return {
       sub: claims.uid,
       email: claims.email,
       displayName: claims.name || claims.displayName,
       role: claims.role,
       orgId: claims.orgId,
-      orgName: claims.orgName, 
+      orgName: claims.orgName,
       onboardingComplete: claims.onboardingComplete,
       iat: claims.iat,
       exp: claims.exp,
     };
   } catch (error) {
-    console.warn("Session verification failed:", error);
+    console.warn('Session verification failed:', error);
     return null;
   }
 }

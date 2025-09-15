@@ -11,7 +11,7 @@
       "import": "./dist/index.js"
     },
     "./onboarding": {
-      "types": "./dist/onboarding.d.ts", 
+      "types": "./dist/onboarding.d.ts",
       "import": "./dist/onboarding.js"
     },
     "./auth": {

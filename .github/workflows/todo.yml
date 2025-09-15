@@ -2,7 +2,7 @@ name: Create Issues from TODOs
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
 
 permissions:
   issues: write
@@ -21,6 +21,6 @@ jobs:
       - name: Create Issues
         uses: peter-evans/create-issue-from-file@v5
         with:
-          title: "TODOs found in commit ${{ github.sha }}"
+          title: 'TODOs found in commit ${{ github.sha }}'
           content-filepath: ./todos.txt
           labels: todo
