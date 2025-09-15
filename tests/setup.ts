@@ -47,6 +47,9 @@ vi.mock('next/headers', () => ({
   }),
 }));
 
+// Mock server-only to prevent client component errors in tests
+vi.mock('server-only', () => ({}));
+
 declare global {
   const vi: typeof import('vitest').vi;
 }

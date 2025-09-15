@@ -13,7 +13,7 @@ jobs:
   lighthouse-ci:
     name: Lighthouse CI
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,7 +67,7 @@ jobs:
   bundle-analysis:
     name: Bundle Analysis
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -127,7 +127,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             try {
               const statsPath = 'apps/web/analyze/client-stats.json';
               if (fs.existsSync(statsPath)) {
@@ -168,7 +168,7 @@ jobs:
     name: Performance Regression Detection
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - name: Checkout base branch
         uses: actions/checkout@v4
@@ -215,21 +215,21 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            
+
             const baseStats = JSON.parse(fs.readFileSync('base-stats.json', 'utf8'));
             const prStats = JSON.parse(fs.readFileSync('pr-stats.json', 'utf8'));
-            
+
             const baseSize = baseStats.assets.reduce((acc, asset) => acc + asset.size, 0);
             const prSize = prStats.assets.reduce((acc, asset) => acc + asset.size, 0);
-            
+
             const sizeDiff = prSize - baseSize;
             const sizePercent = ((sizeDiff / baseSize) * 100).toFixed(2);
-            
+
             const formatSize = (bytes) => (bytes / 1024 / 1024).toFixed(2) + ' MB';
-            
+
             let status = '✅';
             let message = 'Bundle size unchanged or decreased';
-            
+
             if (sizeDiff > 100 * 1024) { // 100KB threshold
               status = '⚠️';
               message = 'Bundle size increased significantly';
@@ -239,24 +239,24 @@ jobs:
                 message = 'Bundle size increased too much';
               }
             }
-            
+
             const comment = `## ${status} Bundle Size Comparison
-            
+
             | Metric | Base | PR | Change |
             |--------|------|----|----|
             | **Bundle Size** | ${formatSize(baseSize)} | ${formatSize(prSize)} | ${sizeDiff > 0 ? '+' : ''}${formatSize(sizeDiff)} (${sizePercent}%) |
-            
+
             ${message}
-            
+
             ${sizeDiff > 500 * 1024 ? '⚠️ **This PR significantly increases the bundle size. Please review and optimize.**' : ''}`;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: comment
             });
-            
+
             // Fail CI if bundle size increased too much
             if (sizeDiff > 1024 * 1024) { // 1MB threshold
               core.setFailed('Bundle size increased by more than 1MB');
