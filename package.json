@@ -27,7 +27,7 @@
     "bundle:watch": "bundlewatch",
     "docs": "typedoc --out docs/API packages",
     "doctor": "./scripts/doctor.sh",
-    "prepare": "husky"
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",

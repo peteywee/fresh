@@ -4,7 +4,7 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Existing config...
-  
+
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Add bundle analyzer in CI or when ANALYZE=true
     if (process.env.ANALYZE === 'true' || process.env.CI) {
@@ -12,13 +12,9 @@ const nextConfig = {
         new BundleAnalyzerPlugin({
           analyzerMode: process.env.CI ? 'static' : 'server',
           openAnalyzer: !process.env.CI,
-          reportFilename: isServer 
-            ? '../analyze/server.html' 
-            : '../analyze/client.html',
+          reportFilename: isServer ? '../analyze/server.html' : '../analyze/client.html',
           generateStatsFile: true,
-          statsFilename: isServer 
-            ? '../analyze/server-stats.json' 
-            : '../analyze/client-stats.json',
+          statsFilename: isServer ? '../analyze/server-stats.json' : '../analyze/client-stats.json',
         })
       );
     }
@@ -35,7 +31,7 @@ const nextConfig = {
   // Bundle analysis settings
   compress: true,
   poweredByHeader: false,
-  
+
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
