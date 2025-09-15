@@ -1,5 +1,3 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-# Run lint-staged for code quality checks
+# Husky v10+ direct shell script
 pnpm lint-staged
