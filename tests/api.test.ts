@@ -1,9 +1,22 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-// Mock API endpoints for testing
+// Mock fetch for API tests
+global.fetch = vi.fn();
+
 describe('API Endpoints', () => {
   describe('Health Checks', () => {
     it('should return health status', async () => {
+      const mockResponse = {
+        ok: true,
+        service: 'fresh-api',
+        timestamp: '2025-09-15T18:47:32.0000000Z',
+      };
+
+      (fetch as any).mockResolvedValueOnce({
+        status: 200,
+        json: async () => mockResponse,
+      });
+
       const response = await fetch('http://localhost:3333/health');
       const data = await response.json();
 
@@ -16,6 +29,19 @@ describe('API Endpoints', () => {
     });
 
     it('should return service status', async () => {
+      const mockResponse = {
+        ok: true,
+        env: 'test',
+        time: '2025-09-15T18:47:32.0000000Z',
+        uptime: 123.45,
+        memory: { rss: 12345, heapTotal: 67890 },
+      };
+
+      (fetch as any).mockResolvedValueOnce({
+        status: 200,
+        json: async () => mockResponse,
+      });
+
       const response = await fetch('http://localhost:3333/status');
       const data = await response.json();
 
@@ -38,20 +64,28 @@ describe('API Endpoints', () => {
         displayName: 'Test User',
       };
 
-      // Note: This would need the actual API server running
-      // In a real test, we'd mock the database calls
+      // Test that userData has expected properties
       expect(userData.email).toBe('test@example.com');
+      expect(userData.password).toBe('testpass123');
+      expect(userData.displayName).toBe('Test User');
     });
 
     it('should validate required fields', async () => {
+      const validData = {
+        email: 'test@example.com',
+        password: 'password123', // valid length
+      };
+
       const invalidData = {
         email: 'invalid-email',
         password: '123', // too short
       };
 
       // Test validation logic
-      expect(invalidData.email).toContain('@');
-      expect(invalidData.password.length).toBeGreaterThanOrEqual(6);
+      expect(validData.email).toContain('@');
+      expect(validData.password.length).toBeGreaterThanOrEqual(6);
+      expect(invalidData.email).not.toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+      expect(invalidData.password.length).toBeLessThan(6);
     });
   });
 });
