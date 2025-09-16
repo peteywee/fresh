@@ -1,63 +1,58 @@
-import { type App, cert, getApps, initializeApp } from 'firebase-admin/app';
-import { type Auth, getAuth } from 'firebase-admin/auth';
-import { type Firestore, getFirestore } from 'firebase-admin/firestore';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import 'server-only';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
+import fs from 'node:fs';
+import path from 'node:path';
 
-let app: App | undefined;
-let auth: Auth | undefined;
-let db: Firestore | undefined;
-
-function required(name: string, v: string | undefined): string {
-  if (!v) throw new Error(`Missing env: ${name}`);
-  return v;
-}
-
-export function getAdminApp(): App {
-  if (getApps().length) return getApps()[0]!;
-
-  try {
-    // Try to load from service account key file first
-    const keyPath = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH;
-    if (keyPath) {
-      const fullPath = join(process.cwd(), keyPath);
-      const serviceAccount = JSON.parse(readFileSync(fullPath, 'utf8'));
-      app = initializeApp({
-        credential: cert(serviceAccount),
-      });
-      return app!;
-    }
-
-    // Fallback to individual environment variables
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const rawKey = process.env.FIREBASE_PRIVATE_KEY;
-
-    if (!projectId || !clientEmail || !rawKey) {
-      throw new Error(
-        'Missing Firebase Admin credentials. Set FIREBASE_SERVICE_ACCOUNT_KEY_PATH or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY in .env.local'
-      );
-    }
-    // Keep raw newlines compatibility
-    const privateKey = rawKey.replace(/\\n/g, '\n');
-
-    app = initializeApp({
-      credential: cert({ projectId, clientEmail, privateKey }),
-    });
-    return app!;
-  } catch (error) {
-    console.error('Firebase Admin initialization failed:', error);
-    throw error;
+function resolveKeyPath(): string {
+  // Highest priority: explicit ADC
+  if (
+    process.env.GOOGLE_APPLICATION_CREDENTIALS &&
+    fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)
+  ) {
+    return process.env.GOOGLE_APPLICATION_CREDENTIALS;
   }
+  // Repo-root secrets/firebase-admin.json
+  const repoRoot = process.cwd();
+  const fromRoot = path.join(repoRoot, 'secrets', 'firebase-admin.json');
+  if (fs.existsSync(fromRoot)) return fromRoot;
+
+  // When running from apps/web/, step up to repo root
+  const fromWeb = path.join(repoRoot, '..', '..', 'secrets', 'firebase-admin.json');
+  if (fs.existsSync(fromWeb)) return path.resolve(fromWeb);
+
+  throw new Error(
+    'firebase-admin.json not found. Set GOOGLE_APPLICATION_CREDENTIALS or place secrets/firebase-admin.json at repo root.'
+  );
 }
 
-export function adminAuth(): Auth {
-  if (!auth) auth = getAuth(getAdminApp());
-  return auth;
+let app: any;
+let auth: any;
+let db: any;
+
+try {
+  const keyPath = resolveKeyPath();
+  const svc = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+
+  app = getApps().length
+    ? getApps()[0]!
+    : initializeApp({
+        credential: cert({
+          projectId: svc.project_id,
+          clientEmail: svc.client_email,
+          privateKey: svc.private_key,
+        }),
+      });
+
+  auth = getAuth(app);
+  db = getFirestore(app);
+} catch (error) {
+  console.warn('Firebase Admin initialization skipped:', error);
+  // Initialize placeholders for graceful degradation
+  app = null;
+  auth = null;
+  db = null;
 }
 
-export function adminDb(): Firestore {
-  if (!db) db = getFirestore(getAdminApp());
-  return db;
-}
+export const adminAuth = auth;
+export const adminDb = () => db;

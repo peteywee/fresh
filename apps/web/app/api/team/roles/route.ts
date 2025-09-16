@@ -35,6 +35,6 @@ export async function GET() {
   if (!session.orgId) return NextResponse.json({ members: [] });
   const db = adminDb();
   const snap = await db.collection('orgs').doc(session.orgId).collection('members').get();
-  const members = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const members = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
   return NextResponse.json({ members });
 }

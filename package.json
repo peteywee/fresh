@@ -11,6 +11,7 @@
     "dev": "concurrently -k -n api,web -c blue,green \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:web": "pnpm --filter @apps/web dev",
     "dev:api": "pnpm --filter @services/api dev",
+    "dev:all": "concurrently -n API,WEB -c cyan,magenta \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:check-node": "node scripts/check-node-version.cjs",
     "dev:restart": "./scripts/restart-dev.sh",
     "dev:kill": "./scripts/kill-dev-processes.sh",

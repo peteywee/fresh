@@ -1,24 +1,17 @@
 import { NextResponse } from 'next/server';
 
-import { adminAuth, adminDb, getAdminApp } from '../../../lib/firebase.admin';
-
-export const runtime = 'nodejs';
+import { adminAuth } from '@/lib/firebase.admin';
 
 export async function GET() {
   try {
-    const app = getAdminApp();
-    // Simple lightweight checks
-    const auth = adminAuth();
-    const db = adminDb();
-
-    // Fetch minimal metadata (no heavy queries)
-    const projectId = app.options.projectId;
-
-    return NextResponse.json({ ok: true, projectId, auth: !!auth, db: !!db });
-  } catch (error: any) {
-    return NextResponse.json(
-      { ok: false, error: error?.message || 'Admin init failed' },
-      { status: 500 }
-    );
+    const time = Date.now();
+    if (!adminAuth) {
+      return NextResponse.json({ ok: false, error: 'Admin SDK not initialized' }, { status: 500 });
+    }
+    // simple call to ensure Admin SDK is alive
+    await adminAuth.listUsers(1);
+    return NextResponse.json({ ok: true, admin: 'connected', time });
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: e?.message ?? String(e) }, { status: 500 });
   }
 }

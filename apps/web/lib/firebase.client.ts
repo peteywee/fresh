@@ -1,37 +1,41 @@
-import { type FirebaseApp, getApps, initializeApp } from 'firebase/app';
-import { type Auth, GoogleAuthProvider, getAuth } from 'firebase/auth';
+'use client';
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+import { type FirebaseApp, getApps, initializeApp } from 'firebase/app';
+import { type Auth, getAuth } from 'firebase/auth';
+
+function required(name: string, v: string | undefined): string {
+  if (!v) throw new Error(`Missing ${name} (check apps/web/.env.local)`);
+  return v;
+}
+
+const config = {
+  apiKey: required('NEXT_PUBLIC_FIREBASE_API_KEY', process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
+  authDomain: required(
+    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+  ),
+  projectId: required(
+    'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  ),
+  storageBucket: required(
+    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+  ),
+  messagingSenderId: required(
+    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+  ),
+  appId: required('NEXT_PUBLIC_FIREBASE_APP_ID', process.env.NEXT_PUBLIC_FIREBASE_APP_ID),
 };
 
-// Initialize Firebase app
 let app: FirebaseApp;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
+if (!getApps().length) {
+  app = initializeApp(config);
 } else {
-  app = getApps()[0];
+  app = getApps()[0]!;
 }
 
-// Initialize Firebase Auth
+// Export auth for compatibility with existing code
 export const auth = getAuth(app);
-export const firebaseApp = app;
-
-// Initialize Google Auth Provider
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.addScope('email');
-googleProvider.addScope('profile');
-
-// Legacy exports for compatibility
-export function getFirebaseApp(): FirebaseApp {
-  return app;
-}
-
-export function getFirebaseAuth(): Auth {
-  return auth;
-}
+export { app };
