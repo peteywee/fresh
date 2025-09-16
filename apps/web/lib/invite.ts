@@ -1,5 +1,6 @@
 import crypto from 'crypto';
-import { adminDb, adminAuth } from './firebase.admin';
+
+import { adminAuth, adminDb } from './firebase.admin';
 
 export interface InviteTokenPayload {
   orgId: string;
@@ -13,7 +14,12 @@ export interface InviteTokenPayload {
 const SECRET = process.env.INVITE_TOKEN_SECRET || 'dev-invite-secret-change-me';
 const DEFAULT_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 
-export function generateInviteToken(orgId: string, email: string, role: string, ttlMs = DEFAULT_TTL_MS) {
+export function generateInviteToken(
+  orgId: string,
+  email: string,
+  role: string,
+  ttlMs = DEFAULT_TTL_MS
+) {
   const canonical = `${orgId}|${email.toLowerCase()}|${role}`;
   const integrity = crypto.createHash('sha256').update(canonical).digest('hex').slice(0, 32);
   const payload: InviteTokenPayload & { integrity: string } = {
@@ -41,7 +47,11 @@ export function verifyInviteToken(token: string): InviteTokenPayload | null {
     if (Date.now() > payload.exp) return null;
     // Recalculate integrity
     const canonical = `${payload.orgId}|${payload.email}|${payload.role}`;
-    const expectedIntegrity = crypto.createHash('sha256').update(canonical).digest('hex').slice(0, 32);
+    const expectedIntegrity = crypto
+      .createHash('sha256')
+      .update(canonical)
+      .digest('hex')
+      .slice(0, 32);
     if ((payload as any).integrity !== expectedIntegrity) return null;
     return payload as InviteTokenPayload;
   } catch {

@@ -18,18 +18,18 @@ export interface BrandingConfig {
     team: string;
     schedule: string;
     appointment: string;
-    
+
     // Actions
     schedule_verb: string; // "schedule", "book", "reserve"
     reschedule: string;
     cancel: string;
-    
+
     // Roles
     admin: string;
     staff: string;
     team_member: string; // Changed from 'member' to avoid conflict
     viewer: string;
-    
+
     // Common terms
     dashboard: string;
     calendar: string;
@@ -40,10 +40,10 @@ export interface BrandingConfig {
     // Feature-specific terms
     chat_enabled: boolean;
     chat_name: string; // "Team Chat", "Communication Hub", "Messages"
-    
+
     appointments_enabled: boolean;
     appointments_name: string; // "Appointments", "Sessions", "Bookings"
-    
+
     resources_enabled: boolean;
     resources_name: string; // "Resources", "Equipment", "Facilities"
   };
@@ -53,7 +53,7 @@ export interface BrandingConfig {
     favicon_url?: string;
     app_name: string;
     tagline?: string;
-    
+
     // Layout preferences
     sidebar_style: 'minimal' | 'detailed' | 'icon-only';
     density: 'compact' | 'comfortable' | 'spacious';

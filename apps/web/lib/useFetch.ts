@@ -71,7 +71,7 @@ export function useFetch<T = any>(
       }
 
       const result = await response.json();
-      
+
       // Cache GET requests
       if (!options.method || options.method === 'GET') {
         cache.set(url, {
@@ -91,17 +91,20 @@ export function useFetch<T = any>(
     }
   }, [url, options.method, options.body, ...deps]);
 
-  const mutate = useCallback((newData: T) => {
-    setData(newData);
-    if (url) {
-      // Update cache
-      cache.set(url, {
-        data: newData,
-        timestamp: Date.now(),
-        ttl: CACHE_TTL,
-      });
-    }
-  }, [url]);
+  const mutate = useCallback(
+    (newData: T) => {
+      setData(newData);
+      if (url) {
+        // Update cache
+        cache.set(url, {
+          data: newData,
+          timestamp: Date.now(),
+          ttl: CACHE_TTL,
+        });
+      }
+    },
+    [url]
+  );
 
   const refetch = useCallback(async () => {
     if (url) {
@@ -113,7 +116,7 @@ export function useFetch<T = any>(
 
   useEffect(() => {
     fetchData();
-    
+
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -147,61 +150,61 @@ export function useDebouncedFetch<T = any>(
 }
 
 // Optimistic updates for mutations
-export function useOptimisticMutation<T = any>(
-  url: string,
-  options: FetchOptions = {}
-) {
+export function useOptimisticMutation<T = any>(url: string, options: FetchOptions = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const mutate = useCallback(async (
-    optimisticData: T,
-    actualData?: any,
-    onSuccess?: (data: T) => void,
-    onError?: (error: string) => void
-  ) => {
-    setLoading(true);
-    setError(null);
+  const mutate = useCallback(
+    async (
+      optimisticData: T,
+      actualData?: any,
+      onSuccess?: (data: T) => void,
+      onError?: (error: string) => void
+    ) => {
+      setLoading(true);
+      setError(null);
 
-    // Apply optimistic update immediately
-    if (onSuccess) {
-      onSuccess(optimisticData);
-    }
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        method: options.method || 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        body: JSON.stringify(actualData || optimisticData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      // Update with actual server response
+      // Apply optimistic update immediately
       if (onSuccess) {
-        onSuccess(result);
+        onSuccess(optimisticData);
       }
 
-      return result;
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
-      if (onError) {
-        onError(err.message);
+      try {
+        const response = await fetch(url, {
+          ...options,
+          method: options.method || 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+          body: JSON.stringify(actualData || optimisticData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // Update with actual server response
+        if (onSuccess) {
+          onSuccess(result);
+        }
+
+        return result;
+      } catch (err: any) {
+        setError(err.message || 'An error occurred');
+        if (onError) {
+          onError(err.message);
+        }
+        throw err;
+      } finally {
+        setLoading(false);
       }
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [url, options]);
+    },
+    [url, options]
+  );
 
   return { mutate, loading, error };
 }

@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useBranding, useTerminology, useColors } from '@/lib/useBranding';
+
 import { BrandingConfig, INDUSTRY_CONFIGS } from '@/lib/branding';
+import { useBranding, useColors, useTerminology } from '@/lib/useBranding';
 
 export default function SettingsPage() {
   const { config, setIndustry, availableIndustries, isLoading } = useBranding();
@@ -18,7 +19,9 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <main style={{ padding: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}
+        >
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       </main>
@@ -53,11 +56,17 @@ export default function SettingsPage() {
           Select your industry to customize terminology and features for your organization.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: 16,
+          }}
+        >
           {availableIndustries.map((industry: { key: string; name: string }) => {
             const isSelected = selectedIndustry === industry.key;
             const industryConfig = INDUSTRY_CONFIGS[industry.key] as BrandingConfig;
-            
+
             return (
               <div
                 key={industry.key}
@@ -71,7 +80,14 @@ export default function SettingsPage() {
                   transition: 'all 0.2s ease',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 8,
+                  }}
+                >
                   <h3 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0 }}>
                     {industry.name}
                   </h3>
@@ -102,7 +118,9 @@ export default function SettingsPage() {
                 </div>
                 <div style={{ marginTop: 4, fontSize: 12 }}>
                   <strong style={{ color: colors.text }}>Team Members:</strong>{' '}
-                  <span style={{ color: colors.muted }}>{industryConfig.terminology.team_member}</span>
+                  <span style={{ color: colors.muted }}>
+                    {industryConfig.terminology.team_member}
+                  </span>
                 </div>
               </div>
             );
@@ -123,8 +141,14 @@ export default function SettingsPage() {
         <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16, color: colors.text }}>
           Current Configuration
         </h2>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: 24,
+          }}
+        >
           {/* Terminology Preview */}
           <div>
             <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: colors.text }}>
@@ -213,8 +237,14 @@ export default function SettingsPage() {
         <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16, color: colors.text }}>
           Features
         </h2>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 16,
+          }}
+        >
           <div
             style={{
               padding: 16,
@@ -247,7 +277,9 @@ export default function SettingsPage() {
               padding: 16,
               border: `1px solid ${config.features.appointments_enabled ? colors.primary : colors.muted}`,
               borderRadius: 6,
-              backgroundColor: config.features.appointments_enabled ? `${colors.primary}10` : '#f9f9f9',
+              backgroundColor: config.features.appointments_enabled
+                ? `${colors.primary}10`
+                : '#f9f9f9',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
@@ -256,7 +288,9 @@ export default function SettingsPage() {
                   width: 16,
                   height: 16,
                   borderRadius: '50%',
-                  backgroundColor: config.features.appointments_enabled ? colors.primary : colors.muted,
+                  backgroundColor: config.features.appointments_enabled
+                    ? colors.primary
+                    : colors.muted,
                   marginRight: 8,
                 }}
               />
@@ -274,7 +308,9 @@ export default function SettingsPage() {
               padding: 16,
               border: `1px solid ${config.features.resources_enabled ? colors.primary : colors.muted}`,
               borderRadius: 6,
-              backgroundColor: config.features.resources_enabled ? `${colors.primary}10` : '#f9f9f9',
+              backgroundColor: config.features.resources_enabled
+                ? `${colors.primary}10`
+                : '#f9f9f9',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
@@ -283,7 +319,9 @@ export default function SettingsPage() {
                   width: 16,
                   height: 16,
                   borderRadius: '50%',
-                  backgroundColor: config.features.resources_enabled ? colors.primary : colors.muted,
+                  backgroundColor: config.features.resources_enabled
+                    ? colors.primary
+                    : colors.muted,
                   marginRight: 8,
                 }}
               />

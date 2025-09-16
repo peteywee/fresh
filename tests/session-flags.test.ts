@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 // Simple pure parser mirroring logic in useSession (avoids DOM dependency)
 function parseFlagsCookie(value: string | undefined) {
@@ -19,7 +19,9 @@ function parseFlagsCookie(value: string | undefined) {
 
 describe('session flags parsing', () => {
   it('parses valid flags', () => {
-    const cookieVal = encodeURIComponent(JSON.stringify({ li: true, ob: true, uid: 'user1', role: 'admin', orgId: 'org1' }));
+    const cookieVal = encodeURIComponent(
+      JSON.stringify({ li: true, ob: true, uid: 'user1', role: 'admin', orgId: 'org1' })
+    );
     const parsed = parseFlagsCookie(cookieVal);
     expect(parsed?.isLoggedIn).toBe(true);
     expect(parsed?.role).toBe('admin');

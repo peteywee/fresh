@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, adminAuth } from '@/lib/firebase.admin';
+
+import { adminAuth, adminDb } from '@/lib/firebase.admin';
 import { generateInviteToken } from '@/lib/invite';
 import { ensureRole } from '@/lib/roles';
 import { getServerSession } from '@/lib/session';
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     displayName?: string;
     role?: string;
   };
-  if (!email || !role || !['owner','admin','member','staff','viewer'].includes(role)) {
+  if (!email || !role || !['owner', 'admin', 'member', 'staff', 'viewer'].includes(role)) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 

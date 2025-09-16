@@ -107,7 +107,6 @@ export default function RegisterPage() {
             required
             disabled={busy}
             suppressHydrationWarning
-
             style={{
               width: '100%',
               padding: '12px 16px',

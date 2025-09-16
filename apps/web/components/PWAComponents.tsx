@@ -47,13 +47,13 @@ export function PWAInstallPrompt() {
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       console.log('PWA installation accepted');
     } else {
       console.log('PWA installation dismissed');
     }
-    
+
     setDeferredPrompt(null);
     setIsInstallable(false);
   };
@@ -86,9 +86,7 @@ export function PWAInstallPrompt() {
     >
       <div>
         <div style={{ marginBottom: 4 }}>Install Fresh App</div>
-        <div style={{ fontSize: 12, opacity: 0.9 }}>
-          Get faster access and offline support
-        </div>
+        <div style={{ fontSize: 12, opacity: 0.9 }}>Get faster access and offline support</div>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <button
@@ -149,7 +147,7 @@ export function useServiceWorker() {
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       navigator.serviceWorker
         .register('/sw.js')
-        .then((registration) => {
+        .then(registration => {
           console.log('SW registered:', registration);
           setSwRegistration(registration);
 
@@ -165,7 +163,7 @@ export function useServiceWorker() {
             }
           });
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('SW registration failed:', error);
         });
     }

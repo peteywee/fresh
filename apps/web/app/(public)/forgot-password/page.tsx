@@ -48,7 +48,11 @@ export default function ForgotPasswordPage() {
       </p>
 
       <form onSubmit={handleReset} style={{ display: 'grid', gap: 12 }}>
-        <label htmlFor="email" style={{ fontSize: 14, fontWeight: 500, color: '#374151' }} suppressHydrationWarning>
+        <label
+          htmlFor="email"
+          style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}
+          suppressHydrationWarning
+        >
           Email Address
         </label>
         <input

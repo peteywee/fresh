@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+
+import { CardSkeleton, LoadingSpinner } from '@/components/LoadingComponents';
 import { useFetch, useOptimisticMutation } from '@/lib/useFetch';
-import { LoadingSpinner, CardSkeleton } from '@/components/LoadingComponents';
 
 type Schedule = {
   id: string;
@@ -27,24 +28,31 @@ export default function CalendarPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Use optimized fetch hook
-  const { data, loading, error: fetchError, refetch, mutate } = useFetch<{ schedules: Schedule[] }>(
-    '/api/schedules'
-  );
+  const {
+    data,
+    loading,
+    error: fetchError,
+    refetch,
+    mutate,
+  } = useFetch<{ schedules: Schedule[] }>('/api/schedules');
 
   const schedules = data?.schedules || [];
 
   // Only confirmed & not declined for grid
-  const confirmedSchedules = useMemo(() => schedules.filter(s => s.confirmed && !s.declined), [schedules]);
+  const confirmedSchedules = useMemo(
+    () => schedules.filter(s => s.confirmed && !s.declined),
+    [schedules]
+  );
 
   // Month view state
   const [currentMonth, setCurrentMonth] = useState(() => {
     const d = new Date();
     d.setDate(1);
-    d.setHours(0,0,0,0);
+    d.setHours(0, 0, 0, 0);
     return d;
   });
 
-  const monthKey = currentMonth.toISOString().slice(0,7);
+  const monthKey = currentMonth.toISOString().slice(0, 7);
 
   const daysInMonth = useMemo(() => {
     const year = currentMonth.getFullYear();
@@ -52,8 +60,8 @@ export default function CalendarPage() {
     const firstDayWeekIndex = new Date(year, month, 1).getDay(); // 0 Sun ... 6 Sat
     const totalDays = new Date(year, month + 1, 0).getDate();
     const cells: { date: Date | null }[] = [];
-    for (let i=0;i<firstDayWeekIndex;i++) cells.push({ date: null });
-    for (let d=1; d<= totalDays; d++) {
+    for (let i = 0; i < firstDayWeekIndex; i++) cells.push({ date: null });
+    for (let d = 1; d <= totalDays; d++) {
       cells.push({ date: new Date(year, month, d) });
     }
     return cells;
@@ -64,7 +72,7 @@ export default function CalendarPage() {
     confirmedSchedules.forEach(s => {
       if (!s.start) return;
       const day = new Date(s.start);
-      const key = day.toISOString().slice(0,10);
+      const key = day.toISOString().slice(0, 10);
       map[key] = map[key] || [];
       map[key].push(s);
     });
@@ -120,13 +128,15 @@ export default function CalendarPage() {
       if (editingId) {
         // Update existing
         const optimisticUpdate = {
-          schedules: schedules.map(s => s.id === editingId ? { ...s, ...payload, updatedAt: Date.now() } : s)
+          schedules: schedules.map(s =>
+            s.id === editingId ? { ...s, ...payload, updatedAt: Date.now() } : s
+          ),
         };
-        
+
         await updateSchedule(
           optimisticUpdate,
           { ...payload, id: editingId },
-          (data) => {
+          data => {
             mutate(data);
             resetForm();
           },
@@ -135,13 +145,13 @@ export default function CalendarPage() {
       } else {
         // Create new
         const optimisticUpdate = {
-          schedules: [newItem, ...schedules]
+          schedules: [newItem, ...schedules],
         };
-        
+
         await createSchedule(
           optimisticUpdate,
           payload,
-          (data) => {
+          data => {
             mutate(data);
             resetForm();
           },
@@ -151,33 +161,55 @@ export default function CalendarPage() {
     } catch (err: any) {
       setError(err.message || 'Failed to save');
     }
-  }, [title, description, start, end, editingId, schedules, createSchedule, updateSchedule, mutate, resetForm, refetch]);
+  }, [
+    title,
+    description,
+    start,
+    end,
+    editingId,
+    schedules,
+    createSchedule,
+    updateSchedule,
+    mutate,
+    resetForm,
+    refetch,
+  ]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!confirm('Are you sure you want to delete this schedule?')) return;
+  const handleDelete = useCallback(
+    async (id: string) => {
+      if (!confirm('Are you sure you want to delete this schedule?')) return;
 
-    const optimisticUpdate = {
-      schedules: schedules.filter(s => s.id !== id)
-    };
+      const optimisticUpdate = {
+        schedules: schedules.filter(s => s.id !== id),
+      };
 
-    try {
-      await deleteSchedule(
-        optimisticUpdate,
-        { id },
-        (data) => mutate(data),
-        () => refetch()
-      );
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete');
-    }
-  }, [schedules, deleteSchedule, mutate, refetch]);
+      try {
+        await deleteSchedule(
+          optimisticUpdate,
+          { id },
+          data => mutate(data),
+          () => refetch()
+        );
+      } catch (err: any) {
+        setError(err.message || 'Failed to delete');
+      }
+    },
+    [schedules, deleteSchedule, mutate, refetch]
+  );
 
   const displayError = error || fetchError;
 
   if (loading) {
     return (
       <main>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 24,
+          }}
+        >
           <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Calendar</h1>
         </div>
         <CardSkeleton count={4} />
@@ -187,7 +219,14 @@ export default function CalendarPage() {
 
   return (
     <main>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 24,
+        }}
+      >
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Calendar</h1>
           <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
@@ -196,49 +235,132 @@ export default function CalendarPage() {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
-            onClick={() => setCurrentMonth(d => new Date(d.getFullYear(), d.getMonth()-1, 1))}
+            onClick={() => setCurrentMonth(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
             style={{
-              background: '#f3f4f6', border: '1px solid #d1d5db', padding: '6px 12px', borderRadius: 6, cursor: 'pointer'
+              background: '#f3f4f6',
+              border: '1px solid #d1d5db',
+              padding: '6px 12px',
+              borderRadius: 6,
+              cursor: 'pointer',
             }}
-          >Prev</button>
-          <div style={{ fontSize: 14, fontWeight: 600, minWidth: 140, textAlign: 'center', alignSelf: 'center' }}>
+          >
+            Prev
+          </button>
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              minWidth: 140,
+              textAlign: 'center',
+              alignSelf: 'center',
+            }}
+          >
             {currentMonth.toLocaleString(undefined, { month: 'long', year: 'numeric' })}
           </div>
           <button
-            onClick={() => setCurrentMonth(d => new Date(d.getFullYear(), d.getMonth()+1, 1))}
+            onClick={() => setCurrentMonth(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
             style={{
-              background: '#f3f4f6', border: '1px solid #d1d5db', padding: '6px 12px', borderRadius: 6, cursor: 'pointer'
+              background: '#f3f4f6',
+              border: '1px solid #d1d5db',
+              padding: '6px 12px',
+              borderRadius: 6,
+              cursor: 'pointer',
             }}
-          >Next</button>
+          >
+            Next
+          </button>
           <button
-            onClick={() => setCurrentMonth(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1); })}
+            onClick={() =>
+              setCurrentMonth(() => {
+                const n = new Date();
+                return new Date(n.getFullYear(), n.getMonth(), 1);
+              })
+            }
             style={{
-              background: '#2563eb', color: 'white', border: 'none', padding: '6px 12px', borderRadius: 6, cursor: 'pointer'
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: 6,
+              cursor: 'pointer',
             }}
-          >Today</button>
+          >
+            Today
+          </button>
         </div>
       </div>
 
       {/* Month Grid */}
-      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 8, marginBottom: 32 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
-          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-            <div key={d} style={{ fontSize: 12, fontWeight: 600, padding: '8px 12px', textAlign: 'center', color: '#374151' }}>{d}</div>
+      <div
+        style={{
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: 8,
+          marginBottom: 32,
+        }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            borderBottom: '1px solid #e5e7eb',
+            background: '#f9fafb',
+          }}
+        >
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+            <div
+              key={d}
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                padding: '8px 12px',
+                textAlign: 'center',
+                color: '#374151',
+              }}
+            >
+              {d}
+            </div>
           ))}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', minHeight: 360 }}>
           {daysInMonth.map((cell, idx) => {
-            if (!cell.date) return <div key={idx} style={{ border: '1px solid #f3f4f6', background: '#f9fafb' }} />;
-            const key = cell.date.toISOString().slice(0,10);
+            if (!cell.date)
+              return (
+                <div key={idx} style={{ border: '1px solid #f3f4f6', background: '#f9fafb' }} />
+              );
+            const key = cell.date.toISOString().slice(0, 10);
             const items = schedulesByDay[key] || [];
             return (
-              <div key={key} style={{ border: '1px solid #f3f4f6', padding: 4, display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4, color: '#374151' }}>{cell.date.getDate()}</div>
+              <div
+                key={key}
+                style={{
+                  border: '1px solid #f3f4f6',
+                  padding: 4,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4, color: '#374151' }}>
+                  {cell.date.getDate()}
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
-                  {items.slice(0,3).map(item => (
-                    <div key={item.id} title={item.title} style={{
-                      background: '#2563eb', color: 'white', borderRadius: 4, padding: '2px 4px', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                    }}>{item.title || 'Untitled'}</div>
+                  {items.slice(0, 3).map(item => (
+                    <div
+                      key={item.id}
+                      title={item.title}
+                      style={{
+                        background: '#2563eb',
+                        color: 'white',
+                        borderRadius: 4,
+                        padding: '2px 4px',
+                        fontSize: 10,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {item.title || 'Untitled'}
+                    </div>
                   ))}
                   {items.length > 3 && (
                     <div style={{ fontSize: 10, color: '#2563eb' }}>+{items.length - 3} more</div>
@@ -272,7 +394,7 @@ export default function CalendarPage() {
             <input
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={e => setTitle(e.target.value)}
               placeholder="Schedule title"
               style={{
                 width: '100%',
@@ -290,7 +412,7 @@ export default function CalendarPage() {
             </label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               placeholder="Optional description"
               rows={3}
               style={{
@@ -312,7 +434,7 @@ export default function CalendarPage() {
               <input
                 type="datetime-local"
                 value={start}
-                onChange={(e) => setStart(e.target.value)}
+                onChange={e => setStart(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -329,7 +451,7 @@ export default function CalendarPage() {
               <input
                 type="datetime-local"
                 value={end}
-                onChange={(e) => setEnd(e.target.value)}
+                onChange={e => setEnd(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -400,7 +522,7 @@ export default function CalendarPage() {
 
       {/* Existing List (Admin / Raw View) */}
       <div style={{ display: 'grid', gap: 16 }}>
-        {schedules.map((item) => (
+        {schedules.map(item => (
           <div
             key={item.id}
             style={{
@@ -410,20 +532,50 @@ export default function CalendarPage() {
               padding: 20,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+            >
               <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px 0' }}>
-                  {item.title}
-                </h3>
+                <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px 0' }}>{item.title}</h3>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
                   {!item.confirmed && !item.declined && (
-                    <span style={{ fontSize: 10, background: '#fcd34d', color: '#92400e', padding: '2px 6px', borderRadius: 12 }}>Pending</span>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        background: '#fcd34d',
+                        color: '#92400e',
+                        padding: '2px 6px',
+                        borderRadius: 12,
+                      }}
+                    >
+                      Pending
+                    </span>
                   )}
                   {item.confirmed && !item.declined && (
-                    <span style={{ fontSize: 10, background: '#bbf7d0', color: '#166534', padding: '2px 6px', borderRadius: 12 }}>Confirmed</span>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        background: '#bbf7d0',
+                        color: '#166534',
+                        padding: '2px 6px',
+                        borderRadius: 12,
+                      }}
+                    >
+                      Confirmed
+                    </span>
                   )}
                   {item.declined && (
-                    <span style={{ fontSize: 10, background: '#fecaca', color: '#991b1b', padding: '2px 6px', borderRadius: 12 }}>Declined</span>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        background: '#fecaca',
+                        color: '#991b1b',
+                        padding: '2px 6px',
+                        borderRadius: 12,
+                      }}
+                    >
+                      Declined
+                    </span>
                   )}
                 </div>
                 {item.description && (
@@ -495,7 +647,9 @@ export default function CalendarPage() {
             }}
           >
             <h3 style={{ fontSize: 16, fontWeight: 500, margin: '0 0 8px 0' }}>No schedules yet</h3>
-            <p style={{ fontSize: 14, margin: 0 }}>Create your first schedule using the form above.</p>
+            <p style={{ fontSize: 14, margin: 0 }}>
+              Create your first schedule using the form above.
+            </p>
           </div>
         )}
       </div>

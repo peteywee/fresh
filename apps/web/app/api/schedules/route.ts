@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     .orderBy('start', 'desc')
     .limit(100);
   const snap = await query.get();
-  let schedules = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+  let schedules = snap.docs.map(d => ({ id: d.id, ...d.data() }) as any);
 
   if (!all) {
     if (pending) {

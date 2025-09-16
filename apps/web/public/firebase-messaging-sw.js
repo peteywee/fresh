@@ -11,7 +11,7 @@ async function ensureInitialized() {
   if (messaging) return messaging;
   if (!initPromise) {
     initPromise = fetch('/api/public/firebase-config')
-      .then(r => r.ok ? r.json() : Promise.reject(new Error('Config fetch failed')))
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error('Config fetch failed'))))
       .then(cfg => {
         if (!cfg || !cfg.apiKey) throw new Error('Invalid Firebase config');
         if (!firebase.apps.length) {
@@ -29,18 +29,20 @@ async function ensureInitialized() {
 }
 
 // Background message handler registration (waits for init)
-self.addEventListener('push', (event) => {
-  event.waitUntil((async () => {
-    const m = await ensureInitialized();
-    // If Firebase messaging is initialized, it will also trigger its own handlers
-    // This manual push listener is a fallback for custom payloads.
-  })());
+self.addEventListener('push', event => {
+  event.waitUntil(
+    (async () => {
+      const m = await ensureInitialized();
+      // If Firebase messaging is initialized, it will also trigger its own handlers
+      // This manual push listener is a fallback for custom payloads.
+    })()
+  );
 });
 
 // Firebase native background messages
 ensureInitialized().then(m => {
   if (!m) return;
-  m.onBackgroundMessage((payload) => {
+  m.onBackgroundMessage(payload => {
     console.log('[firebase-messaging-sw] background message', payload);
     const notificationTitle = payload.notification?.title || 'New message';
     const notificationOptions = {
@@ -50,15 +52,15 @@ ensureInitialized().then(m => {
       tag: 'team-chat',
       data: {
         click_action: '/team',
-        ...payload.data
-      }
+        ...payload.data,
+      },
     };
     self.registration.showNotification(notificationTitle, notificationOptions);
   });
 });
 
 // Handle notification clicks
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(clients.openWindow(event.notification.data?.click_action || '/team'));
 });

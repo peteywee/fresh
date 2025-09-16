@@ -1,17 +1,17 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
-import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  query, 
-  orderBy, 
-  limit, 
-  onSnapshot, 
-  where,
+import { getApps, initializeApp } from 'firebase/app';
+import {
+  Timestamp,
+  addDoc,
+  collection,
+  getFirestore,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
   serverTimestamp,
-  Timestamp
+  where,
 } from 'firebase/firestore';
+import { Messaging, getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 // Firebase config from environment variables
 const firebaseConfig = {
@@ -97,7 +97,14 @@ class MessagingService {
   }
 
   // Send a message to the team chat
-  async sendMessage(orgId: string, senderId: string, senderName: string, senderEmail: string, content: string, channelId = 'general'): Promise<string | null> {
+  async sendMessage(
+    orgId: string,
+    senderId: string,
+    senderName: string,
+    senderEmail: string,
+    content: string,
+    channelId = 'general'
+  ): Promise<string | null> {
     try {
       const messageData: Omit<Message, 'id'> = {
         orgId,
@@ -120,7 +127,11 @@ class MessagingService {
   }
 
   // Listen to messages for an organization
-  subscribeToMessages(orgId: string, channelId = 'general', callback: (messages: Message[]) => void): () => void {
+  subscribeToMessages(
+    orgId: string,
+    channelId = 'general',
+    callback: (messages: Message[]) => void
+  ): () => void {
     const messagesRef = collection(db, 'messages');
     const q = query(
       messagesRef,
@@ -130,12 +141,12 @@ class MessagingService {
       limit(50)
     );
 
-    return onSnapshot(q, (snapshot) => {
+    return onSnapshot(q, snapshot => {
       const messages: Message[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       })) as Message[];
-      
+
       // Reverse to show oldest first
       callback(messages.reverse());
     });
@@ -170,7 +181,13 @@ class MessagingService {
   }
 
   // Create a new channel
-  async createChannel(orgId: string, createdBy: string, name: string, description?: string, type: 'general' | 'team' | 'project' | 'private' = 'team'): Promise<string | null> {
+  async createChannel(
+    orgId: string,
+    createdBy: string,
+    name: string,
+    description?: string,
+    type: 'general' | 'team' | 'project' | 'private' = 'team'
+  ): Promise<string | null> {
     try {
       const channelData: Omit<MessageChannel, 'id'> = {
         orgId,
@@ -193,7 +210,11 @@ class MessagingService {
   }
 
   // Get channels for an organization
-  subscribeToChannels(orgId: string, userId: string, callback: (channels: MessageChannel[]) => void): () => void {
+  subscribeToChannels(
+    orgId: string,
+    userId: string,
+    callback: (channels: MessageChannel[]) => void
+  ): () => void {
     const channelsRef = collection(db, 'channels');
     const q = query(
       channelsRef,
@@ -202,18 +223,22 @@ class MessagingService {
       orderBy('lastActivity', 'desc')
     );
 
-    return onSnapshot(q, (snapshot) => {
+    return onSnapshot(q, snapshot => {
       const channels: MessageChannel[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       })) as MessageChannel[];
-      
+
       callback(channels);
     });
   }
 
   // Send system notification (member joined, etc.)
-  async sendSystemMessage(orgId: string, content: string, channelId = 'general'): Promise<string | null> {
+  async sendSystemMessage(
+    orgId: string,
+    content: string,
+    channelId = 'general'
+  ): Promise<string | null> {
     try {
       const messageData: Omit<Message, 'id'> = {
         orgId,

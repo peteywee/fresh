@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from '@/lib/session';
+
 import { acceptInvite } from '@/lib/invite';
+import { getServerSession } from '@/lib/session';
 
 // POST /api/team/members/accept { token }
 // Requires user to be authenticated (session cookie present) and email must match invite.

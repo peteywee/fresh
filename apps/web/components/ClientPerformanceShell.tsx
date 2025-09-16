@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { PerformanceProvider, PerformanceBudget } from '@/components/PerformanceProvider';
+
+import { PerformanceBudget, PerformanceProvider } from '@/components/PerformanceProvider';
 
 export function ClientPerformanceShell({ children }: { children: React.ReactNode }) {
   return (

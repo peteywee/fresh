@@ -37,11 +37,12 @@ const CACHE_FIRST_PATTERNS = [
 ];
 
 // Install event - cache static assets
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   console.log('[SW] Installing v2');
   event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then((cache) => {
+    caches
+      .open(STATIC_CACHE)
+      .then(cache => {
         console.log('[SW] Caching static assets');
         return cache.addAll(STATIC_ASSETS);
       })
@@ -50,13 +51,14 @@ self.addEventListener('install', (event) => {
 });
 
 // Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', event => {
   console.log('[SW] Activating v2');
   event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => {
+    caches
+      .keys()
+      .then(cacheNames => {
         return Promise.all(
-          cacheNames.map((cacheName) => {
+          cacheNames.map(cacheName => {
             if (!cacheName.includes('v2')) {
               console.log('[SW] Deleting old cache:', cacheName);
               return caches.delete(cacheName);
@@ -69,7 +71,7 @@ self.addEventListener('activate', (event) => {
 });
 
 // Fetch event - implement smart caching
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   const { request } = event;
   const url = request.url;
 
@@ -127,7 +129,7 @@ async function cacheFirst(request) {
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
   const cached = await cache.match(request);
-  
+
   const fetchPromise = fetch(request)
     .then(response => {
       if (response.ok) {
@@ -136,8 +138,8 @@ async function staleWhileRevalidate(request) {
       return response;
     })
     .catch(() => null);
-  
-  return cached || await fetchPromise || new Response('Offline', { status: 503 });
+
+  return cached || (await fetchPromise) || new Response('Offline', { status: 503 });
 }
 
 // Network with fallback - default strategy

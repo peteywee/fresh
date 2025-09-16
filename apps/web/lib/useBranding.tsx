@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+
 // Internal module import without extension (Next.js + Bundler moduleResolution)
-import { BrandingConfig, getBrandingConfig, getAvailableIndustries } from './branding';
+import { BrandingConfig, getAvailableIndustries, getBrandingConfig } from './branding';
 
 interface BrandingContextType {
   config: BrandingConfig;
@@ -46,7 +47,7 @@ export function BrandingProvider({ children, initialIndustry }: BrandingProvider
   useEffect(() => {
     if (typeof window !== 'undefined' && config) {
       const root = document.documentElement;
-      
+
       // Apply color variables
       root.style.setProperty('--color-primary', config.colors.primary);
       root.style.setProperty('--color-secondary', config.colors.secondary);
@@ -54,12 +55,12 @@ export function BrandingProvider({ children, initialIndustry }: BrandingProvider
       root.style.setProperty('--color-background', config.colors.background);
       root.style.setProperty('--color-text', config.colors.text);
       root.style.setProperty('--color-muted', config.colors.muted);
-      
+
       // Update document title and favicon if specified
       if (config.ui.app_name) {
         document.title = config.ui.app_name;
       }
-      
+
       if (config.ui.favicon_url) {
         const favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
         if (favicon) {
@@ -71,7 +72,7 @@ export function BrandingProvider({ children, initialIndustry }: BrandingProvider
 
   const setIndustry = (newIndustry: string) => {
     setIndustryState(newIndustry);
-    
+
     // Save to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('fresh_industry_preference', newIndustry);

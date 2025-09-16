@@ -1,7 +1,7 @@
-import { getServerSession } from '@/lib/session';
-import { PWAInstallPrompt, OfflineIndicator } from '@/components/PWAComponents';
-import { BrandingProvider } from '@/lib/useBranding';
 import ClientPerformanceShell from '@/components/ClientPerformanceShell';
+import { OfflineIndicator, PWAInstallPrompt } from '@/components/PWAComponents';
+import { getServerSession } from '@/lib/session';
+import { BrandingProvider } from '@/lib/useBranding';
 
 export const metadata = {
   title: process.env.NEXT_PUBLIC_APP_NAME || 'Fresh Team Management',
@@ -56,154 +56,155 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body
         style={{
-          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          fontFamily:
+            'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
           margin: 0,
         }}
       >
         <ClientPerformanceShell>
           <BrandingProvider>
             <OfflineIndicator />
-          {/* Global Header / Navigation */}
-          <header
-            style={{
-              position: 'sticky',
-            top: 0,
-            zIndex: 30,
-            backgroundColor: 'white',
-            borderBottom: '1px solid #e5e7eb',
-          }}
-        >
-          <nav
-            style={{
-              maxWidth: 1200,
-              margin: '0 auto',
-              padding: '12px 24px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 16,
-              justifyContent: 'space-between',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <a
-                href={loggedIn && onboarded ? '/dashboard' : '/'}
+            {/* Global Header / Navigation */}
+            <header
+              style={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 30,
+                backgroundColor: 'white',
+                borderBottom: '1px solid #e5e7eb',
+              }}
+            >
+              <nav
                 style={{
-                  color: '#111827',
-                  fontWeight: 800,
-                  textDecoration: 'none',
-                  fontSize: 18,
+                  maxWidth: 1200,
+                  margin: '0 auto',
+                  padding: '12px 24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  justifyContent: 'space-between',
                 }}
               >
-                {appName}
-              </a>
-              {loggedIn && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <a
-                    href="/dashboard"
-                    style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
+                    href={loggedIn && onboarded ? '/dashboard' : '/'}
+                    style={{
+                      color: '#111827',
+                      fontWeight: 800,
+                      textDecoration: 'none',
+                      fontSize: 18,
+                    }}
                   >
-                    Dashboard
+                    {appName}
                   </a>
-                  {!onboarded && (
-                    <a
-                      href="/onboarding"
-                      style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                    >
-                      Onboarding
-                    </a>
+                  {loggedIn && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <a
+                        href="/dashboard"
+                        style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
+                      >
+                        Dashboard
+                      </a>
+                      {!onboarded && (
+                        <a
+                          href="/onboarding"
+                          style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
+                        >
+                          Onboarding
+                        </a>
+                      )}
+                      <a
+                        href="/team"
+                        style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
+                      >
+                        Team
+                      </a>
+                      <a
+                        href="/calendar"
+                        style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
+                      >
+                        Calendar
+                      </a>
+                      <a
+                        href="/settings"
+                        style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
+                      >
+                        Settings
+                      </a>
+                    </div>
                   )}
-                  <a
-                    href="/team"
-                    style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                  >
-                    Team
-                  </a>
-                  <a
-                    href="/calendar"
-                    style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                  >
-                    Calendar
-                  </a>
-                  <a
-                    href="/settings"
-                    style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                  >
-                    Settings
-                  </a>
                 </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {loggedIn ? (
-                <>
-                  {session?.role && (
-                    <span
-                      style={{
-                        backgroundColor: '#eff6ff',
-                        color: '#1d4ed8',
-                        border: '1px solid #bfdbfe',
-                        borderRadius: 9999,
-                        padding: '4px 10px',
-                        fontSize: 12,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      {session.role}
-                    </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {loggedIn ? (
+                    <>
+                      {session?.role && (
+                        <span
+                          style={{
+                            backgroundColor: '#eff6ff',
+                            color: '#1d4ed8',
+                            border: '1px solid #bfdbfe',
+                            borderRadius: 9999,
+                            padding: '4px 10px',
+                            fontSize: 12,
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          {session.role}
+                        </span>
+                      )}
+                      <a
+                        href="/api/session/logout"
+                        style={{
+                          color: '#374151',
+                          backgroundColor: '#f3f4f6',
+                          border: '1px solid #e5e7eb',
+                          padding: '6px 12px',
+                          borderRadius: 8,
+                          textDecoration: 'none',
+                          fontSize: 14,
+                        }}
+                      >
+                        Sign out
+                      </a>
+                    </>
+                  ) : (
+                    <>
+                      <a
+                        href="/login"
+                        style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
+                      >
+                        Login
+                      </a>
+                      <a
+                        href="/register"
+                        style={{
+                          color: 'white',
+                          backgroundColor: '#2563eb',
+                          padding: '6px 12px',
+                          borderRadius: 8,
+                          textDecoration: 'none',
+                          fontSize: 14,
+                        }}
+                      >
+                        Sign up
+                      </a>
+                    </>
                   )}
-                  <a
-                    href="/api/session/logout"
-                    style={{
-                      color: '#374151',
-                      backgroundColor: '#f3f4f6',
-                      border: '1px solid #e5e7eb',
-                      padding: '6px 12px',
-                      borderRadius: 8,
-                      textDecoration: 'none',
-                      fontSize: 14,
-                    }}
-                  >
-                    Sign out
-                  </a>
-                </>
-              ) : (
-                <>
-                  <a
-                    href="/login"
-                    style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                  >
-                    Login
-                  </a>
-                  <a
-                    href="/register"
-                    style={{
-                      color: 'white',
-                      backgroundColor: '#2563eb',
-                      padding: '6px 12px',
-                      borderRadius: 8,
-                      textDecoration: 'none',
-                      fontSize: 14,
-                    }}
-                  >
-                    Sign up
-                  </a>
-                </>
-              )}
-            </div>
-          </nav>
-        </header>
+                </div>
+              </nav>
+            </header>
 
-        <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>{children}</div>
-        </div>
-        <PWAInstallPrompt />
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              'if("serviceWorker" in navigator && "production" === process.env.NODE_ENV){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").then(reg=>console.log("SW registered:",reg)).catch(err=>console.log("SW registration failed:",err)));}',
-            }}
-          />
+            <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+              <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>{children}</div>
+            </div>
+            <PWAInstallPrompt />
+            <script
+              dangerouslySetInnerHTML={{
+                __html:
+                  'if("serviceWorker" in navigator && "production" === process.env.NODE_ENV){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").then(reg=>console.log("SW registered:",reg)).catch(err=>console.log("SW registration failed:",err)));}',
+              }}
+            />
           </BrandingProvider>
         </ClientPerformanceShell>
       </body>

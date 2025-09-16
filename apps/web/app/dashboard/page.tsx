@@ -180,7 +180,9 @@ export default async function Dashboard() {
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{item.title || 'Untitled'}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
+                    {item.title || 'Untitled'}
+                  </div>
                   {item.start && (
                     <div style={{ fontSize: 12, color: '#6b7280' }}>
                       {new Date(item.start).toLocaleString()}
@@ -188,7 +190,11 @@ export default async function Dashboard() {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <form action={`/api/schedules/${item.id}/confirm`} method="post" style={{ margin: 0 }}>
+                  <form
+                    action={`/api/schedules/${item.id}/confirm`}
+                    method="post"
+                    style={{ margin: 0 }}
+                  >
                     <button
                       formMethod="patch"
                       style={{
@@ -204,7 +210,11 @@ export default async function Dashboard() {
                       Confirm
                     </button>
                   </form>
-                  <form action={`/api/schedules/${item.id}/decline`} method="post" style={{ margin: 0 }}>
+                  <form
+                    action={`/api/schedules/${item.id}/decline`}
+                    method="post"
+                    style={{ margin: 0 }}
+                  >
                     <input type="hidden" name="reason" value="User declined from dashboard" />
                     <button
                       formMethod="patch"

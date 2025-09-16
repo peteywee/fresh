@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+import { formatDistanceToNow } from 'date-fns';
+
 // NOTE: Local TS modules within the same package do not need the explicit .js extension (only cross-package ESM imports do)
 import { Message, MessageChannel, messagingService } from '../lib/messaging';
-import { formatDistanceToNow } from 'date-fns';
 
 interface TeamChatProps {
   orgId: string;
@@ -19,7 +21,11 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
-function ChatInput({ onSend, disabled = false, placeholder = "Type a message..." }: ChatInputProps) {
+function ChatInput({
+  onSend,
+  disabled = false,
+  placeholder = 'Type a message...',
+}: ChatInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -43,7 +49,7 @@ function ChatInput({ onSend, disabled = false, placeholder = "Type a message..."
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
-    
+
     // Auto-resize textarea
     const textarea = e.target;
     textarea.style.height = 'auto';
@@ -132,19 +138,17 @@ function MessageItem({ message, isOwn, canEdit = false, onEdit, onDelete }: Mess
             <span className="text-xs text-gray-500">{formatTimestamp(message.timestamp)}</span>
           </div>
         )}
-        
+
         <div
           className={`px-4 py-2 rounded-lg ${
-            isOwn
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-900'
+            isOwn ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'
           }`}
         >
           {isEditing ? (
             <div className="space-y-2">
               <textarea
                 value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
+                onChange={e => setEditContent(e.target.value)}
                 className="w-full px-2 py-1 text-gray-900 bg-white border border-gray-300 rounded resize-none"
                 rows={2}
               />
@@ -225,7 +229,7 @@ export default function TeamChat({ orgId, userId, userName, userEmail, userRole 
         }
 
         // Listen for foreground messages
-        messagingService.onMessage((payload) => {
+        messagingService.onMessage(payload => {
           console.log('Received foreground message:', payload);
           // You could show a toast notification here
         });
@@ -239,9 +243,9 @@ export default function TeamChat({ orgId, userId, userName, userEmail, userRole 
 
   // Subscribe to channels
   useEffect(() => {
-    const unsubscribe = messagingService.subscribeToChannels(orgId, userId, (channelList) => {
+    const unsubscribe = messagingService.subscribeToChannels(orgId, userId, channelList => {
       setChannels(channelList);
-      
+
       // Ensure general channel exists
       const hasGeneral = channelList.some(ch => ch.id === 'general' || ch.name === 'General');
       if (!hasGeneral && channelList.length === 0) {
@@ -255,10 +259,10 @@ export default function TeamChat({ orgId, userId, userName, userEmail, userRole 
 
   // Subscribe to messages for current channel
   useEffect(() => {
-    const unsubscribe = messagingService.subscribeToMessages(orgId, currentChannel, (messageList) => {
+    const unsubscribe = messagingService.subscribeToMessages(orgId, currentChannel, messageList => {
       setMessages(messageList);
       setIsLoading(false);
-      
+
       // Scroll to bottom when new messages arrive
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -273,7 +277,14 @@ export default function TeamChat({ orgId, userId, userName, userEmail, userRole 
 
     setIsSending(true);
     try {
-      await messagingService.sendMessage(orgId, userId, userName, userEmail, content, currentChannel);
+      await messagingService.sendMessage(
+        orgId,
+        userId,
+        userName,
+        userEmail,
+        content,
+        currentChannel
+      );
     } catch (error) {
       console.error('Failed to send message:', error);
     } finally {
@@ -301,7 +312,13 @@ export default function TeamChat({ orgId, userId, userName, userEmail, userRole 
     if (!newChannelName.trim()) return;
 
     try {
-      const channelId = await messagingService.createChannel(orgId, userId, newChannelName, '', 'team');
+      const channelId = await messagingService.createChannel(
+        orgId,
+        userId,
+        newChannelName,
+        '',
+        'team'
+      );
       if (channelId) {
         setNewChannelName('');
         setShowNewChannel(false);
@@ -321,14 +338,14 @@ export default function TeamChat({ orgId, userId, userName, userEmail, userRole 
         <div className="p-4 border-b border-gray-200">
           <h3 className="font-semibold text-gray-900">Team Chat</h3>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto">
           <div className="p-2">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
               Channels
             </div>
-            
-            {channels.map((channel) => (
+
+            {channels.map(channel => (
               <button
                 key={channel.id}
                 onClick={() => setCurrentChannel(channel.id!)}
@@ -341,7 +358,7 @@ export default function TeamChat({ orgId, userId, userName, userEmail, userRole 
                 # {channel.name}
               </button>
             ))}
-            
+
             {/* Default general channel if no channels exist */}
             {channels.length === 0 && (
               <button
@@ -361,10 +378,10 @@ export default function TeamChat({ orgId, userId, userName, userEmail, userRole 
                 <input
                   type="text"
                   value={newChannelName}
-                  onChange={(e) => setNewChannelName(e.target.value)}
+                  onChange={e => setNewChannelName(e.target.value)}
                   placeholder="Channel name"
                   className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                  onKeyDown={(e) => e.key === 'Enter' && handleCreateChannel()}
+                  onKeyDown={e => e.key === 'Enter' && handleCreateChannel()}
                 />
                 <div className="flex gap-1">
                   <button
@@ -410,7 +427,7 @@ export default function TeamChat({ orgId, userId, userName, userEmail, userRole 
             </div>
           ) : (
             <div className="space-y-1">
-              {messages.map((message) => (
+              {messages.map(message => (
                 <MessageItem
                   key={message.id}
                   message={message}

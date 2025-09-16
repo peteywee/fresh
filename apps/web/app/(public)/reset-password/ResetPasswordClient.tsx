@@ -56,7 +56,7 @@ export default function ResetPasswordClient() {
       <form onSubmit={doReset} style={{ display: 'grid', gap: 16 }}>
         {/* Hidden field for username context - helps password managers */}
         <input type="hidden" name="username" autoComplete="username" value="" />
-        
+
         <div>
           <label
             htmlFor="new-password"
@@ -135,13 +135,15 @@ export default function ResetPasswordClient() {
           style={{
             width: '100%',
             padding: '12px 24px',
-            backgroundColor: busy || !newPassword || newPassword !== confirmPassword ? '#9ca3af' : '#10b981',
+            backgroundColor:
+              busy || !newPassword || newPassword !== confirmPassword ? '#9ca3af' : '#10b981',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
             fontSize: '16px',
             fontWeight: 600,
-            cursor: busy || !newPassword || newPassword !== confirmPassword ? 'not-allowed' : 'pointer',
+            cursor:
+              busy || !newPassword || newPassword !== confirmPassword ? 'not-allowed' : 'pointer',
             transition: 'background-color 0.2s',
           }}
         >

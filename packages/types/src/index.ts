@@ -63,7 +63,7 @@ export const ScheduleSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
   start: z.number().optional(), // epoch ms
-  end: z.number().optional(),   // epoch ms
+  end: z.number().optional(), // epoch ms
   createdBy: z.string().optional(),
   createdAt: z.number().optional(),
   updatedAt: z.number().optional(),

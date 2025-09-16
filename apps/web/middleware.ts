@@ -18,40 +18,32 @@ export function middleware(req: NextRequest) {
 
   // Public routes that don't need auth
   const PUBLIC_ROUTES = new Set(['/login', '/register', '/forgot-password', '/reset-password']);
-  
+
   // Check for session cookie (fast synchronous check)
   const hasSession = !!req.cookies.get(process.env.SESSION_COOKIE_NAME || '__session')?.value;
 
   // Root path: redirect based on session
   if (pathname === '/') {
-    return hasSession 
-      ? NextResponse.redirect(new URL('/dashboard', req.url))
-      : NextResponse.next();
+    return hasSession ? NextResponse.redirect(new URL('/dashboard', req.url)) : NextResponse.next();
   }
 
   // Public routes: redirect if already logged in
   if (PUBLIC_ROUTES.has(pathname)) {
-    return hasSession 
-      ? NextResponse.redirect(new URL('/dashboard', req.url))
-      : NextResponse.next();
+    return hasSession ? NextResponse.redirect(new URL('/dashboard', req.url)) : NextResponse.next();
   }
 
   // Onboarding: require session
   if (pathname.startsWith('/onboarding')) {
-    return hasSession 
-      ? NextResponse.next()
-      : NextResponse.redirect(new URL('/login', req.url));
+    return hasSession ? NextResponse.next() : NextResponse.redirect(new URL('/login', req.url));
   }
 
   // All other routes: require session (dashboard, team, etc.)
-  return hasSession 
-    ? NextResponse.next()
-    : NextResponse.redirect(new URL('/login', req.url));
+  return hasSession ? NextResponse.next() : NextResponse.redirect(new URL('/login', req.url));
 }
 
 export const config = {
   matcher: [
     // Ultra-optimized matcher: only run on actual pages, skip everything else
-    '/((?!_next|api|favicon|manifest|sw|icons|.*\\.).*)' 
+    '/((?!_next|api|favicon|manifest|sw|icons|.*\\.).*)',
   ],
 };

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, adminAuth } from '@/lib/firebase.admin';
+
+import { adminAuth, adminDb } from '@/lib/firebase.admin';
 import { ensureRole } from '@/lib/roles';
 import { getServerSession } from '@/lib/session';
 
@@ -17,7 +18,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!displayName && !role) {
     return NextResponse.json({ error: 'No changes provided' }, { status: 400 });
   }
-  if (role && !['owner','admin','member','staff','viewer'].includes(role)) {
+  if (role && !['owner', 'admin', 'member', 'staff', 'viewer'].includes(role)) {
     return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
   }
 
@@ -57,12 +58,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const { id } = await params;
   const db = adminDb();
-  await db
-    .collection('orgs')
-    .doc(session.orgId)
-    .collection('members')
-    .doc(id)
-    .delete();
+  await db.collection('orgs').doc(session.orgId).collection('members').doc(id).delete();
 
   return NextResponse.json({ ok: true });
 }

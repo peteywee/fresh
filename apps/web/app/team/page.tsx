@@ -1,17 +1,26 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { TableSkeleton } from '@/components/LoadingComponents';
-import { useDebouncedFetch, useOptimisticMutation } from '@/lib/useFetch';
+
 import dynamic from 'next/dynamic';
+
+import { TableSkeleton } from '@/components/LoadingComponents';
+import { DeleteConfirmation, TeamMemberForm } from '@/components/TeamMemberForms';
+import { useFeatures, useTerminology } from '@/lib/useBranding';
+import { useDebouncedFetch, useOptimisticMutation } from '@/lib/useFetch';
+import { useSession } from '@/lib/useSession';
+
 // Lazy load TeamChat to reduce initial bundle for team management table
 const TeamChat = dynamic(() => import('@/components/TeamChat'), {
   ssr: false,
-  loading: () => <div style={{padding:16, border:'1px solid #e5e7eb', borderRadius:8, background:'#f9fafb'}}>Loading chat…</div>
+  loading: () => (
+    <div
+      style={{ padding: 16, border: '1px solid #e5e7eb', borderRadius: 8, background: '#f9fafb' }}
+    >
+      Loading chat…
+    </div>
+  ),
 });
-import { useSession } from '@/lib/useSession';
-import { TeamMemberForm, DeleteConfirmation } from '@/components/TeamMemberForms';
-import { useTerminology, useFeatures } from '@/lib/useBranding';
 
 type Member = {
   id: string;
@@ -60,25 +69,29 @@ export default function TeamPage() {
   const members = data?.members || [];
 
   // Optimistic mutation hook for role updates
-  const { mutate: updateRoles, loading: bulkUpdating } = useOptimisticMutation('/api/team/bulk-roles');
+  const { mutate: updateRoles, loading: bulkUpdating } =
+    useOptimisticMutation('/api/team/bulk-roles');
 
   // Individual role update with optimistic updates
-  const setRole = useCallback(async (id: string, role: string) => {
-    const optimisticUpdate = {
-      members: members.map(m => (m.id === id ? { ...m, role, updatedAt: Date.now() } : m))
-    };
+  const setRole = useCallback(
+    async (id: string, role: string) => {
+      const optimisticUpdate = {
+        members: members.map(m => (m.id === id ? { ...m, role, updatedAt: Date.now() } : m)),
+      };
 
-    try {
-      await updateRoles(
-        optimisticUpdate,
-        { userId: id, role },
-        (data) => mutate(data),
-        () => refetch() // Revert on error
-      );
-    } catch (error) {
-      console.error('Failed to update role:', error);
-    }
-  }, [members, updateRoles, mutate, refetch]);
+      try {
+        await updateRoles(
+          optimisticUpdate,
+          { userId: id, role },
+          data => mutate(data),
+          () => refetch() // Revert on error
+        );
+      } catch (error) {
+        console.error('Failed to update role:', error);
+      }
+    },
+    [members, updateRoles, mutate, refetch]
+  );
 
   // Bulk role update with optimistic updates
   const bulkUpdateRoles = useCallback(async () => {
@@ -88,14 +101,14 @@ export default function TeamPage() {
     const optimisticUpdate = {
       members: members.map(m =>
         selectedMembers.has(m.id) ? { ...m, role: bulkRole, updatedAt: Date.now() } : m
-      )
+      ),
     };
 
     try {
       await updateRoles(
         optimisticUpdate,
         { userIds, role: bulkRole },
-        (data) => {
+        data => {
           mutate(data);
           setSelectedMembers(new Set());
         },
@@ -107,63 +120,69 @@ export default function TeamPage() {
   }, [selectedMembers, bulkRole, members, updateRoles, mutate, refetch]);
 
   // Add new member
-  const addMember = useCallback(async (memberData: Omit<Member, 'id' | 'joinedAt' | 'updatedAt'>) => {
-    setFormLoading(true);
-    try {
-      const response = await fetch('/api/team/members', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(memberData),
-      });
+  const addMember = useCallback(
+    async (memberData: Omit<Member, 'id' | 'joinedAt' | 'updatedAt'>) => {
+      setFormLoading(true);
+      try {
+        const response = await fetch('/api/team/members', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(memberData),
+        });
 
-      if (response.ok) {
-        await refetch(); // Refresh the member list
-        return true;
-      } else {
-        const error = await response.text();
+        if (response.ok) {
+          await refetch(); // Refresh the member list
+          return true;
+        } else {
+          const error = await response.text();
+          console.error('Failed to add member:', error);
+          return false;
+        }
+      } catch (error) {
         console.error('Failed to add member:', error);
         return false;
+      } finally {
+        setFormLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to add member:', error);
-      return false;
-    } finally {
-      setFormLoading(false);
-    }
-  }, [refetch]);
+    },
+    [refetch]
+  );
 
   // Edit existing member
-  const editMember = useCallback(async (memberData: Omit<Member, 'id' | 'joinedAt' | 'updatedAt'>) => {
-    if (!editingMember) return false;
-    
-    setFormLoading(true);
-    try {
-      const response = await fetch(`/api/team/members/${editingMember.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(memberData),
-      });
+  const editMember = useCallback(
+    async (memberData: Omit<Member, 'id' | 'joinedAt' | 'updatedAt'>) => {
+      if (!editingMember) return false;
 
-      if (response.ok) {
-        await refetch(); // Refresh the member list
-        return true;
-      } else {
-        const error = await response.text();
+      setFormLoading(true);
+      try {
+        const response = await fetch(`/api/team/members/${editingMember.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(memberData),
+        });
+
+        if (response.ok) {
+          await refetch(); // Refresh the member list
+          return true;
+        } else {
+          const error = await response.text();
+          console.error('Failed to edit member:', error);
+          return false;
+        }
+      } catch (error) {
         console.error('Failed to edit member:', error);
         return false;
+      } finally {
+        setFormLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to edit member:', error);
-      return false;
-    } finally {
-      setFormLoading(false);
-    }
-  }, [editingMember, refetch]);
+    },
+    [editingMember, refetch]
+  );
 
   // Delete member
   const deleteMember = useCallback(async () => {
     if (!deletingMember) return false;
-    
+
     setFormLoading(true);
     try {
       const response = await fetch(`/api/team/members/${deletingMember.id}`, {
@@ -223,7 +242,14 @@ export default function TeamPage() {
   if (loading) {
     return (
       <main>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 24,
+          }}
+        >
           <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Team Management</h1>
         </div>
         <TableSkeleton rows={5} columns={5} />
@@ -273,11 +299,13 @@ export default function TeamPage() {
                 cursor: 'pointer',
               }}
             >
-              {showChat ? '🗨️ Hide ' : '💬 Show '}{features.chat_name}
+              {showChat ? '🗨️ Hide ' : '💬 Show '}
+              {features.chat_name}
             </button>
           )}
           <div style={{ fontSize: 14, color: '#6b7280' }}>
-            {members.length} {terminology.team_member.toLowerCase()}{members.length !== 1 ? 's' : ''}
+            {members.length} {terminology.team_member.toLowerCase()}
+            {members.length !== 1 ? 's' : ''}
           </div>
         </div>
       </div>

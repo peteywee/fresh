@@ -1,5 +1,11 @@
-import { describe, it, expect } from 'vitest';
-import { getBrandingConfig, INDUSTRY_CONFIGS, getAvailableIndustries, DEFAULT_CONFIG } from '../apps/web/lib/branding';
+import { describe, expect, it } from 'vitest';
+
+import {
+  DEFAULT_CONFIG,
+  INDUSTRY_CONFIGS,
+  getAvailableIndustries,
+  getBrandingConfig,
+} from '../apps/web/lib/branding';
 
 describe('branding configuration', () => {
   it('returns default config for unknown industry', () => {

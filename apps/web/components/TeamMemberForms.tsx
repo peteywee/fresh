@@ -19,7 +19,13 @@ interface TeamMemberFormProps {
   isLoading?: boolean;
 }
 
-export function TeamMemberForm({ member, onSave, onCancel, roles, isLoading = false }: TeamMemberFormProps) {
+export function TeamMemberForm({
+  member,
+  onSave,
+  onCancel,
+  roles,
+  isLoading = false,
+}: TeamMemberFormProps) {
   const [formData, setFormData] = useState({
     displayName: member?.displayName || '',
     email: member?.email || '',
@@ -50,7 +56,7 @@ export function TeamMemberForm({ member, onSave, onCancel, roles, isLoading = fa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validate()) return;
 
     const success = await onSave({
@@ -91,7 +97,7 @@ export function TeamMemberForm({ member, onSave, onCancel, roles, isLoading = fa
                 type="text"
                 id="displayName"
                 value={formData.displayName}
-                onChange={(e) => handleChange('displayName', e.target.value)}
+                onChange={e => handleChange('displayName', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.displayName ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -112,18 +118,18 @@ export function TeamMemberForm({ member, onSave, onCancel, roles, isLoading = fa
                 type="email"
                 id="email"
                 value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
+                onChange={e => handleChange('email', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter email address"
                 disabled={isLoading || !!member} // Disable email editing for existing members
               />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               {member && (
-                <p className="text-gray-500 text-sm mt-1">Email cannot be changed for existing members</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Email cannot be changed for existing members
+                </p>
               )}
             </div>
 
@@ -135,21 +141,19 @@ export function TeamMemberForm({ member, onSave, onCancel, roles, isLoading = fa
               <select
                 id="role"
                 value={formData.role}
-                onChange={(e) => handleChange('role', e.target.value)}
+                onChange={e => handleChange('role', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.role ? 'border-red-500' : 'border-gray-300'
                 }`}
                 disabled={isLoading}
               >
-                {roles.map((role) => (
+                {roles.map(role => (
                   <option key={role} value={role}>
                     {role.charAt(0).toUpperCase() + role.slice(1)}
                   </option>
                 ))}
               </select>
-              {errors.role && (
-                <p className="text-red-500 text-sm mt-1">{errors.role}</p>
-              )}
+              {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role}</p>}
             </div>
           </div>
 
@@ -186,7 +190,12 @@ interface DeleteConfirmationProps {
   isLoading?: boolean;
 }
 
-export function DeleteConfirmation({ member, onConfirm, onCancel, isLoading = false }: DeleteConfirmationProps) {
+export function DeleteConfirmation({
+  member,
+  onConfirm,
+  onCancel,
+  isLoading = false,
+}: DeleteConfirmationProps) {
   const handleConfirm = async () => {
     const success = await onConfirm();
     if (success) {
@@ -203,7 +212,8 @@ export function DeleteConfirmation({ member, onConfirm, onCancel, isLoading = fa
 
         <div className="px-6 py-4">
           <p className="text-gray-700 mb-4">
-            Are you sure you want to remove <strong>{member.displayName || member.email}</strong> from the team?
+            Are you sure you want to remove <strong>{member.displayName || member.email}</strong>{' '}
+            from the team?
           </p>
           <p className="text-sm text-gray-500">
             This action cannot be undone. The member will lose access to all team resources.

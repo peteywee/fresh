@@ -16,5 +16,7 @@ export async function GET() {
   if (!cfg.apiKey) {
     return NextResponse.json({ error: 'Firebase config unavailable' }, { status: 500 });
   }
-  return NextResponse.json(cfg, { headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600' } });
+  return NextResponse.json(cfg, {
+    headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600' },
+  });
 }

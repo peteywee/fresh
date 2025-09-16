@@ -41,11 +41,11 @@ function ResetPasswordForm() {
         </h1>
         <p style={{ color: '#6b7280', fontSize: 16 }}>Enter your new password</p>
       </div>
-      
+
       <form onSubmit={submit} style={{ display: 'grid', gap: 16 }}>
         {/* Hidden field for username context - helps password managers */}
         <input type="hidden" name="username" autoComplete="username" value="" />
-        
+
         <div>
           <label
             htmlFor="token"
@@ -77,7 +77,7 @@ function ResetPasswordForm() {
             }}
           />
         </div>
-        
+
         <div>
           <label
             htmlFor="new-password"
@@ -111,7 +111,7 @@ function ResetPasswordForm() {
             }}
           />
         </div>
-        
+
         <button
           type="submit"
           style={{

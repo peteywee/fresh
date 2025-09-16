@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { adminDb } from '@/lib/firebase.admin';
 import { ensureRole } from '@/lib/roles';
 import { getServerSession } from '@/lib/session';
@@ -10,7 +11,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!session?.orgId) return NextResponse.json({ error: 'No organization' }, { status: 400 });
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
-  const reason = typeof body.reason === 'string' && body.reason.trim() ? body.reason.trim() : undefined;
+  const reason =
+    typeof body.reason === 'string' && body.reason.trim() ? body.reason.trim() : undefined;
   const db = adminDb();
   const docRef = db.collection('orgs').doc(session.orgId).collection('schedules').doc(id);
   const doc = await docRef.get();
