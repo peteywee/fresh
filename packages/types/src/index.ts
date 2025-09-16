@@ -56,6 +56,41 @@ export const ScheduleEntrySchema = z.object({
 });
 export type ScheduleEntry = z.infer<typeof ScheduleEntrySchema>;
 
+// New lightweight schedule schema matching current app calendar implementation
+// (Existing calendar routes store fields named start/end (ms timestamps) not startTime/endTime ISO strings.)
+export const ScheduleSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1).optional(),
+  description: z.string().optional(),
+  start: z.number().optional(), // epoch ms
+  end: z.number().optional(),   // epoch ms
+  createdBy: z.string().optional(),
+  createdAt: z.number().optional(),
+  updatedAt: z.number().optional(),
+  updatedBy: z.string().optional(),
+  confirmed: z.boolean().default(false),
+  confirmedAt: z.number().optional(),
+  confirmedBy: z.string().optional(),
+  declined: z.boolean().default(false),
+  declinedAt: z.number().optional(),
+  declinedBy: z.string().optional(),
+  declineReason: z.string().optional(),
+});
+export type Schedule = z.infer<typeof ScheduleSchema>;
+
+// Utility filters (kept here so they can be used on both client & server without duplication)
+export function filterCalendarVisible(schedules: Schedule[]): Schedule[] {
+  return schedules.filter(s => s.confirmed && !s.declined);
+}
+
+export function splitByStatus(schedules: Schedule[]) {
+  return {
+    confirmed: schedules.filter(s => s.confirmed && !s.declined),
+    pending: schedules.filter(s => !s.confirmed && !s.declined),
+    declined: schedules.filter(s => s.declined),
+  };
+}
+
 // Re-export from other modules
 export * from './auth.js';
 export * from './onboarding.js';

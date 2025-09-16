@@ -1,16 +1,32 @@
-import { redirect } from 'next/navigation';
-
 import { getServerSession } from '@/lib/session';
+
+async function fetchPending(): Promise<any[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/schedules?pending=1`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.schedules || [];
+  } catch {
+    return [];
+  }
+}
 
 export default async function Dashboard() {
   const session = await getServerSession();
+  const pending = await fetchPending();
 
+  // If we reach this page, middleware has already verified auth/onboarding
+  // Just get session data for display purposes
   if (!session?.sub) {
-    return redirect('/login');
-  }
-
-  if (!session.onboardingComplete) {
-    return redirect('/onboarding');
+    // This should not happen due to middleware, but handle gracefully
+    return (
+      <div style={{ padding: 24, textAlign: 'center' }}>
+        <p>Session error - please try logging in again.</p>
+        <a href="/login">Go to Login</a>
+      </div>
+    );
   }
 
   return (
@@ -134,6 +150,83 @@ export default async function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Pending Confirmations */}
+      {pending.length > 0 && (
+        <div
+          style={{
+            backgroundColor: 'white',
+            padding: 24,
+            borderRadius: 12,
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            marginBottom: 32,
+          }}
+        >
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: '#111827', margin: '0 0 16px 0' }}>
+            Pending Confirmations
+          </h2>
+          <div style={{ display: 'grid', gap: 16 }}>
+            {pending.slice(0, 5).map(item => (
+              <div
+                key={item.id}
+                style={{
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 8,
+                  padding: 16,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{item.title || 'Untitled'}</div>
+                  {item.start && (
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>
+                      {new Date(item.start).toLocaleString()}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <form action={`/api/schedules/${item.id}/confirm`} method="post" style={{ margin: 0 }}>
+                    <button
+                      formMethod="patch"
+                      style={{
+                        backgroundColor: '#16a34a',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: 6,
+                        fontSize: 12,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Confirm
+                    </button>
+                  </form>
+                  <form action={`/api/schedules/${item.id}/decline`} method="post" style={{ margin: 0 }}>
+                    <input type="hidden" name="reason" value="User declined from dashboard" />
+                    <button
+                      formMethod="patch"
+                      style={{
+                        backgroundColor: '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: 6,
+                        fontSize: 12,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Decline
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recent Activity */}
       <div

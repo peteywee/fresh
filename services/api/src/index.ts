@@ -72,7 +72,8 @@ app.use((req, res) => {
 });
 
 // Start server
-const PORT = Number(process.env.PORT || 3001);
+// Default development port standardized to 3333 (docs & tests rely on this)
+const PORT = Number(process.env.PORT || 3333);
 app.listen(PORT, () => {
   log.info({ port: PORT }, 'Fresh API listening');
 });

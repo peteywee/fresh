@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
-// Prefer API_BASE_URL, fallback to API_URL, then default to local dev port 3001
-const API_URL = process.env.API_BASE_URL || process.env.API_URL || 'http://localhost:3001';
+// Prefer API_BASE_URL, fallback to API_URL, then default to local dev port 3333
+const API_URL = process.env.API_BASE_URL || process.env.API_URL || 'http://localhost:3333';
 
 // Bundle analyzer setup
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
@@ -27,16 +27,46 @@ const nextConfig = {
           }
         : false,
   },
-  // Add headers for static assets to improve PWA caching
+  // Performance optimizations
+  compress: true,
+  // Image optimization
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+  },
+  // Enable PWA features
   async headers() {
     return [
       {
         source: '/_next/static/:path*',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
       },
       {
-        source: '/manifest.webmanifest',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
+        source: '/manifest.json',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400' },
+          { key: 'Content-Type', value: 'application/manifest+json' },
+        ],
+      },
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+      {
+        source: '/((?!api|_next|_static|favicon.ico).*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
       },
     ];
   },

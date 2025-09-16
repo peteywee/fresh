@@ -69,6 +69,8 @@ export default function RegisterPage() {
     }
   }
 
+  // Removed unused setName function
+
   return (
     <main style={{ maxWidth: 420, margin: '0 auto', padding: 24 }}>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -83,6 +85,7 @@ export default function RegisterPage() {
       <form onSubmit={handleRegister} style={{ display: 'grid', gap: 16 }}>
         <div>
           <label
+            htmlFor="name"
             style={{
               display: 'block',
               fontSize: 14,
@@ -90,16 +93,21 @@ export default function RegisterPage() {
               color: '#374151',
               marginBottom: 4,
             }}
+            suppressHydrationWarning
           >
             Full Name
           </label>
           <input
+            id="name"
+            name="name"
             placeholder="Enter your full name"
             type="text"
-            value={displayName}
+            autoComplete="name"
             onChange={e => setDisplayName(e.target.value)}
             required
             disabled={busy}
+            suppressHydrationWarning
+
             style={{
               width: '100%',
               padding: '12px 16px',
@@ -111,9 +119,9 @@ export default function RegisterPage() {
             }}
           />
         </div>
-
         <div>
           <label
+            htmlFor="email"
             style={{
               display: 'block',
               fontSize: 14,
@@ -121,16 +129,21 @@ export default function RegisterPage() {
               color: '#374151',
               marginBottom: 4,
             }}
+            suppressHydrationWarning
           >
             Email Address
           </label>
           <input
+            id="email"
+            name="email"
             placeholder="Enter your email"
             type="email"
+            autoComplete="username"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
             disabled={busy}
+            suppressHydrationWarning
             style={{
               width: '100%',
               padding: '12px 16px',
@@ -145,6 +158,7 @@ export default function RegisterPage() {
 
         <div>
           <label
+            htmlFor="new-password"
             style={{
               display: 'block',
               fontSize: 14,
@@ -152,17 +166,22 @@ export default function RegisterPage() {
               color: '#374151',
               marginBottom: 4,
             }}
+            suppressHydrationWarning
           >
             Password
           </label>
           <input
+            id="new-password"
+            name="password"
             placeholder="Enter password (min 6 characters)"
             type="password"
+            autoComplete="new-password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
             minLength={6}
             disabled={busy}
+            suppressHydrationWarning
             style={{
               width: '100%',
               padding: '12px 16px',
@@ -177,6 +196,7 @@ export default function RegisterPage() {
 
         <div>
           <label
+            htmlFor="confirm-password"
             style={{
               display: 'block',
               fontSize: 14,
@@ -184,17 +204,22 @@ export default function RegisterPage() {
               color: '#374151',
               marginBottom: 4,
             }}
+            suppressHydrationWarning
           >
             Confirm Password
           </label>
           <input
+            id="confirm-password"
+            name="confirmPassword"
             placeholder="Confirm your password"
             type="password"
+            autoComplete="new-password"
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
             required
             minLength={6}
             disabled={busy}
+            suppressHydrationWarning
             style={{
               width: '100%',
               padding: '12px 16px',

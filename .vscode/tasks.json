@@ -44,7 +44,7 @@
     {
       "label": "🔧 Start API Only",
       "type": "shell",
-      "command": "PORT=3001 pnpm dev:api",
+      "command": "PORT=3333 pnpm dev:api",
       "group": "build",
       "detail": "Start only the API development server (Express)",
       "problemMatcher": []

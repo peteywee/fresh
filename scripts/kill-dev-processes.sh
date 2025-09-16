@@ -31,7 +31,7 @@ kill_processes "next dev" "Next.js development server"
 kill_processes "pnpm.*dev" "Package manager dev scripts"
 
 # Kill processes by port
-for port in 3000 3001 3333; do
+for port in 3000 3333; do
   echo "🔍 Checking for processes on port $port..."
   pids=$(lsof -ti tcp:$port 2>/dev/null || true)
   if [ -n "$pids" ]; then

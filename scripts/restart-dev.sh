@@ -13,15 +13,15 @@ sleep 2
 echo "Step 2: Starting development servers..."
 
 # Start API server
-echo "🟢 Starting API Server on port 3001..."
-PORT=3001 pnpm --filter @services/api dev > logs/api.log 2>&1 &
+echo "🟢 Starting API Server on port 3333..."
+PORT=3333 pnpm --filter @services/api dev > logs/api.log 2>&1 &
 API_PID=$!
 echo "   PID: $API_PID, Logs: logs/api.log"
 
 # Wait for API to be ready
-echo "⏳ Waiting for API server to be ready..."
+echo "⏳ Waiting for API server to be ready (port 3333)..."
 sleep 3
-if curl -s http://localhost:3001/health >/dev/null; then
+if curl -s http://localhost:3333/health >/dev/null; then
   echo "✅ API server is ready"
 else
   echo "❌ API server failed to start"
@@ -49,8 +49,8 @@ echo "🎉 Development environment is ready!"
 echo ""
 echo "📋 Services:"
 echo "   • Web:    http://localhost:3000"
-echo "   • API:    http://localhost:3001"
-echo "   • Health: http://localhost:3001/health"
+echo "   • API:    http://localhost:3333"
+echo "   • Health: http://localhost:3333/health"
 echo ""
 echo "📝 Log files:"
 echo "   • API:    logs/api.log"

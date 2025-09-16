@@ -1,54 +1,57 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 export function middleware(req: NextRequest) {
-  const { pathname } = new URL(req.url);
+  const { pathname } = req.nextUrl;
 
-  // Public or static resources - include all auth-related pages
-  const isPublic =
-    pathname === '/' ||
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/register') ||
-    pathname.startsWith('/forgot-password') ||
-    pathname.startsWith('/reset-password') ||
+  // Skip middleware for static assets and API routes (ultra fast)
+  if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/favicon') ||
     pathname.startsWith('/manifest') ||
     pathname.startsWith('/sw.js') ||
-    /\.[\w]+$/.test(pathname); // static files
+    pathname.startsWith('/icons') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next();
+  }
 
-  // NEVER intercept API
-  const isAPI = pathname.startsWith('/api');
-  if (isPublic || isAPI) return NextResponse.next();
+  // Public routes that don't need auth
+  const PUBLIC_ROUTES = new Set(['/login', '/register', '/forgot-password', '/reset-password']);
+  
+  // Check for session cookie (fast synchronous check)
+  const hasSession = !!req.cookies.get(process.env.SESSION_COOKIE_NAME || '__session')?.value;
 
-  // Session cookie - use the flags cookie for routing decisions
-  const flagsCookie = process.env.FLAGS_COOKIE_NAME || 'fresh_flags';
-  const raw = req.cookies.get(flagsCookie)?.value;
-  let flags: any = null;
-  try {
-    flags = raw ? JSON.parse(raw) : null;
-  } catch {}
+  // Root path: redirect based on session
+  if (pathname === '/') {
+    return hasSession 
+      ? NextResponse.redirect(new URL('/dashboard', req.url))
+      : NextResponse.next();
+  }
 
-  const loggedIn = !!flags?.li;
-  const onboarded = !!flags?.ob;
+  // Public routes: redirect if already logged in
+  if (PUBLIC_ROUTES.has(pathname)) {
+    return hasSession 
+      ? NextResponse.redirect(new URL('/dashboard', req.url))
+      : NextResponse.next();
+  }
 
-  if (!loggedIn) return NextResponse.redirect(new URL('/login', req.url));
+  // Onboarding: require session
+  if (pathname.startsWith('/onboarding')) {
+    return hasSession 
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL('/login', req.url));
+  }
 
-  if (loggedIn && !onboarded && !pathname.startsWith('/onboarding'))
-    return NextResponse.redirect(new URL('/onboarding', req.url));
-
-  if (
-    loggedIn &&
-    onboarded &&
-    (pathname === '/' ||
-      pathname === '/login' ||
-      pathname === '/register' ||
-      pathname === '/onboarding')
-  )
-    return NextResponse.redirect(new URL('/dashboard', req.url));
-
-  return NextResponse.next();
+  // All other routes: require session (dashboard, team, etc.)
+  return hasSession 
+    ? NextResponse.next()
+    : NextResponse.redirect(new URL('/login', req.url));
 }
 
 export const config = {
-  matcher: ['/((?!_next|favicon.ico|api|.*\\..*).*)'],
+  matcher: [
+    // Ultra-optimized matcher: only run on actual pages, skip everything else
+    '/((?!_next|api|favicon|manifest|sw|icons|.*\\.).*)' 
+  ],
 };

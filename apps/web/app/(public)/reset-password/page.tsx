@@ -34,19 +34,117 @@ function ResetPasswordForm() {
   }
 
   return (
-    <main style={{ padding: 24, maxWidth: 420 }}>
-      <h1>Reset Password</h1>
-      <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
-        <input placeholder="Token" value={token} onChange={e => setToken(e.target.value)} />
-        <input
-          placeholder="New password"
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
-        <button type="submit">Reset</button>
+    <main style={{ padding: 24, maxWidth: 420, margin: '0 auto' }}>
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 700, color: '#111827', marginBottom: 8 }}>
+          Reset Password
+        </h1>
+        <p style={{ color: '#6b7280', fontSize: 16 }}>Enter your new password</p>
+      </div>
+      
+      <form onSubmit={submit} style={{ display: 'grid', gap: 16 }}>
+        {/* Hidden field for username context - helps password managers */}
+        <input type="hidden" name="username" autoComplete="username" value="" />
+        
+        <div>
+          <label
+            htmlFor="token"
+            style={{
+              display: 'block',
+              fontSize: 14,
+              fontWeight: 500,
+              color: '#374151',
+              marginBottom: 4,
+            }}
+          >
+            Reset Token
+          </label>
+          <input
+            id="token"
+            name="token"
+            placeholder="Token"
+            type="text"
+            value={token}
+            onChange={e => setToken(e.target.value)}
+            required
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '16px',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+        
+        <div>
+          <label
+            htmlFor="new-password"
+            style={{
+              display: 'block',
+              fontSize: 14,
+              fontWeight: 500,
+              color: '#374151',
+              marginBottom: 4,
+            }}
+          >
+            New Password
+          </label>
+          <input
+            id="new-password"
+            name="password"
+            placeholder="New password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            minLength={6}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '16px',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+        
+        <button
+          type="submit"
+          style={{
+            width: '100%',
+            padding: '12px 24px',
+            backgroundColor: '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '16px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'background-color 0.2s',
+          }}
+        >
+          Reset Password
+        </button>
       </form>
-      {msg && <p style={{ color: 'crimson', marginTop: 12 }}>{msg}</p>}
+      {msg && (
+        <div
+          style={{
+            color: msg.includes('reset') ? '#059669' : '#dc2626',
+            backgroundColor: msg.includes('reset') ? '#f0fdf4' : '#fef2f2',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginTop: '16px',
+            border: msg.includes('reset') ? '1px solid #bbf7d0' : '1px solid #fecaca',
+            fontSize: '14px',
+          }}
+        >
+          {msg}
+        </div>
+      )}
     </main>
   );
 }

@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase.admin';
 import { getServerSession } from '@/lib/session';
 
-const FLAGS_COOKIE = process.env.FLAGS_COOKIE_NAME || 'fresh_flags';
-
 export async function POST(req: NextRequest) {
   const session = await getServerSession();
   if (!session?.sub) {
@@ -72,14 +70,6 @@ export async function POST(req: NextRequest) {
         name: orgName,
         role,
       },
-    });
-
-    // Update flags cookie to reflect onboarding completion
-    res.cookies.set(FLAGS_COOKIE, JSON.stringify({ li: true, ob: true }), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
-      sameSite: 'lax',
-      path: '/',
     });
 
     return res;

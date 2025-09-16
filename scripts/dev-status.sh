@@ -5,8 +5,8 @@ echo "📊 Fresh Development Environment Status"
 echo "======================================="
 
 # Check API server
-echo -n "🔧 API Server (port 3001): "
-if curl -s http://localhost:3001/health >/dev/null 2>&1; then
+echo -n "🔧 API Server (port 3333): "
+if curl -s http://localhost:3333/health >/dev/null 2>&1; then
   echo "✅ Running"
 else
   echo "❌ Not running"
@@ -30,7 +30,7 @@ pgrep -fl "next dev|tsx watch|pnpm.*dev" || echo "No development processes found
 echo ""
 echo "🔌 Port Usage:"
 echo "-------------"
-for port in 3000 3001 3333; do
+for port in 3000 3333; do
   if lsof -ti tcp:$port >/dev/null 2>&1; then
     echo "Port $port: ✅ In use"
   else

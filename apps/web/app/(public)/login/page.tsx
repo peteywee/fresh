@@ -66,6 +66,7 @@ export default function LoginPage() {
       <form onSubmit={handleLogin} style={{ display: 'grid', gap: 16 }}>
         <div>
           <label
+            htmlFor="email"
             style={{
               display: 'block',
               fontSize: 14,
@@ -73,16 +74,21 @@ export default function LoginPage() {
               color: '#374151',
               marginBottom: 4,
             }}
+            suppressHydrationWarning
           >
             Email Address
           </label>
           <input
+            id="email"
+            name="email"
             placeholder="Enter your email"
             type="email"
+            autoComplete="username"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
             disabled={busy}
+            suppressHydrationWarning
             style={{
               width: '100%',
               padding: '12px 16px',
@@ -97,6 +103,7 @@ export default function LoginPage() {
 
         <div>
           <label
+            htmlFor="current-password"
             style={{
               display: 'block',
               fontSize: 14,
@@ -104,16 +111,21 @@ export default function LoginPage() {
               color: '#374151',
               marginBottom: 4,
             }}
+            suppressHydrationWarning
           >
             Password
           </label>
           <input
+            id="current-password"
+            name="password"
             placeholder="Enter your password"
             type="password"
+            autoComplete="current-password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
             disabled={busy}
+            suppressHydrationWarning
             style={{
               width: '100%',
               padding: '12px 16px',

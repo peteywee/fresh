@@ -4,19 +4,31 @@ import { adminDb } from '@/lib/firebase.admin';
 import { ensureRole } from '@/lib/roles';
 import { getServerSession } from '@/lib/session';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getServerSession();
   if (!session?.sub) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!session.orgId) return NextResponse.json({ schedules: [] });
   const db = adminDb();
-  const snap = await db
+  const { searchParams } = new URL(req.url);
+  const all = searchParams.has('all');
+  const pending = searchParams.has('pending');
+
+  let query = db
     .collection('orgs')
     .doc(session.orgId)
     .collection('schedules')
     .orderBy('start', 'desc')
-    .limit(25)
-    .get();
-  const schedules = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    .limit(100);
+  const snap = await query.get();
+  let schedules = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+
+  if (!all) {
+    if (pending) {
+      schedules = schedules.filter(s => !s.confirmed && !s.declined);
+    } else {
+      schedules = schedules.filter(s => s.confirmed && !s.declined);
+    }
+  }
   return NextResponse.json({ schedules });
 }
 
@@ -35,6 +47,8 @@ export async function POST(req: NextRequest) {
     .collection('schedules')
     .add({
       ...payload,
+      confirmed: false,
+      declined: false,
       createdBy: session.sub,
       createdAt: Date.now(),
     });

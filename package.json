@@ -2,10 +2,14 @@
   "name": "fresh",
   "private": true,
   "version": "0.1.0",
+  "engines": {
+    "node": ">=20 <21"
+  },
   "scripts": {
-    "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
+    "dev": "concurrently -k -n api,web -c blue,green \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:web": "pnpm --filter @apps/web dev",
     "dev:api": "pnpm --filter @services/api dev",
+    "dev:check-node": "node scripts/check-node-version.cjs",
     "dev:restart": "./scripts/restart-dev.sh",
     "dev:kill": "./scripts/kill-dev-processes.sh",
     "dev:status": "./scripts/dev-status.sh",
@@ -27,9 +31,11 @@
     "bundle:watch": "bundlewatch",
     "docs": "typedoc --out docs/API packages",
     "doctor": "./scripts/doctor.sh",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "commit:skip-hooks": "HUSKY=0 git commit -m \"chore: commit without hooks (temporary)\""
   },
   "devDependencies": {
+    "semver": "^7.6.3",
     "@lhci/cli": "^0.15.1",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
@@ -51,5 +57,8 @@
     "typedoc": "^0.28.12",
     "vitest": "^3.2.4",
     "webpack-bundle-analyzer": "^4.10.2"
+  },
+  "dependencies": {
+    "next": "15.5.2"
   }
 }
