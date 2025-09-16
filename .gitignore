@@ -145,4 +145,10 @@ docs/API/
 
 # Vite logs files
 vite.config.js.timestamp-*
-vite.config.ts.timestamp-*sac.json
+vite.config.ts.timestamp-*
+
+# Local Firebase service account (never commit)
+sac.json
+secrets/
+secrets/*.json
+!secrets/README.md

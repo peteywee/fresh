@@ -30,9 +30,16 @@ export function getAdminApp(): App {
     }
 
     // Fallback to individual environment variables
-    const projectId = required('FIREBASE_PROJECT_ID', process.env.FIREBASE_PROJECT_ID);
-    const clientEmail = required('FIREBASE_CLIENT_EMAIL', process.env.FIREBASE_CLIENT_EMAIL);
-    const rawKey = required('FIREBASE_PRIVATE_KEY', process.env.FIREBASE_PRIVATE_KEY);
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const rawKey = process.env.FIREBASE_PRIVATE_KEY;
+
+    if (!projectId || !clientEmail || !rawKey) {
+      throw new Error(
+        'Missing Firebase Admin credentials. Set FIREBASE_SERVICE_ACCOUNT_KEY_PATH or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY in .env.local'
+      );
+    }
+    // Keep raw newlines compatibility
     const privateKey = rawKey.replace(/\\n/g, '\n');
 
     app = initializeApp({

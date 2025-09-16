@@ -35,7 +35,6 @@
     "commit:skip-hooks": "HUSKY=0 git commit -m \"chore: commit without hooks (temporary)\""
   },
   "devDependencies": {
-    "semver": "^7.6.3",
     "@lhci/cli": "^0.15.1",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
@@ -52,6 +51,7 @@
     "lighthouse": "^12.8.2",
     "lint-staged": "^16.1.6",
     "prettier": "^3.6.2",
+    "semver": "^7.6.3",
     "server-only": "^0.0.1",
     "supertest": "^7.1.4",
     "typedoc": "^0.28.12",
@@ -59,6 +59,7 @@
     "webpack-bundle-analyzer": "^4.10.2"
   },
   "dependencies": {
+    "firebase": "^12.2.1",
     "next": "15.5.2"
   }
 }
