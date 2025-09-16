@@ -11,10 +11,32 @@ Monorepo (pnpm) with:
 - Node.js 20.19.4
 - pnpm 10+
 
+⚠️ **Important**: This project uses **pnpm workspaces** exclusively. Do not use `npm install` as it will create conflicts.
+
 ## Quick Start (Turbopack)
 
-- Web (Next.js, Turbopack): `pnpm dev:web`
-- API (Express): `PORT=3333 pnpm dev:api`
+1. **Clone and setup**:
+
+   ```bash
+   git clone <repo-url>
+   cd fresh
+   pnpm install --frozen-lockfile
+   ```
+
+2. **Start development servers**:
+   - Web (Next.js, Turbopack): `pnpm dev:web`
+   - API (Express): `PORT=3333 pnpm dev:api`
+   - Both: `pnpm dev`
+
+### Troubleshooting Mixed Package Managers
+
+If you encounter errors like "lockfile is broken" or "installed by a different package manager", run:
+
+```bash
+./scripts/cleanup-package-managers.sh
+```
+
+This will remove npm artifacts and reinstall with pnpm correctly.
 
 VS Code tasks are available for full restart, quick restart, kill, and status. See `docs/PROCESS_MANAGEMENT.md` for details.
 
