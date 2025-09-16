@@ -1,15 +1,48 @@
 #!/usr/bin/env node
+const { execSync } = require('child_process');
 const semver = require('semver');
-// Pinned Node.js major version policy: use latest stable 20.x
-// Keep this in sync with package.json "engines" fields and .nvmrc
-const expected = '20.x';
-const current = process.versions.node;
-// semver.satisfies does not accept wildcard "20.x" directly for full match semantics.
-// We'll coerce to a range ^20.0.0 <21.0.0
-const range = '>=20 <21';
-if (!semver.satisfies(current, range)) {
-  console.error(`\n[fresh] Unsupported Node version ${current}. Required: ${expected} (range ${range}).\n` +
-    'Install and select Node 20 (e.g. nvm install 20 && nvm use 20) before running dev scripts.\n');
-  process.exit(1);
+
+const REQUIRED_NODE_VERSION = '20.19.4';
+const REQUIRED_PNPM_VERSION = '9.0.0';
+
+function checkNodeVersion() {
+  const currentNodeVersion = process.version;
+  
+  console.log(`Current Node.js version: ${currentNodeVersion}`);
+  console.log(`Required Node.js version: ${REQUIRED_NODE_VERSION}`);
+  
+  if (!semver.satisfies(currentNodeVersion, `^${REQUIRED_NODE_VERSION}`)) {
+    console.error(`❌ Node.js version ${REQUIRED_NODE_VERSION} is required, but ${currentNodeVersion} is installed.`);
+    console.error('Please install the correct version using:');
+    console.error(`  nvm install ${REQUIRED_NODE_VERSION}`);
+    console.error(`  nvm use ${REQUIRED_NODE_VERSION}`);
+    process.exit(1);
+  }
+  
+  console.log('✅ Node.js version is compatible');
 }
-console.log(`[fresh] Node version ${current} OK (expected ${expected})`);
+
+function checkPnpmVersion() {
+  try {
+    const pnpmVersion = execSync('pnpm --version', { encoding: 'utf8' }).trim();
+    console.log(`Current pnpm version: ${pnpmVersion}`);
+    console.log(`Required pnpm version: >=${REQUIRED_PNPM_VERSION}`);
+    
+    if (!semver.gte(pnpmVersion, REQUIRED_PNPM_VERSION)) {
+      console.error(`❌ pnpm version >=${REQUIRED_PNPM_VERSION} is required, but ${pnpmVersion} is installed.`);
+      console.error('Please install the correct version using:');
+      console.error(`  npm install -g pnpm@latest`);
+      process.exit(1);
+    }
+    
+    console.log('✅ pnpm version is compatible');
+  } catch (error) {
+    console.error('❌ pnpm is not installed. Please install it using:');
+    console.error('  npm install -g pnpm@latest');
+    process.exit(1);
+  }
+}
+
+checkNodeVersion();
+checkPnpmVersion();
+console.log('🎉 All version requirements satisfied!');
