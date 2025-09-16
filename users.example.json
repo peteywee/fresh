@@ -1,0 +1,26 @@
+{
+  "users": [
+    {
+      "localId": "example-user-id-1",
+      "email": "user1@example.com",
+      "emailVerified": false,
+      "passwordHash": "EXAMPLE_HASH_DO_NOT_USE",
+      "salt": "EXAMPLE_SALT==",
+      "displayName": "Example User",
+      "lastSignedInAt": "1000000000000",
+      "createdAt": "1000000000000",
+      "providerUserInfo": []
+    },
+    {
+      "localId": "example-user-id-2",
+      "email": "user2@example.com",
+      "emailVerified": false,
+      "passwordHash": "EXAMPLE_HASH_DO_NOT_USE",
+      "salt": "EXAMPLE_SALT==",
+      "displayName": "Another Example User",
+      "lastSignedInAt": "1000000000000",
+      "createdAt": "1000000000000",
+      "providerUserInfo": []
+    }
+  ]
+}

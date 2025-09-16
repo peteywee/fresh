@@ -1,0 +1,1 @@
+example_session_id=dummy_session_value; HttpOnly; Path=/; Secure; SameSite=Lax

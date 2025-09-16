@@ -1,11 +1,19 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getServerSession } from '../apps/web/lib/session';
+import { verifySessionCookieValue } from '../apps/web/lib/session';
 
-// Mock Firebase Admin before importing the session module
-vi.mock('../apps/web/lib/firebase.admin', () => ({
-  adminAuth: vi.fn(() => ({
-    verifySessionCookie: vi.fn().mockResolvedValue({
+describe('Session Management', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return null if session cookie is missing', async () => {
+    const session = await verifySessionCookieValue(undefined, async () => ({}) as any);
+    expect(session).toBeNull();
+  });
+
+  it('should return session data if cookie is valid', async () => {
+    const fakeClaims = {
       uid: 'test-uid',
       email: 'test@example.com',
       name: 'Test User',
@@ -15,20 +23,17 @@ vi.mock('../apps/web/lib/firebase.admin', () => ({
       onboardingComplete: true,
       iat: Date.now() / 1000,
       exp: Date.now() / 1000 + 3600,
-    }),
-  })),
-}));
-
-describe('Session Management', () => {
-  it('should be importable without errors', () => {
-    expect(getServerSession).toBeDefined();
-    expect(typeof getServerSession).toBe('function');
+    };
+    const session = await verifySessionCookieValue('valid-cookie', async () => fakeClaims);
+    expect(session).toBeDefined();
+    expect(session?.sub).toBe('test-uid');
+    expect(session?.email).toBe('test@example.com');
   });
 
-  it('should handle missing session gracefully', async () => {
-    // Simple test that doesn't depend on complex mocking
-    const result = await getServerSession();
-    // Just verify it returns something (null or session object)
-    expect(result === null || typeof result === 'object').toBe(true);
+  it('should handle errors during session verification gracefully', async () => {
+    const session = await verifySessionCookieValue('some-cookie', async () => {
+      throw new Error('verification failed');
+    });
+    expect(session).toBeNull();
   });
 });

@@ -152,3 +152,9 @@ sac.json
 secrets/
 secrets/*.json
 !secrets/README.md
+
+# Additional sensitive files
+users.json
+.env.local
+cookies.txt
+encrypted_backup/
