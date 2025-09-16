@@ -14,7 +14,21 @@ export async function GET() {
 
   // Basic validation to reduce noise
   if (!cfg.apiKey) {
+    const isDev = process.env.NODE_ENV === 'development';
+    if (isDev) {
+      // In development, return a helpful message
+      return NextResponse.json(
+        {
+          error: 'Firebase config unavailable',
+          message: 'Firebase environment variables not configured for development',
+          suggestion: 'Create .env.local with Firebase configuration or use demo values',
+        },
+        { status: 500 }
+      );
+    }
     return NextResponse.json({ error: 'Firebase config unavailable' }, { status: 500 });
   }
-  return NextResponse.json(cfg, { headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600' } });
+  return NextResponse.json(cfg, {
+    headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600' },
+  });
 }
