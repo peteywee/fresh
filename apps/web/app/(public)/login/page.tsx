@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 
@@ -11,6 +11,19 @@ import { app } from '@/lib/firebase.client';
 export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [envOK, setEnvOK] = useState(false);
+
+  // Check environment on client side by trying to use the Firebase app
+  useEffect(() => {
+    try {
+      if (app) {
+        setEnvOK(true);
+      }
+    } catch (error) {
+      setErr('Missing Firebase configuration. Please check environment variables.');
+      setEnvOK(false);
+    }
+  }, []);
 
   async function signInGoogle() {
     setErr(null);
@@ -27,12 +40,6 @@ export default function LoginPage() {
       setBusy(false);
     }
   }
-
-  // Render the button only if env is present (prevents "missing env" silent failures)
-  const envOK =
-    !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
-    !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
-    !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
   return (
     <main className="mx-auto max-w-sm p-6">
