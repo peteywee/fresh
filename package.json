@@ -3,9 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "engines": {
-    "node": ">=20 <21"
+    "node": ">=20 <23"
   },
   "scripts": {
+    "preinstall": "node scripts/check-node-version.cjs",
     "dev": "concurrently -k -n api,web -c blue,green \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:web": "pnpm --filter @apps/web dev",
     "dev:api": "pnpm --filter @services/api dev",
@@ -32,7 +33,8 @@
     "docs": "typedoc --out docs/API packages",
     "doctor": "./scripts/doctor.sh",
     "prepare": "husky install",
-    "commit:skip-hooks": "HUSKY=0 git commit -m \"chore: commit without hooks (temporary)\""
+    "commit:skip-hooks": "HUSKY=0 git commit -m \"chore: commit without hooks (temporary)\"",
+    "gen:icons": "tsx scripts/generate-icons.ts"
   },
   "devDependencies": {
     "semver": "^7.6.3",
@@ -56,7 +58,8 @@
     "supertest": "^7.1.4",
     "typedoc": "^0.28.12",
     "vitest": "^3.2.4",
-    "webpack-bundle-analyzer": "^4.10.2"
+    "webpack-bundle-analyzer": "^4.10.2",
+    "sharp": "^0.33.4"
   },
   "dependencies": {
     "next": "15.5.2"

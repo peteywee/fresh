@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
-export const RoleSchema = z.enum(['owner', 'admin', 'member', 'staff', 'viewer']);
-export type Role = z.infer<typeof RoleSchema>;
+import { RoleSchema } from './role.js';
+
+export * from './role.js';
 
 export const UserSchema = z.object({
   id: z.string().min(1),
@@ -63,7 +64,7 @@ export const ScheduleSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
   start: z.number().optional(), // epoch ms
-  end: z.number().optional(),   // epoch ms
+  end: z.number().optional(), // epoch ms
   createdBy: z.string().optional(),
   createdAt: z.number().optional(),
   updatedAt: z.number().optional(),
@@ -90,6 +91,20 @@ export function splitByStatus(schedules: Schedule[]) {
     declined: schedules.filter(s => s.declined),
   };
 }
+
+// Simple notification schema (currently only used for decline alerts). Can be expanded later.
+export const NotificationSchema = z.object({
+  id: z.string().min(1),
+  orgId: z.string().min(1),
+  type: z.enum(['schedule.declined']),
+  scheduleId: z.string().min(1),
+  actorId: z.string().min(1),
+  createdAt: z.number(),
+  message: z.string().min(1),
+  reason: z.string().optional(),
+  read: z.boolean().default(false),
+});
+export type Notification = z.infer<typeof NotificationSchema>;
 
 // Re-export from other modules
 export * from './auth.js';

@@ -8,8 +8,28 @@ Monorepo (pnpm) with:
 
 ## Prerequisites
 
-- Node.js 20.19.4
+- Node.js 20.x ONLY (project is hard‑pinned; using 21+ or 22+ will abort with the version check script)
 - pnpm 10+
+
+### Node Version Policy
+
+We intentionally pin to the current stable 20.x line for deterministic behavior across local dev, CI, and production.
+
+Why:
+
+1. Avoid subtle runtime differences (fetch/webcrypto, OpenSSL defaults) introduced in newer majors.
+2. Minimize cold start variance in serverless/container targets still standardized on 20.
+3. Keep security / feature parity without early‑adopting 22 until ecosystem libs fully certify.
+
+Quick use:
+
+```bash
+nvm install 20
+nvm use 20
+node -v   # should output v20.*
+```
+
+If you accidentally run with a different version you'll see an error from `scripts/check-node-version.cjs` early in the workflow.
 
 ## Quick Start (Turbopack)
 
@@ -117,6 +137,7 @@ Implemented with Firebase (Firestore + Messaging) and available on the `/team` p
 
 ### Environment Variables (Add to `.env.local` for web)
 ```
+
 NEXT_PUBLIC_FIREBASE_API_KEY=...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
@@ -124,19 +145,22 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 NEXT_PUBLIC_FIREBASE_APP_ID=...
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 NEXT_PUBLIC_FIREBASE_VAPID_KEY=...
-SESSION_COOKIE_NAME=__session
+SESSION_COOKIE_NAME=\_\_session
 FLAGS_COOKIE_NAME=fresh_flags
 FIREBASE_ADMIN_PROJECT_ID=...
 FIREBASE_ADMIN_CLIENT_EMAIL=...
 FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 INVITE_TOKEN_SECRET=change-me-please
+
 ```
 
 ## Testing
 
 Added Vitest tests for branding config and session flag parsing:
 ```
+
 pnpm test
+
 ```
 Additional smoke tests cover new member CRUD route module exports.
 

@@ -180,15 +180,21 @@ export default async function Dashboard() {
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{item.title || 'Untitled'}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
+                    {item.title || 'Untitled'}
+                  </div>
                   {item.start && (
                     <div style={{ fontSize: 12, color: '#6b7280' }}>
                       {new Date(item.start).toLocaleString()}
                     </div>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <form action={`/api/schedules/${item.id}/confirm`} method="post" style={{ margin: 0 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <form
+                    action={`/api/schedules/${item.id}/confirm`}
+                    method="post"
+                    style={{ margin: 0 }}
+                  >
                     <button
                       formMethod="patch"
                       style={{
@@ -204,8 +210,30 @@ export default async function Dashboard() {
                       Confirm
                     </button>
                   </form>
-                  <form action={`/api/schedules/${item.id}/decline`} method="post" style={{ margin: 0 }}>
-                    <input type="hidden" name="reason" value="User declined from dashboard" />
+                  <form
+                    action={`/api/schedules/${item.id}/decline`}
+                    method="post"
+                    style={{
+                      margin: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                      maxWidth: 240,
+                    }}
+                  >
+                    <textarea
+                      name="reason"
+                      placeholder="Optional reason"
+                      rows={2}
+                      style={{
+                        resize: 'vertical',
+                        padding: 6,
+                        fontSize: 12,
+                        borderRadius: 4,
+                        border: '1px solid #d1d5db',
+                        fontFamily: 'inherit',
+                      }}
+                    />
                     <button
                       formMethod="patch"
                       style={{
@@ -216,6 +244,7 @@ export default async function Dashboard() {
                         borderRadius: 6,
                         fontSize: 12,
                         cursor: 'pointer',
+                        alignSelf: 'flex-start',
                       }}
                     >
                       Decline
