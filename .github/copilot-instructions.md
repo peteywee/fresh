@@ -1,65 +1,78 @@
-# GPT Assistant Scheduler — Copilot Instructions
+# Fresh — GitHub Copilot Instructions
 
 **ALWAYS follow these instructions first.** Only fallback to additional search and context gathering if the information here is incomplete or found to be in error.
 
-## Architecture Overview
+## Project Overview
 
-This is a TypeScript monorepo using pnpm workspaces with:
+Fresh is a modern PWA-compliant scheduler application built with TypeScript, Firebase, and Next.js. This is a production-grade monorepo using pnpm workspaces with advanced authentication, performance monitoring, and full-stack type safety.
 
-- `apps/web`: Next.js 15+ UI (App Router, server/client components, custom session logic)
+### Repository Structure
+
+- `apps/web`: Next.js 15+ UI (App Router, server/client components, Firebase auth, PWA features)
 - `services/api`: Express API (task orchestration, onboarding, demo data)
 - `packages/types`: Shared Zod schemas and TypeScript types
+- `scripts/`: Development automation and process management
+- `docs/`: Comprehensive technical documentation
 
 **Data contracts:** All cross-service types/schemas live in `packages/types` and are imported with explicit `.js` extensions for NodeNext ESM compatibility.
 
-## Working Effectively
+### Key Technologies
 
-### Bootstrap, Build, and Test (VALIDATED COMMANDS)
+- **Frontend**: Next.js 15+, React 19+, TypeScript 5.5+
+- **Authentication**: Firebase Auth with custom session management
+- **Database**: Firestore (Firebase Admin SDK + client SDK)
+- **Validation**: Zod schemas for all data contracts
+- **Performance**: PWA standards, Core Web Vitals tracking
+- **Package Management**: pnpm with workspace configuration
 
-Run these commands in order - all have been validated to work:
+## Development Workflow
 
-1. **Install dependencies:**
+### Required Commands (VALIDATED - never cancel these)
+
+Run these commands in order - all have been validated to work in CI/CD:
+
+1. **Install dependencies (50s runtime):**
 
    ```bash
    pnpm install --frozen-lockfile
    ```
 
-   - Takes ~50 seconds. NEVER CANCEL. Set timeout to 120+ seconds.
+   - Set timeout to 120+ seconds. NEVER CANCEL.
+   - Uses pnpm workspace configuration
 
-2. **Build all packages (REQUIRED before typecheck):**
+2. **Build all packages (25s runtime):**
 
    ```bash
    pnpm build
    ```
 
-   - Takes ~25 seconds. NEVER CANCEL. Set timeout to 60+ seconds.
+   - Set timeout to 60+ seconds. NEVER CANCEL.
    - Must build types package first, then API and Web in parallel
    - Next.js warnings about `outputFileTracingRoot` are expected
 
-3. **Typecheck (run AFTER build):**
+3. **TypeScript validation (4s runtime):**
 
    ```bash
    pnpm typecheck
    ```
 
-   - Takes ~4 seconds after build completes
-   - Will FAIL if run before build due to missing generated types
+   - MUST run AFTER build due to generated types dependency
+   - Will FAIL if run before build
 
-4. **Lint:**
+4. **Linting (2s runtime):**
 
    ```bash
    pnpm lint
    ```
 
-   - Takes ~2 seconds. Covers all TypeScript files in all packages.
+   - Covers all TypeScript files across monorepo
 
-5. **Test:**
-
+5. **Testing (<1s runtime):**
    ```bash
    pnpm test
    ```
 
-   - Takes <1 second. No tests exist yet - add tests in `/tests` or per package.
+   - Vitest configuration, minimal tests currently
 
 ### Development Servers
 
@@ -85,22 +98,27 @@ Run these commands in order - all have been validated to work:
    - Next.js dev server with hot reload
 
 3. **Process management (use these scripts):**
-
    ```bash
    pnpm dev:restart    # Full restart with health checks
    pnpm dev:kill       # Kill all dev processes
    pnpm dev:status     # Check what's running
    ```
 
-   - The dev:status script has some issues but dev:kill and individual servers work
+   - The `dev:status` script has some issues but `dev:kill` and individual servers work
 
-## Validation Scenarios
+## Validation & Testing
 
-**ALWAYS validate changes by testing these scenarios:**
+### Required Pre-Commit Validation
 
-### Manual Web Application Testing
+Always run these before committing (matches `.github/workflows/ci.yml`):
 
-1. **Login page loads correctly:**
+```bash
+pnpm build && pnpm typecheck && pnpm lint
+```
+
+### Manual Application Testing
+
+1. **Login page verification:**
 
    ```bash
    curl -s http://localhost:3000/login | grep -q "Login" && echo "✅ Login page works"
@@ -109,87 +127,111 @@ Run these commands in order - all have been validated to work:
    - Should render form with Email, Password fields and Login/Register/Forgot Password buttons
 
 2. **API health check:**
-
    ```bash
    curl -s http://localhost:3333/health | jq . | grep "ok"
    ```
 
    - Should return `{"ok": true}`
 
-3. **Full build pipeline:**
+## Architecture & Authentication
 
-   ```bash
-   pnpm build && pnpm typecheck && pnpm lint
-   ```
+### Session Management System
 
-   - All must succeed for CI to pass
+- **Architecture**: Firebase Auth + custom session cookies (PWA-optimized)
+- **Session API**: `/api/session/current`, `/api/session/login`, `/api/session/logout`
+- **Middleware**: Ultra-fast cookie existence check (<5ms, no async operations)
+- **Server Verification**: Full Firebase session verification via `getServerSession()`
 
-### CI Validation
+### Key Authentication Files
 
-Always run these before committing (matches `.github/workflows/ci.yml`):
+- `apps/web/lib/session.ts`: Server-side session verification
+- `apps/web/lib/firebase.admin.ts`: Firebase Admin SDK initialization
+- `apps/web/lib/firebase.client.ts`: Client-side Firebase configuration
+- `apps/web/middleware.ts`: Route protection middleware
 
-```bash
-pnpm build        # NEVER CANCEL - takes 25s, set 60s timeout
-pnpm typecheck    # Run after build
-pnpm lint         # Must pass for CI
-```
+### Database (Firestore)
 
-## Key Patterns & Development Notes
+- **Admin SDK**: `firebase-admin/firestore` for server operations
+- **Client SDK**: Dynamic imports for registration/auth flows
+- **Collections**: Users, organizations stored in Firestore
+- **Custom Claims**: Set during onboarding for role-based access
 
-- **TypeScript ESM:** All imports between packages use explicit `.js` extensions:
+## Code Standards & Conventions
+
+### TypeScript Requirements
+
+- **ESM Imports**: All cross-package imports use explicit `.js` extensions:
   ```ts
   import { Organization } from '../../../packages/types/src/onboarding.js';
   ```
-- **Session management:** See `apps/web/lib/session.ts` for custom cookie/session logic
-- **Next.js structure:** Uses App Router with `app/` directory (not `src/`)
-- **Process management:** Extensive scripts in `scripts/` directory for dev workflow
-- **VS Code integration:** Tasks defined in `.vscode/tasks.json` for development workflow
+- **Strict Mode**: All packages use strict TypeScript configuration
+- **Zod Validation**: All data contracts defined in `packages/types` with Zod schemas
 
-## Common File Locations
+### Next.js Patterns
 
-### Repository Structure
+- **App Router**: Uses `app/` directory structure (not `src/`)
+- **Server Components**: Default; mark client components with `'use client'`
+- **Session Handling**: Always use `getServerSession()` for server-side auth checks
+- **Middleware**: Keep ultra-fast (<5ms) with only synchronous cookie checks
+
+### Performance Standards
+
+- **PWA Compliance**: Core Web Vitals tracking, service worker registration
+- **Bundle Analysis**: Use `pnpm analyze` for bundle size monitoring
+- **Session Performance**: Middleware <5ms, page loads <100ms target
+
+### File Organization Patterns
 
 ```
-/home/runner/work/fresh/fresh/
-├── apps/web/                 # Next.js application
-│   ├── app/                  # Next.js App Router pages
-│   ├── lib/                  # Web utilities (session.ts)
-│   └── middleware.ts         # Next.js middleware
-├── services/api/             # Express API server
-│   └── src/index.ts          # Main API routes
-├── packages/types/           # Shared TypeScript types
-│   └── src/                  # Zod schemas and exports
-├── scripts/                  # Development process management
-├── docs/                     # Documentation
-└── .vscode/tasks.json        # VS Code development tasks
+apps/web/
+├── app/                    # Next.js App Router pages
+│   ├── (auth)/            # Route groups for auth pages
+│   ├── api/               # API routes
+│   └── globals.css        # Global styles
+├── components/            # Reusable React components
+├── lib/                   # Utility functions and configurations
+└── middleware.ts          # Next.js middleware
 ```
 
-### Frequently Modified Files
+## Common Development Tasks
 
-- `packages/types/src/index.ts` - Add new Zod schemas here
-- `services/api/src/index.ts` - Add new API endpoints
-- `apps/web/app/` - Next.js pages and routes
+### Adding New API Endpoints
 
-## Documentation Generation
+1. Create route in `apps/web/app/api/[endpoint]/route.ts`
+2. Use `getServerSession()` for authentication
+3. Validate input with Zod schemas from `packages/types`
+4. Return structured JSON responses
 
-```bash
-npx typedoc --out docs/API packages
-```
+### Adding New UI Components
 
-- Generates API docs in `docs/API/`
-- Has warnings but produces working documentation
+1. Create in `apps/web/components/`
+2. Use TypeScript with proper prop types
+3. Mark as client component only if needed (`'use client'`)
+4. Import shared types from `packages/types/src/index.js`
 
-## Important Build Dependencies
+### Database Operations
 
-- **Node.js**: 20.19.4 (validated)
-- **pnpm**: 10+ required
-- **TypeScript**: 5.5.4 across all packages
-- **Next.js**: 15.5.2
-- **Express**: 4.20.0
+1. Use `adminDb()` from `firebase.admin.ts` for server operations
+2. Structure data with Zod schemas before Firestore writes
+3. Handle errors gracefully with try/catch blocks
+
+### Authentication Flows
+
+1. Client: Use Firebase Auth SDK for login/register
+2. Exchange: POST to `/api/session/login` with ID token
+3. Session: Server uses `getServerSession()` for verification
+4. Logout: POST to `/api/session/logout` to clear session
 
 ## Troubleshooting
+
+### Common Issues & Solutions
 
 - **Port conflicts (EADDRINUSE):** Use `pnpm dev:kill` then restart
 - **Typecheck errors:** Always run `pnpm build` first to generate types
 - **API server on wrong port:** Set `PORT=3333` environment variable
 - **Lint pattern errors:** Web app uses `app/` and `lib/` directories, not `src/`
+- **Firebase session errors:** Check environment variables and private key formatting
+
+### Build Dependencies
+
+- **Node.js**: 20.19.4 (validated) - engines specify >=20
