@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { signInWithEmail } from '@/lib/auth-email';
 import { consumeRedirectResult, signInWithGoogle } from '@/lib/auth-google';
+import { logOAuthDebugInfo } from '@/lib/oauth-debug';
 
 import styles from '../auth.module.css';
 
@@ -97,11 +98,18 @@ export default function LoginPage() {
         }
       } else if (res.error !== 'redirecting') {
         console.error('Google sign-in error code:', res.error);
+
+        // Log debug information for development
+        if (process.env.NODE_ENV === 'development') {
+          logOAuthDebugInfo();
+        }
+
         // Show specific error messages for common Google auth errors
         let errorMessage = 'Google sign-in failed';
         switch (res.error) {
           case 'auth/internal-error':
-            errorMessage = 'Google authentication service error. Please try again.';
+            errorMessage =
+              'Google OAuth configuration issue. This happens in development environments. Please configure the OAuth client in Google Cloud Console to allow this domain.';
             break;
           case 'auth/popup-blocked':
             errorMessage = 'Popup was blocked. Please allow popups and try again.';
@@ -111,6 +119,10 @@ export default function LoginPage() {
             break;
           case 'auth/network-request-failed':
             errorMessage = 'Network error. Please check your connection and try again.';
+            break;
+          case 'auth/unauthorized-domain':
+            errorMessage =
+              'This domain is not authorized for Google sign-in. Please contact the administrator.';
             break;
           default:
             errorMessage = `Google sign-in failed: ${res.error}`;
