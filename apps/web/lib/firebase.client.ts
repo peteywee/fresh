@@ -34,9 +34,7 @@ if (!getApps().length) {
   app = initializeApp(config);
 } else {
   app = getApps()[0]!;
-  app = getApps()[0]!;
 }
 
-// Export auth for compatibility with existing code
 export const auth = getAuth(app);
 export { app };

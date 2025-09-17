@@ -1,11 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
 import Image from 'next/image';
-
 import { GoogleAuthProvider, getAuth, signInWithPopup } from 'firebase/auth';
-
 import { app } from '@/lib/firebase.client';
 
 export default function LoginPage() {
@@ -44,7 +41,6 @@ export default function LoginPage() {
   return (
     <main className="mx-auto max-w-sm p-6">
       <h1 className="text-xl font-semibold mb-4">Login</h1>
-
       <button
         onClick={signInGoogle}
         disabled={!envOK || busy}
@@ -56,7 +52,6 @@ export default function LoginPage() {
           {busy ? 'Signing in…' : 'Sign in with Google'}
         </span>
       </button>
-
       {!envOK && (
         <p className="text-sm text-red-600">
           Missing Firebase env. Fill apps/web/.env.local and restart dev server.
