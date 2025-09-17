@@ -14,17 +14,33 @@ const nextConfig = {
     // We run ESLint separately in CI; skip during Next build to avoid plugin detection warnings
     ignoreDuringBuilds: true,
   },
-  output: 'standalone',
-  experimental: {
-    optimizePackageImports: ['firebase', '@firebase/auth'],
+  // Environment variables - explicitly define for better reliability
+  env: {
+    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   },
+  compiler: {
+    optimizePackageImports: ['firebase', 'zod'],
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? {
+            exclude: ['error'],
+          }
+        : false,
+  },
+  // Performance optimizations
+  // Image optimization
   images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
-      { protocol: 'https', hostname: 'fonts.gstatic.com' },
-      { protocol: 'https', hostname: 'images.unsplash.com' },
-    ],
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
+  // Enable PWA features
   async headers() {
     return [
       {
@@ -41,13 +57,11 @@ const nextConfig = {
       {
         source: '/sw.js',
         headers: [
-          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
-          { key: 'Pragma', value: 'no-cache' },
-          { key: 'Expires', value: '0' },
+          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
+          { key: 'Service-Worker-Allowed', value: '/' },
         ],
       },
       {
-        // Default app pages
         source: '/((?!api|_next|_static|favicon.ico).*)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=3600' },
@@ -56,15 +70,7 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Content-Security-Policy',
-            // Compatible with Firebase/Google sign-in + dev/prod API calls
-            value:
-              "default-src 'self'; " +
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.gstatic.com https://www.google.com; " +
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-              "img-src 'self' data: blob:; " +
-              "font-src 'self' https://fonts.gstatic.com data:; " +
-              "connect-src 'self' https: http:; " + // allows API_URL in both http(s)
-              "frame-src 'self' https://accounts.google.com https://www.google.com;",
+            value: "default-src 'self'; style-src 'self' 'unsafe-inline';",
           },
         ],
       },

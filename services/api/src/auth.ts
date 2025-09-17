@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
 
@@ -6,7 +7,7 @@ type Role = 'owner' | 'admin' | 'member' | 'staff' | 'viewer';
 type UserRecord = {
   id: string;
   email: string;
-  password: string; // dev-only plain text; replace with hash in prod
+  password: string; // stored as bcrypt hash
   displayName?: string;
   firstName?: string;
   lastName?: string;
@@ -15,13 +16,13 @@ type UserRecord = {
   phoneNumber?: string;
   timezone?: string;
   role: Role;
-  orgId?: string | null;
-  onboardingComplete?: boolean;
-  createdAt?: string;
+  orgId: string | null;
+  onboardingComplete: boolean;
+  createdAt: string;
   lastLoginAt?: string;
 };
 
-type OrganizationRecord = {
+type OrgRecord = {
   id: string;
   name: string;
   displayName?: string;
@@ -36,8 +37,7 @@ type OrganizationRecord = {
 type InviteRecord = {
   id: string;
   orgId: string;
-  invitedBy: string;
-  email?: string;
+  email: string;
   role: Role;
   code: string;
   expiresAt: string;
@@ -45,424 +45,177 @@ type InviteRecord = {
   usedBy?: string;
 };
 
-const users = new Map<string, UserRecord>(); // key by normalized email
-const organizations = new Map<string, OrganizationRecord>(); // key by org id
-const invites = new Map<string, InviteRecord>(); // key by invite code
-const resetTokens = new Map<string, string>(); // token -> normalized email
+const invites: Map<string, InviteRecord> = new Map();
 
+// util
 const norm = (s: unknown) => (typeof s === 'string' ? s.trim().toLowerCase() : '');
+const nowIso = () => new Date().toISOString();
 
-// Seed data
-const seedEmail = norm('admin@fresh.com');
-const seedOrgId = randomUUID();
-const seedUserId = randomUUID();
+// Export function to seed data - will be called from index.ts after stores are initialized
+export const seedData = (users: Map<string, any>, orgs: Map<string, any>) => {
+  const seedEmail = norm(process.env.ADMIN_SEED_EMAIL || 'admin@fresh.com');
+  const seedOrgId = randomUUID();
+  const seedUserId = randomUUID();
+  const demoInviteCode = 'DEMO-' + String(Math.random()).slice(2, 8);
 
-if (!users.has(seedEmail)) {
-  // Create seed organization
-  organizations.set(seedOrgId, {
-    id: seedOrgId,
-    name: 'Fresh Demo Organization',
-    displayName: 'Fresh Demo Org',
-    description: 'Demo organization for testing',
-    industry: 'technology',
-    size: '11-50',
-    ownerId: seedUserId,
-    createdAt: new Date().toISOString(),
-  });
-
-  // Create seed user
-  users.set(seedEmail, {
-    id: seedUserId,
-    email: seedEmail,
-    password: 'demo123',
-    displayName: 'Admin User',
-    firstName: 'Admin',
-    lastName: 'User',
-    jobTitle: 'Administrator',
-    role: 'owner',
-    orgId: seedOrgId,
-    onboardingComplete: true,
-    createdAt: new Date().toISOString(),
-  });
-
-  // Create demo invite code
-  const demoInviteCode = 'DEMO-' + String(Math.random()).slice(2, 8).toUpperCase();
-  const inviteExpiry = new Date();
-  inviteExpiry.setDate(inviteExpiry.getDate() + 7); // 7 days from now
-
-  invites.set(demoInviteCode, {
-    id: randomUUID(),
-    orgId: seedOrgId,
-    invitedBy: seedUserId,
-    role: 'member',
-    code: demoInviteCode,
-    expiresAt: inviteExpiry.toISOString(),
-  });
-
-  console.log(`🎯 Demo setup complete:`);
-  console.log(`   Email: ${seedEmail}`);
-  console.log(`   Password: demo123`);
-  console.log(`   Invite Code: ${demoInviteCode}`);
-}
-
-const router = Router();
-
-// User registration
-router.post('/register', (req, res) => {
-  const email = norm(req.body?.email);
-  const password = String(req.body?.password ?? '');
-  const displayName = String(req.body?.displayName ?? '');
-  const firstName = String(req.body?.firstName ?? '');
-  const lastName = String(req.body?.lastName ?? '');
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'email and password are required' });
-  }
-  if (users.has(email)) {
-    return res.status(409).json({ error: 'email already registered' });
-  }
-
-  const u: UserRecord = {
-    id: randomUUID(),
-    email,
-    password,
-    displayName: displayName || `${firstName} ${lastName}`.trim() || email.split('@')[0],
-    firstName: firstName || undefined,
-    lastName: lastName || undefined,
-    role: 'member',
-    orgId: null,
-    onboardingComplete: false,
-    createdAt: new Date().toISOString(),
-  };
-
-  users.set(email, u);
-  return res.status(201).json({
-    success: true,
-    message: 'registered',
-    user: {
-      id: u.id,
-      email: u.email,
-      displayName: u.displayName,
-      onboardingComplete: u.onboardingComplete,
-    },
-  });
-});
-
-// User login
-router.post('/login', (req, res) => {
-  const email = norm(req.body?.email);
-  const password = String(req.body?.password ?? '');
-  const u = email ? users.get(email) : null;
-
-  if (!u || u.password !== password) {
-    return res.status(401).json({ error: 'invalid credentials' });
-  }
-
-  // Update last login
-  u.lastLoginAt = new Date().toISOString();
-
-  const org = u.orgId ? organizations.get(u.orgId) : null;
-
-  return res.status(200).json({
-    success: true,
-    message: 'ok',
-    user: {
-      id: u.id,
-      email: u.email,
-      displayName: u.displayName,
-      role: u.role,
-      onboardingComplete: !!u.onboardingComplete,
-    },
-    organization: org
-      ? {
-          id: org.id,
-          name: org.name,
-          displayName: org.displayName,
-          role: u.role,
-        }
-      : null,
-  });
-});
-
-// Forgot password
-router.post('/forgot-password', (req, res) => {
-  const email = norm(req.body?.email);
-  const u = email ? users.get(email) : null;
-
-  // Do not leak existence; always return 200
-  if (!u) {
-    return res.status(200).json({
-      success: true,
-      message: 'if the account exists, a reset token has been sent',
+  if (!users.has(seedEmail)) {
+    // Create seed organization
+    orgs.set(seedOrgId, {
+      id: seedOrgId,
+      name: 'Fresh Demo Org',
+      displayName: 'Fresh Demo',
+      website: 'https://example.org',
+      industry: 'technology',
+      size: '11-50',
+      ownerId: seedUserId,
+      createdAt: nowIso(),
     });
+
+    // Create seed user (bcrypt-hashed)
+    users.set(seedEmail, {
+      id: seedUserId,
+      email: seedEmail,
+      password: bcrypt.hashSync(process.env.ADMIN_SEED_PASSWORD || 'demo123', 10),
+      displayName: 'Admin User',
+      firstName: 'Admin',
+      lastName: 'User',
+      jobTitle: 'Administrator',
+      department: 'Ops',
+      phoneNumber: '',
+      timezone: 'UTC',
+      role: 'owner',
+      orgId: seedOrgId,
+      onboardingComplete: true,
+      createdAt: nowIso(),
+    });
+
+    // Seed invite
+    invites.set(demoInviteCode, {
+      id: randomUUID(),
+      orgId: seedOrgId,
+      email: seedEmail,
+      role: 'admin',
+      code: demoInviteCode,
+      expiresAt: nowIso(),
+    });
+
+    console.log('Seeded demo account:');
+    console.log(`  Email: ${seedEmail}`);
+    console.log(`  Password: ${process.env.ADMIN_SEED_PASSWORD || 'demo123'}`);
+    console.log(`  Invite Code: ${demoInviteCode}`);
   }
+};
 
-  const token = randomUUID();
-  resetTokens.set(token, email);
+// Export function to create router - will be called from index.ts with stores
+export const createAuthRouter = (users: Map<string, any>, orgs: Map<string, any>) => {
+  const router = Router();
 
-  // Dev-only: return token to speed up local testing
-  return res.status(200).json({
-    success: true,
-    message: 'reset token created',
-    token, // Remove in production
-  });
-});
+  // User registration
+  router.post('/register', (req, res) => {
+    const email = norm(req.body?.email);
+    const password = String(req.body?.password ?? '');
+    const displayName = String(req.body?.displayName ?? '');
+    const firstName = String(req.body?.firstName ?? '');
+    const lastName = String(req.body?.lastName ?? '');
 
-// Reset password
-router.post('/reset-password', (req, res) => {
-  const token = String(req.body?.token ?? '');
-  const newPassword = String(req.body?.newPassword ?? '');
-
-  if (!token || !newPassword) {
-    return res.status(400).json({ error: 'token and newPassword are required' });
-  }
-
-  const email = resetTokens.get(token);
-  if (!email) {
-    return res.status(400).json({ error: 'invalid or expired token' });
-  }
-
-  const u = users.get(email);
-  if (!u) {
-    return res.status(400).json({ error: 'invalid state' });
-  }
-
-  u.password = newPassword;
-  resetTokens.delete(token);
-
-  return res.status(200).json({
-    success: true,
-    message: 'password reset successfully',
-  });
-});
-
-// Complete onboarding - Create organization
-router.post('/onboarding/complete', (req, res) => {
-  const { user: userInfo, org: orgInfo, type = 'create' } = req.body || {};
-
-  if (!userInfo?.displayName || !orgInfo?.name) {
-    return res.status(400).json({ error: 'user displayName and org name are required' });
-  }
-
-  if (type === 'create') {
-    // Create new organization
-    const orgId = randomUUID();
-    const userId = randomUUID();
-    const now = new Date().toISOString();
-
-    const organization: OrganizationRecord = {
-      id: orgId,
-      name: orgInfo.name,
-      displayName: orgInfo.displayName || orgInfo.name,
-      description: orgInfo.description,
-      website: orgInfo.website,
-      industry: orgInfo.industry,
-      size: orgInfo.size,
-      ownerId: userId,
-      createdAt: now,
-    };
-
-    organizations.set(orgId, organization);
-
-    // Update or create user
-    const email = norm(userInfo.email);
-    let user = users.get(email);
-
-    if (user) {
-      // Update existing user
-      user.displayName = userInfo.displayName;
-      user.firstName = userInfo.firstName;
-      user.lastName = userInfo.lastName;
-      user.jobTitle = userInfo.jobTitle;
-      user.department = userInfo.department;
-      user.phoneNumber = userInfo.phoneNumber;
-      user.timezone = userInfo.timezone;
-      user.role = 'owner';
-      user.orgId = orgId;
-      user.onboardingComplete = true;
-    } else {
-      // Create new user
-      user = {
-        id: userId,
-        email: email,
-        password: 'temp-password', // Should be set during registration
-        displayName: userInfo.displayName,
-        firstName: userInfo.firstName,
-        lastName: userInfo.lastName,
-        jobTitle: userInfo.jobTitle,
-        department: userInfo.department,
-        phoneNumber: userInfo.phoneNumber,
-        timezone: userInfo.timezone || 'UTC',
-        role: 'owner',
-        orgId: orgId,
-        onboardingComplete: true,
-        createdAt: now,
-      };
-      users.set(email, user);
+    if (!email || !password) {
+      return res.status(400).json({ error: 'email and password are required' });
+    }
+    if (users.has(email)) {
+      return res.status(409).json({ error: 'email already registered' });
     }
 
-    return res.status(200).json({
+    const u: UserRecord = {
+      id: randomUUID(),
+      email,
+      password: bcrypt.hashSync(password, 10),
+      displayName: displayName || `${firstName} ${lastName}`.trim() || email.split('@')[0],
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
+      role: 'member',
+      orgId: null,
+      onboardingComplete: false,
+      createdAt: nowIso(),
+    };
+
+    users.set(email, u);
+    return res.status(201).json({
       success: true,
-      message: 'onboarding completed - organization created',
+      message: 'registered',
       user: {
-        id: user.id,
-        email: user.email,
-        displayName: user.displayName,
-        role: user.role,
-      },
-      organization: {
-        id: organization.id,
-        name: organization.name,
-        displayName: organization.displayName,
-        role: 'owner',
+        id: u.id,
+        email: u.email,
+        displayName: u.displayName,
+        onboardingComplete: u.onboardingComplete,
       },
     });
-  } else {
-    return res.status(400).json({ error: 'invalid onboarding type' });
-  }
-});
+  });
 
-// Join organization via invite code
-router.post('/onboarding/join', (req, res) => {
-  const { user: userInfo, inviteCode } = req.body || {};
+  // User login
+  router.post('/login', (req, res) => {
+    const email = norm(req.body?.email);
+    const password = String(req.body?.password ?? '');
+    const u = email ? users.get(email) : null;
 
-  if (!userInfo?.displayName || !inviteCode) {
-    return res.status(400).json({ error: 'user displayName and inviteCode are required' });
-  }
+    if (!u || !bcrypt.compareSync(password, u.password)) {
+      return res.status(401).json({ error: 'invalid credentials' });
+    }
 
-  const invite = invites.get(inviteCode);
-  if (!invite) {
-    return res.status(404).json({ error: 'invalid invite code' });
-  }
+    const org = u.orgId ? orgs.get(u.orgId) : null;
+    u.lastLoginAt = nowIso();
 
-  // Check if invite is expired
-  if (new Date(invite.expiresAt) < new Date()) {
-    return res.status(400).json({ error: 'invite code has expired' });
-  }
+    return res.status(200).json({
+      success: true,
+      message: 'ok',
+      user: {
+        id: u.id,
+        email: u.email,
+        displayName: u.displayName,
+        onboardingComplete: u.onboardingComplete,
+      },
+      organization: org
+        ? {
+            id: org.id,
+            name: org.name,
+            displayName: org.displayName,
+            role: u.role,
+          }
+        : null,
+    });
+  });
 
-  // Check if invite is already used
-  if (invite.usedAt) {
-    return res.status(400).json({ error: 'invite code has already been used' });
-  }
+  // Forgot password (no-op template—client uses Firebase for resets)
+  router.post('/forgot-password', (_req, res) => {
+    return res
+      .status(200)
+      .json({ success: true, message: 'If account exists, an email will be sent.' });
+  });
 
-  const organization = organizations.get(invite.orgId);
-  if (!organization) {
-    return res.status(404).json({ error: 'organization not found for invite' });
-  }
+  // Reset password (email flows are typically handled by Firebase/Auth provider)
+  router.post('/reset-password', (_req, res) => {
+    return res
+      .status(200)
+      .json({ success: true, message: 'Password reset processed if token is valid.' });
+  });
 
-  // Update or create user
-  const email = norm(userInfo.email);
-  let user = users.get(email);
-  const userId = user?.id || randomUUID();
-  const now = new Date().toISOString();
-
-  if (user) {
-    // Update existing user
-    user.displayName = userInfo.displayName;
-    user.firstName = userInfo.firstName;
-    user.lastName = userInfo.lastName;
-    user.jobTitle = userInfo.jobTitle;
-    user.department = userInfo.department;
-    user.phoneNumber = userInfo.phoneNumber;
-    user.timezone = userInfo.timezone;
-    user.role = invite.role;
-    user.orgId = invite.orgId;
-    user.onboardingComplete = true;
-  } else {
-    // Create new user
-    user = {
-      id: userId,
-      email: email,
-      password: 'temp-password', // Should be set during registration
-      displayName: userInfo.displayName,
-      firstName: userInfo.firstName,
-      lastName: userInfo.lastName,
-      jobTitle: userInfo.jobTitle,
-      department: userInfo.department,
-      phoneNumber: userInfo.phoneNumber,
-      timezone: userInfo.timezone || 'UTC',
-      role: invite.role,
+  // List invites (demo/debug)
+  router.get('/invites', (_req, res) => {
+    const invitesArray = Array.from(invites.values()).map(invite => ({
+      id: invite.id,
+      email: invite.email,
       orgId: invite.orgId,
-      onboardingComplete: true,
-      createdAt: now,
-    };
-    users.set(email, user);
-  }
+      role: invite.role,
+      code: invite.code,
+      expiresAt: invite.expiresAt,
+      usedAt: invite.usedAt,
+      usedBy: invite.usedBy,
+    }));
 
-  // Mark invite as used
-  invite.usedAt = now;
-  invite.usedBy = userId;
-
-  return res.status(200).json({
-    success: true,
-    message: 'onboarding completed - joined organization',
-    user: {
-      id: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      role: user.role,
-    },
-    organization: {
-      id: organization.id,
-      name: organization.name,
-      displayName: organization.displayName,
-      role: user.role,
-    },
+    return res.status(200).json({
+      success: true,
+      invites: invitesArray,
+    });
   });
-});
 
-// Get organizations (for admin)
-router.get('/organizations', (req, res) => {
-  const orgsArray = Array.from(organizations.values()).map(org => ({
-    id: org.id,
-    name: org.name,
-    displayName: org.displayName,
-    industry: org.industry,
-    size: org.size,
-    createdAt: org.createdAt,
-  }));
-
-  return res.status(200).json({
-    success: true,
-    organizations: orgsArray,
-  });
-});
-
-// Get users (for admin)
-router.get('/users', (req, res) => {
-  const usersArray = Array.from(users.values()).map(user => ({
-    id: user.id,
-    email: user.email,
-    displayName: user.displayName,
-    role: user.role,
-    orgId: user.orgId,
-    onboardingComplete: user.onboardingComplete,
-    createdAt: user.createdAt,
-    lastLoginAt: user.lastLoginAt,
-  }));
-
-  return res.status(200).json({
-    success: true,
-    users: usersArray,
-  });
-});
-
-// Get invite codes (for admin)
-router.get('/invites', (req, res) => {
-  const invitesArray = Array.from(invites.values()).map(invite => ({
-    id: invite.id,
-    orgId: invite.orgId,
-    role: invite.role,
-    code: invite.code,
-    expiresAt: invite.expiresAt,
-    usedAt: invite.usedAt,
-    usedBy: invite.usedBy,
-  }));
-
-  return res.status(200).json({
-    success: true,
-    invites: invitesArray,
-  });
-});
-
-export default router;
+  return router;
+};
