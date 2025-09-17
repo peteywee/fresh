@@ -11,6 +11,7 @@
     "dev": "concurrently -k -n api,web -c blue,green \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:web": "pnpm --filter @apps/web dev",
     "dev:api": "pnpm --filter @services/api dev",
+    "dev:all": "concurrently -n API,WEB -c cyan,magenta \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:check-node": "node scripts/check-node-version.cjs",
     "dev:restart": "./scripts/restart-dev.sh",
     "dev:kill": "./scripts/kill-dev-processes.sh",
@@ -65,5 +66,6 @@
   "dependencies": {
     "firebase": "^12.2.1",
     "next": "15.5.2"
-  }
+  },
+  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad"
 }

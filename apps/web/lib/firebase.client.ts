@@ -1,5 +1,7 @@
+'use client';
+
 import { type FirebaseApp, getApps, initializeApp } from 'firebase/app';
-import { type Auth, GoogleAuthProvider, getAuth } from 'firebase/auth';
+import { type Auth, getAuth } from 'firebase/auth';
 
 // For client-side, environment variables should be available via process.env
 // If process is not defined, we're in a problematic state, so use fallbacks
@@ -40,20 +42,6 @@ try {
   throw error;
 }
 
-// Initialize Firebase Auth
+// Export auth for compatibility with existing code
 export const auth = getAuth(app);
-export const firebaseApp = app;
-
-// Initialize Google Auth Provider
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.addScope('email');
-googleProvider.addScope('profile');
-
-// Legacy exports for compatibility
-export function getFirebaseApp(): FirebaseApp {
-  return app;
-}
-
-export function getFirebaseAuth(): Auth {
-  return auth;
-}
+export { app };
