@@ -74,7 +74,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <header className={styles.header}>
           <nav className={styles.nav}>
             <div className={styles.navLinks}>
-              <a href={loggedIn && onboarded ? '/dashboard' : '/'} className={styles.logoLink}>
+              <a
+                href={
+                  loggedIn && onboarded ? '/dashboard' : loggedIn ? '/onboarding' : '/dashboard'
+                }
+                className={styles.logoLink}
+              >
                 {appName}
               </a>
               {loggedIn && (

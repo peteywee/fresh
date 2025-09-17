@@ -43,7 +43,7 @@ export default function RegisterPage() {
     setErr(null);
     setBusy(true);
     const res = await signInWithGoogle();
-    if (res.ok) router.replace('/');
+    if (res.ok) router.replace('/onboarding');
     else if (res.error !== 'redirecting') {
       setErr(res.error);
       setBusy(false);
@@ -63,7 +63,7 @@ export default function RegisterPage() {
       if (displayName) {
         await updateProfile(cred.user, { displayName });
       }
-      router.replace('/');
+      router.replace('/onboarding');
     } catch (e: any) {
       setErr(e?.code || 'auth/register-error');
       setBusy(false);

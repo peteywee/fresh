@@ -41,7 +41,7 @@ export default function LoginPage() {
     setErr(null);
     setBusy(true);
     const res = await signInWithGoogle();
-    if (res.ok) router.replace('/');
+    if (res.ok) router.replace('/dashboard');
     else if (res.error !== 'redirecting') {
       setErr(res.error);
       setBusy(false);
@@ -54,7 +54,7 @@ export default function LoginPage() {
     setBusy(true);
     try {
       await emailSignIn(email, password);
-      router.replace('/');
+      router.replace('/dashboard');
     } catch (e: any) {
       setErr(e?.code || 'auth/error');
       setBusy(false);
