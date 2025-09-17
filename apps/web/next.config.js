@@ -78,6 +78,8 @@ const nextConfig = {
       { source: '/api/reset-password', destination: `${API_URL}/api/reset-password` },
     ];
   },
+  // Configure allowed dev origins for Turbopack
+  allowedDevOrigins: ['localhost:3000', '127.0.0.1:3000', '10.0.0.117:3000'],
 };
 
 module.exports = withBundleAnalyzer(nextConfig);

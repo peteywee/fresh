@@ -96,12 +96,52 @@ export default function LoginPage() {
           setBusy(false);
         }
       } else if (res.error !== 'redirecting') {
-        setErr(res.error);
+        console.error('Google sign-in error code:', res.error);
+        // Show specific error messages for common Google auth errors
+        let errorMessage = 'Google sign-in failed';
+        switch (res.error) {
+          case 'auth/internal-error':
+            errorMessage = 'Google authentication service error. Please try again.';
+            break;
+          case 'auth/popup-blocked':
+            errorMessage = 'Popup was blocked. Please allow popups and try again.';
+            break;
+          case 'auth/cancelled-popup-request':
+            errorMessage = 'Sign-in was cancelled. Please try again.';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Network error. Please check your connection and try again.';
+            break;
+          default:
+            errorMessage = `Google sign-in failed: ${res.error}`;
+        }
+        setErr(errorMessage);
         setBusy(false);
       }
     } catch (error: any) {
       console.error('Google sign in error:', error);
-      setErr('Google sign-in failed. Please try again.');
+      console.error('Error code:', error?.code);
+      console.error('Error message:', error?.message);
+
+      let errorMessage = 'Google sign-in failed. Please try again.';
+      if (error?.code) {
+        switch (error.code) {
+          case 'auth/internal-error':
+            errorMessage =
+              'Google authentication internal error. This may be due to configuration issues.';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Network error. Please check your connection.';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Too many attempts. Please wait and try again.';
+            break;
+          default:
+            errorMessage = `Google sign-in error: ${error.code}`;
+        }
+      }
+
+      setErr(errorMessage);
       setBusy(false);
     }
   }

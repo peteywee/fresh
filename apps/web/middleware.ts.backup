@@ -19,7 +19,7 @@ export function middleware(req: NextRequest) {
   // Public routes that don't need auth
   const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
   const isPublicRoute = publicRoutes.includes(pathname);
-
+  
   // Check for session cookie (fast synchronous check)
   const sessionCookie = req.cookies.get(process.env.SESSION_COOKIE_NAME || '__session');
   const hasSession = !!sessionCookie?.value;
@@ -58,6 +58,6 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     // Ultra-optimized matcher: only run on actual pages, skip everything else
-    '/((?!_next|api|favicon|manifest|sw|icons|.*\\.).*)',
+    '/((?!_next|api|favicon|manifest|sw|icons|.*\\.).*)' 
   ],
 };

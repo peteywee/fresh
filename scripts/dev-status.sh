@@ -16,6 +16,12 @@ fi
 echo -n "🌐 Web Server (port 3000): "
 if curl -s http://localhost:3000 >/dev/null 2>&1; then
   echo "✅ Running"
+  # Check if running with Turbopack
+  if pgrep -f "next dev.*--turbo" >/dev/null 2>&1; then
+    echo "   ⚡ Turbopack enabled"
+  elif pgrep -f "next dev" >/dev/null 2>&1; then
+    echo "   📦 Webpack mode"
+  fi
 else
   echo "❌ Not running"
 fi

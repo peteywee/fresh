@@ -2,7 +2,6 @@
 
 # Pre-commit hook for Fresh project
 # Ensures code quality, documentation, and testing standards before commits
-
 set -e
 
 # Colors for output
