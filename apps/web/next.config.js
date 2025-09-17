@@ -14,12 +14,17 @@ const nextConfig = {
     // We run ESLint separately in CI; skip during Next build to avoid plugin detection warnings
     ignoreDuringBuilds: true,
   },
-  // Build-time optimizations
-  experimental: {
-    optimizePackageImports: ['firebase', 'firebase-admin', 'zod'],
+  // Environment variables - explicitly define for better reliability
+  env: {
+    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   },
-  // Reduce bundle size
   compiler: {
+    optimizePackageImports: ['firebase', 'zod'],
     removeConsole:
       process.env.NODE_ENV === 'production'
         ? {
@@ -28,7 +33,6 @@ const nextConfig = {
         : false,
   },
   // Performance optimizations
-  compress: true,
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -41,9 +45,7 @@ const nextConfig = {
     return [
       {
         source: '/_next/static/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
         source: '/manifest.json',
@@ -66,6 +68,10 @@ const nextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; style-src 'self' 'unsafe-inline';",
+          },
         ],
       },
     ];

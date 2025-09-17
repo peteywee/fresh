@@ -1,0 +1,52 @@
+.authMain {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.authTitle {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.authDivider {
+  margin: 24px 0;
+  text-align: center;
+  position: relative;
+}
+
+.authDivider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.authDividerLabel {
+  position: relative;
+  background: white;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.authCtaRow {
+  text-align: center;
+  margin-top: 24px;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.authError {
+  color: #dc2626;
+  background-color: #fef2f2;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+  border: 1px solid #fecaca;
+  font-size: 14px;
+}
