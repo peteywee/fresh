@@ -1,0 +1,84 @@
+name: Fresh Development Environment Setup
+description: Pre-install dependencies and setup environment for Fresh application development
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.4'
+          check-latest: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: |
+          echo "Installing project dependencies..."
+          pnpm install --frozen-lockfile
+          echo "✅ Dependencies installed successfully"
+
+      - name: Build packages
+        run: |
+          echo "Building all packages..."
+          pnpm build
+          echo "✅ Build completed successfully"
+
+      - name: Verify setup
+        run: |
+          echo "Running verification checks..."
+          
+          # Verify TypeScript compilation
+          pnpm typecheck
+          echo "✅ TypeScript check passed"
+          
+          # Verify linting
+          pnpm lint
+          echo "✅ Lint check passed"
+          
+          # Verify tests run
+          pnpm test
+          echo "✅ Tests passed"
+          
+          echo "🎉 Fresh development environment is ready!"
+
+      - name: Setup Firebase Emulator (optional)
+        run: |
+          echo "Installing Firebase CLI for testing..."
+          npm install -g firebase-tools
+          echo "✅ Firebase CLI installed"
+
+      - name: Environment summary
+        run: |
+          echo "=== Fresh Development Environment ==="
+          echo "Node.js: $(node --version)"
+          echo "pnpm: $(pnpm --version)"
+          echo "TypeScript: $(npx tsc --version)"
+          echo "Next.js: Ready for development"
+          echo "Firebase: CLI tools available"
+          echo "================================="

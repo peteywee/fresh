@@ -150,29 +150,31 @@ Run these commands in order - all have been validated to work in CI/CD:
    ```
 
    - The `dev:status` script has some issues but `dev:kill` and individual servers work
-   - The `dev:status` script has some issues but `dev:kill` and individual servers work
 
 ## Validation & Testing
 
 ### Required Pre-Commit Validation
 
-Always run these before committing (matches `.github/workflows/ci.yml`):
+Always run these before committing (matches CI pipeline):
 
 ```bash
-pnpm build && pnpm typecheck && pnpm lint
+pnpm build && pnpm typecheck && pnpm lint && pnpm test
 ```
 
-### Manual Application Testing
+### CI/CD Pipeline
 
-## Validation & Testing
+The repository uses a comprehensive CI/CD pipeline with the following workflows:
 
-### Required Pre-Commit Validation
+- **🔍 CI/CD Pipeline** (`ci.yml`) - Core validation (build, typecheck, lint, test, security)
+- **🔒 Security** (`security.yml`) - Dependency audit, CodeQL analysis, secrets detection
+- **📝 TODO Management** (`todo.yml`) - Tracks TODO comments and creates issues
+- **🚀 Preview Deployment** (`preview.yml`) - PR preview environments
+- **📊 Performance Monitoring** (`performance.yml`) - Bundle analysis and Lighthouse CI
+- **📚 Documentation** (`docs.yml`) - Auto-generates TypeDoc documentation
 
-Always run these before committing (matches `.github/workflows/ci.yml`):
+**All workflows must pass (green ✅) for merge approval.**
 
-```bash
-pnpm build && pnpm typecheck && pnpm lint
-```
+See `docs/CI_CD_PIPELINE.md` for detailed pipeline documentation.
 
 ### Manual Application Testing
 
@@ -187,6 +189,7 @@ pnpm build && pnpm typecheck && pnpm lint
    - Should render form with Email, Password fields and Login/Register/Forgot Password buttons
 
 1. **API health check:**
+
    ```bash
    curl -s http://localhost:3333/health | jq . | grep "ok"
    ```

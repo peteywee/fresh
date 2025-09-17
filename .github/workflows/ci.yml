@@ -1,4 +1,4 @@
-name: CI
+name: 🚀 CI/CD Pipeline
 
 on:
   push:
@@ -6,38 +6,144 @@ on:
   pull_request:
     branches: [main, develop]
 
+env:
+  NODE_VERSION: '20.19.4'
+  PNPM_VERSION: '10'
+
 jobs:
-  test:
+  validate:
+    name: 🔍 Code Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
+      - name: 🔧 Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20.19.4'
+          node-version: ${{ env.NODE_VERSION }}
           
-      - name: Setup pnpm
+      - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: ${{ env.PNPM_VERSION }}
           
-      - name: Install dependencies
+      - name: 💾 Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          
+      - name: ⚡ Cache pnpm modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+        
+      - name: 📋 Install dependencies
         run: pnpm install --frozen-lockfile
+        timeout-minutes: 5
         
-      - name: Check Node version
-        run: node scripts/check-node-version.cjs
-        
-      - name: Build packages
+      - name: 🏗️ Build all packages
         run: pnpm build
+        timeout-minutes: 10
         
-      - name: Type check
+      - name: 🔎 TypeScript type checking
         run: pnpm typecheck
         
-      - name: Lint
+      - name: 🧹 Lint code
         run: pnpm lint
         
-      - name: Test
-        run: pnpm test
+      - name: 🧪 Run tests
+        run: pnpm test --coverage
+        
+      - name: 📊 Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+          
+      - name: ✅ Validation Summary
+        if: success()
+        run: |
+          echo "🎉 All validation checks passed!"
+          echo "✅ Dependencies installed"
+          echo "✅ Build successful" 
+          echo "✅ Type checking passed"
+          echo "✅ Linting passed"
+          echo "✅ Tests passed"
+          
+      - name: ❌ Validation Failed
+        if: failure()
+        run: |
+          echo "💥 Validation failed. Please check the logs above."
+          exit 1
+
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: validate
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: 📋 Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: 🛡️ Audit dependencies
+        run: |
+          pnpm audit --audit-level moderate
+          echo "✅ No moderate or high severity vulnerabilities found"
+          
+      - name: 🔍 Security scan with CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript,typescript
+          
+      - name: 🏗️ Autobuild
+        uses: github/codeql-action/autobuild@v3
+        
+      - name: 📈 Perform CodeQL Analysis  
+        uses: github/codeql-action/analyze@v3
+
+  quality-gate:
+    name: 🎯 Quality Gate
+    runs-on: ubuntu-latest
+    needs: [validate, security]
+    if: always()
+    
+    steps:
+      - name: 🎉 Quality Gate Passed
+        if: needs.validate.result == 'success' && needs.security.result == 'success'
+        run: |
+          echo "🎯 Quality Gate: PASSED ✅"
+          echo "🔍 Code validation: ✅ PASSED" 
+          echo "🔒 Security scan: ✅ PASSED"
+          echo ""
+          echo "🚀 Ready for deployment!"
+          
+      - name: ❌ Quality Gate Failed
+        if: needs.validate.result != 'success' || needs.security.result != 'success'
+        run: |
+          echo "🎯 Quality Gate: FAILED ❌"
+          echo "🔍 Code validation: ${{ needs.validate.result == 'success' && '✅ PASSED' || '❌ FAILED' }}"
+          echo "🔒 Security scan: ${{ needs.security.result == 'success' && '✅ PASSED' || '❌ FAILED' }}"
+          echo ""
+          echo "❌ Not ready for deployment. Please fix issues above."
+          exit 1

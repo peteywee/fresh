@@ -3,6 +3,8 @@ import { OfflineIndicator, PWAInstallPrompt } from '@/components/PWAComponents';
 import { getServerSession } from '@/lib/session';
 import { BrandingProvider } from '@/lib/useBranding';
 
+import styles from './layout.module.css';
+
 // Removed temporary SafeClientPerformanceShell guard after stabilization.
 
 export const metadata = {
