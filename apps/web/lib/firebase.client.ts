@@ -4,7 +4,14 @@ import { type FirebaseApp, getApps, initializeApp } from 'firebase/app';
 import { type Auth, getAuth } from 'firebase/auth';
 
 function required(name: string, v: string | undefined): string {
-  if (!v) throw new Error(`Missing ${name} (check apps/web/.env.local)`);
+  if (!v) {
+    // During CI build, we don't have Firebase env vars - use dummy values to allow build
+    if (process.env.NODE_ENV === 'production' && process.env.CI) {
+      console.warn(`Missing ${name} in CI build - using dummy value`);
+      return 'dummy-value-for-ci-build';
+    }
+    throw new Error(`Missing ${name} (check apps/web/.env.local)`);
+  }
   return v;
 }
 
