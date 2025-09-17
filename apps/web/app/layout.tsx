@@ -3,12 +3,7 @@ import { OfflineIndicator, PWAInstallPrompt } from '@/components/PWAComponents';
 import { getServerSession } from '@/lib/session';
 import { BrandingProvider } from '@/lib/useBranding';
 
-import styles from './layout.module.css';
-
-// Defensive runtime guard: if for any reason the imported component is undefined
-// (e.g. stale HMR state), fall back to a pass-through wrapper to avoid crashes.
-const SafeClientPerformanceShell: React.ComponentType<React.PropsWithChildren> =
-  (ClientPerformanceShell as any) || (({ children }) => <>{children}</>);
+// Removed temporary SafeClientPerformanceShell guard after stabilization.
 
 export const metadata = {
   title: process.env.NEXT_PUBLIC_APP_NAME || 'Fresh Team Management',
@@ -66,8 +61,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta name="msapplication-TileColor" content="#2563eb" />
         <meta name="msapplication-config" content="none" />
       </head>
-      <body className={styles.body}>
-        <SafeClientPerformanceShell>
+      <body
+        style={{
+          fontFamily:
+            'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          margin: 0,
+        }}
+      >
+        <ClientPerformanceShell>
           <BrandingProvider>
             <OfflineIndicator />
             {/* Global Header / Navigation */}
@@ -127,7 +128,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <PWAInstallPrompt />
             <script src="/sw-register.js" defer />
           </BrandingProvider>
-        </SafeClientPerformanceShell>
+        </ClientPerformanceShell>
       </body>
     </html>
   );
