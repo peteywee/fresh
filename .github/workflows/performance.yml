@@ -29,7 +29,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -38,10 +38,11 @@ jobs:
         run: pnpm build
         env:
           NODE_ENV: production
+          CI: true
 
       - name: Start application
         run: |
-          pnpm start:web &
+          cd apps/web && pnpm start &
           sleep 10
           curl -f http://localhost:3000 || exit 1
         env:
@@ -81,7 +82,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -89,8 +90,7 @@ jobs:
       - name: Build with bundle analysis
         run: |
           cd apps/web
-          cp next.config.analysis.js next.config.js
-          ANALYZE=true pnpm build
+          ANALYZE=true CI=true pnpm build
         env:
           NODE_ENV: production
 
@@ -190,15 +190,14 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Build base version
         run: |
           cd base
           pnpm install --frozen-lockfile
           cd apps/web
-          cp next.config.analysis.js next.config.js
-          ANALYZE=true pnpm build
+          ANALYZE=true CI=true pnpm build
           cp analyze/client-stats.json ../../base-stats.json
 
       - name: Build PR version
@@ -206,8 +205,7 @@ jobs:
           cd pr
           pnpm install --frozen-lockfile
           cd apps/web
-          cp next.config.analysis.js next.config.js
-          ANALYZE=true pnpm build
+          ANALYZE=true CI=true pnpm build
           cp analyze/client-stats.json ../../pr-stats.json
 
       - name: Compare bundle sizes

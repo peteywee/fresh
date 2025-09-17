@@ -10,6 +10,7 @@ dist/
 build/
 out/
 coverage/
+analyze/
 
 # Logs
 logs/

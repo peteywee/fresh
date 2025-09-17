@@ -24,7 +24,7 @@ const nextConfig = {
     NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   },
   compiler: {
-    optimizePackageImports: ['firebase', 'zod'],
+    // Note: optimizePackageImports is not a valid option - remove it
     removeConsole:
       process.env.NODE_ENV === 'production'
         ? {
@@ -33,6 +33,9 @@ const nextConfig = {
         : false,
   },
   // Performance optimizations
+  experimental: {
+    optimizePackageImports: ['firebase', 'zod'],
+  },
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -83,6 +86,23 @@ const nextConfig = {
       { source: '/api/forgot-password', destination: `${API_URL}/api/forgot-password` },
       { source: '/api/reset-password', destination: `${API_URL}/api/reset-password` },
     ];
+  },
+  // Add webpack configuration for bundle analysis
+  webpack: (config, { isServer }) => {
+    // Generate bundle stats when ANALYZE=true
+    if (process.env.ANALYZE === 'true') {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: process.env.CI ? 'static' : 'server',
+          openAnalyzer: !process.env.CI,
+          reportFilename: isServer ? '../analyze/server.html' : '../analyze/client.html',
+          generateStatsFile: true,
+          statsFilename: isServer ? '../analyze/server-stats.json' : '../analyze/client-stats.json',
+        })
+      );
+    }
+    return config;
   },
 };
 

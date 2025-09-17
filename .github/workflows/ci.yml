@@ -28,7 +28,7 @@ jobs:
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: ${{ env.PNPM_VERSION }}
+          version: 10
           
       - name: 💾 Get pnpm store directory
         shell: bash
@@ -49,6 +49,9 @@ jobs:
       - name: 🏗️ Build all packages
         run: pnpm build
         timeout-minutes: 10
+        env:
+          CI: true
+          NODE_ENV: production
         
       - name: 🔎 TypeScript type checking
         run: pnpm typecheck
@@ -101,7 +104,7 @@ jobs:
       - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: ${{ env.PNPM_VERSION }}
+          version: 10
           
       - name: 📋 Install dependencies
         run: pnpm install --frozen-lockfile
