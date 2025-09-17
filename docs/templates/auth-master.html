@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fresh - Modern PWA Scheduler with Firebase Authentication">
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Fresh">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/logo.svg">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#2563eb">
+    
+    <!-- Firebase Authentication Meta -->
+    <meta name="firebase-auth-domain" content="your-project.firebaseapp.com">
+    
+    <!-- Production-Safe CSP (Google OAuth Compatible) -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' 
+                   https://apis.google.com 
+                   https://www.gstatic.com 
+                   https://www.google.com 
+                   https://securetoken.googleapis.com
+                   https://www.googleapis.com;
+        style-src 'self' 'unsafe-inline' 
+                  https://fonts.googleapis.com;
+        font-src 'self' 
+                 https://fonts.gstatic.com;
+        img-src 'self' data: blob: 
+                https://lh3.googleusercontent.com 
+                https://www.google.com 
+                https://www.gstatic.com;
+        connect-src 'self' 
+                    https://identitytoolkit.googleapis.com 
+                    https://securetoken.googleapis.com
+                    https://www.googleapis.com
+                    https://accounts.google.com;
+        frame-src 'self' 
+                  https://accounts.google.com 
+                  https://www.google.com;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    
+    <title>Fresh - Authentication System</title>
+</head>
+<body>
+    <!-- Loading State -->
+    <div id="app-loading" class="loading-screen">
+        <div class="loading-content">
+            <img src="/logo.svg" alt="Fresh" class="loading-logo">
+            <div class="loading-spinner"></div>
+            <p>Loading Fresh...</p>
+        </div>
+    </div>
+
+    <!-- Authentication Error Fallback -->
+    <div id="auth-error" class="error-screen" style="display: none;">
+        <div class="error-content">
+            <h1>🔒 Authentication Setup Required</h1>
+            <p>Firebase configuration is missing or invalid.</p>
+            <details>
+                <summary>Configuration Checklist</summary>
+                <ul>
+                    <li>✅ Firebase project created</li>
+                    <li>✅ Authentication enabled (Email/Password + Google)</li>
+                    <li>✅ Environment variables set in .env.local</li>
+                    <li>✅ Authorized domains configured</li>
+                </ul>
+            </details>
+            <a href="/docs/AUTHENTICATION.md" class="docs-link">📚 View Setup Guide</a>
+        </div>
+    </div>
+
+    <!-- Network Error Fallback -->
+    <div id="network-error" class="error-screen" style="display: none;">
+        <div class="error-content">
+            <h1>🌐 Connection Error</h1>
+            <p>Unable to connect to authentication services.</p>
+            <button onclick="window.location.reload()" class="retry-button">
+                🔄 Retry
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="__next">
+        <!-- Next.js app will mount here -->
+    </div>
+
+    <!-- Authentication System Styles -->
+    <style>
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+
+        .loading-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            margin: 20px auto;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Error Screens */
+        .error-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+        }
+
+        .error-content {
+            text-align: center;
+            max-width: 500px;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .error-content h1 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .error-content p {
+            color: #6b7280;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .error-content details {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .error-content ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .docs-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .docs-link:hover {
+            background: #1d4ed8;
+        }
+
+        .retry-button {
+            padding: 12px 24px;
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .retry-button:hover {
+            background: #047857;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* Hide loading when Next.js loads */
+        #__next:not(:empty) ~ .loading-screen {
+            display: none;
+        }
+
+        /* Authentication form styling */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-title {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 32px;
+        }
+
+        .google-button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            color: #374151;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .google-button:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 24px 0;
+            position: relative;
+            color: #9ca3af;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .submit-button:hover {
+            background: #1d4ed8;
+        }
+
+        .submit-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .auth-links {
+            text-align: center;
+        }
+
+        .auth-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+    </style>
+
+    <!-- Authentication System JavaScript -->
+    <script>
+        // Environment validation
+        window.addEventListener('load', function() {
+            // Check if Firebase config is available
+            if (typeof window !== 'undefined') {
+                const hasFirebaseConfig = !!(
+                    process?.env?.NEXT_PUBLIC_FIREBASE_API_KEY ||
+                    window.localStorage?.getItem('firebase-config')
+                );
+                
+                if (!hasFirebaseConfig) {
+                    setTimeout(() => {
+                        document.getElementById('app-loading').style.display = 'none';
+                        document.getElementById('auth-error').style.display = 'flex';
+                    }, 2000);
+                }
+            }
+        });
+
+        // Network error detection
+        window.addEventListener('offline', function() {
+            document.getElementById('network-error').style.display = 'flex';
+        });
+
+        window.addEventListener('online', function() {
+            document.getElementById('network-error').style.display = 'none';
+        });
+
+        // Hide loading screen when Next.js starts
+        window.addEventListener('DOMContentLoaded', function() {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.target.id === '__next' && mutation.target.children.length > 0) {
+                        document.getElementById('app-loading').style.display = 'none';
+                        observer.disconnect();
+                    }
+                });
+            });
+
+            observer.observe(document.getElementById('__next'), {
+                childList: true,
+                subtree: true
+            });
+        });
+
+        // Google Analytics (optional - add your GA ID)
+        // window.dataLayer = window.dataLayer || [];
+        // function gtag(){dataLayer.push(arguments);}
+        // gtag('js', new Date());
+        // gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+
+    <!-- Google Analytics (uncomment and add your measurement ID) -->
+    <!-- 
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    -->
+</body>
+</html>
