@@ -1,4 +1,60 @@
+# Node / monorepo
+node_modules/
+.pnpm-store/
+.npmrc
+.pnp.*
+
+# Next.js / build artifacts
+.next/
+dist/
+build/
+out/
+coverage/
+
 # Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / Editor
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Environment files (browser/server)
+.env
+.env.*
+*.env
+*.local
+apps/web/.env.local
+
+# Secrets and service accounts
+secrets/**
+!secrets/README.md
+firebase-admin.json
+*.pem
+*.p12
+*.key
+
+# Local data not for commit
+cookies.txt
+users.json
+
+# Encrypted backup: allow only encrypted files
+encrypted_backup/**
+!encrypted_backup/*.gpg
+!encrypted_backup/README.md
+
+# Temporary
+tmp/
+*.tmp
+*.bak
+*.swp# Logs
 logs/
 *.log
 npm-debug.log*

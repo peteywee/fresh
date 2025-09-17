@@ -6,32 +6,58 @@ import { useRouter } from 'next/navigation';
 
 import styles from '../auth.module.css';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleLogin(e: React.FormEvent) {
+  async function exchangeFirebaseTokenForSession(idToken: string) {
+    const res = await fetch('/api/session/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+    if (!res.ok) throw new Error('Session exchange failed');
+    router.replace('/onboarding');
+  }
+
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setBusy(false);
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      setBusy(false);
+      return;
+    }
     try {
-      // Dynamic import to reduce initial bundle size and improve performance
-      const [{ auth }, { signInWithEmailAndPassword }] = await Promise.all([
+      const [{ auth }, { createUserWithEmailAndPassword, updateProfile }] = await Promise.all([
         import('@/lib/firebase.client'),
         import('firebase/auth'),
       ]);
-
-      const credential = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await credential.user.getIdToken(true);
-
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      if (displayName) await updateProfile(user, { displayName });
+      const idToken = await user.getIdToken(true);
       await exchangeFirebaseTokenForSession(idToken);
     } catch (e: any) {
-      console.error('Login error:', e);
-      setError(e?.message || 'Login failed');
+      if (e?.code === 'auth/email-already-in-use') {
+        setError('An account with this email already exists. Try signing in instead.');
+      } else if (e?.code === 'auth/weak-password') {
+        setError('Password is too weak. Please choose a stronger password.');
+      } else if (e?.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.');
+      } else {
+        setError(e?.message || 'Registration failed');
+      }
     } finally {
       setBusy(false);
     }
@@ -40,17 +66,13 @@ export default function LoginPage() {
   async function handleGoogleSignIn() {
     setBusy(true);
     setError(null);
-
     try {
-      // Dynamic import to reduce initial bundle size and improve performance
       const [{ auth, googleProvider }, { signInWithPopup }] = await Promise.all([
         import('@/lib/firebase.client'),
         import('firebase/auth'),
       ]);
-
       const credential = await signInWithPopup(auth, googleProvider);
       const idToken = await credential.user.getIdToken(true);
-
       await exchangeFirebaseTokenForSession(idToken);
     } catch (e: any) {
       console.error('Google sign-in error:', e);
@@ -60,39 +82,52 @@ export default function LoginPage() {
     }
   }
 
-  async function exchangeFirebaseTokenForSession(idToken: string) {
-    const response = await fetch('/api/session/login', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ idToken }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Session exchange failed');
-    }
-
-    // Check current session status to determine redirect
-    const statusResponse = await fetch('/api/session/current');
-    const status = await statusResponse.json();
-
-    if (status.user?.onboardingComplete) {
-      // Use window.location to ensure middleware processes the new cookies
-      window.location.href = '/dashboard';
-    } else {
-      window.location.href = '/onboarding';
-    }
-  }
-
   return (
     <main className={styles.authMain}>
       <div className={styles.authTitle}>
         <h1 style={{ fontSize: 32, fontWeight: 700, color: '#111827', marginBottom: 8 }}>
-          Welcome Back
+          Create Your Account
         </h1>
-        <p style={{ color: '#6b7280', fontSize: 16 }}>Sign in to your Fresh account</p>
+        <p style={{ color: '#6b7280', fontSize: 16 }}>
+          Join Fresh to get started with your team workspace
+        </p>
       </div>
 
-      <form onSubmit={handleLogin} style={{ display: 'grid', gap: 16 }}>
+      <form onSubmit={handleRegister} style={{ display: 'grid', gap: 16 }}>
+        <div>
+          <label
+            htmlFor="name"
+            style={{
+              display: 'block',
+              fontSize: 14,
+              fontWeight: 500,
+              color: '#374151',
+              marginBottom: 4,
+            }}
+          >
+            Full Name
+          </label>
+          <input
+            id="name"
+            name="name"
+            placeholder="Enter your full name"
+            type="text"
+            autoComplete="name"
+            onChange={e => setDisplayName(e.target.value)}
+            required
+            disabled={busy}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '16px',
+              backgroundColor: busy ? '#f9fafb' : 'white',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
         <div>
           <label
             htmlFor="email"
@@ -130,7 +165,7 @@ export default function LoginPage() {
 
         <div>
           <label
-            htmlFor="current-password"
+            htmlFor="new-password"
             style={{
               display: 'block',
               fontSize: 14,
@@ -142,11 +177,11 @@ export default function LoginPage() {
             Password
           </label>
           <input
-            id="current-password"
+            id="new-password"
             name="password"
-            placeholder="Enter your password"
+            placeholder="Create a password"
             type="password"
-            autoComplete="current-password"
+            autoComplete="new-password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
@@ -163,23 +198,59 @@ export default function LoginPage() {
           />
         </div>
 
+        <div>
+          <label
+            htmlFor="confirm-password"
+            style={{
+              display: 'block',
+              fontSize: 14,
+              fontWeight: 500,
+              color: '#374151',
+              marginBottom: 4,
+            }}
+          >
+            Confirm Password
+          </label>
+          <input
+            id="confirm-password"
+            name="confirm-password"
+            placeholder="Re-enter your password"
+            type="password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            required
+            disabled={busy}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '16px',
+              backgroundColor: busy ? '#f9fafb' : 'white',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
         <button
-          disabled={busy || !email || !password}
+          disabled={busy || !email || !password || !confirmPassword}
           type="submit"
           style={{
             width: '100%',
             padding: '12px 24px',
-            backgroundColor: busy || !email || !password ? '#9ca3af' : '#2563eb',
+            backgroundColor:
+              busy || !email || !password || !confirmPassword ? '#9ca3af' : '#2563eb',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
             fontSize: '16px',
             fontWeight: 600,
-            cursor: busy || !email || !password ? 'not-allowed' : 'pointer',
+            cursor: busy || !email || !password || !confirmPassword ? 'not-allowed' : 'pointer',
             transition: 'background-color 0.2s',
           }}
         >
-          {busy ? 'Signing in...' : 'Sign In'}
+          {busy ? 'Creating account...' : 'Create Account'}
         </button>
       </form>
 
@@ -242,15 +313,8 @@ export default function LoginPage() {
       </button>
 
       <div className={styles.authCtaRow}>
-        <a href="/register" style={{ color: '#2563eb', textDecoration: 'none', fontSize: 14 }}>
-          Create Account
-        </a>
-        <span style={{ color: '#d1d5db' }}>•</span>
-        <a
-          href="/forgot-password"
-          style={{ color: '#2563eb', textDecoration: 'none', fontSize: 14 }}
-        >
-          Forgot Password
+        <a href="/login" style={{ color: '#2563eb', textDecoration: 'none', fontSize: 14 }}>
+          Already have an account? Sign in
         </a>
       </div>
 

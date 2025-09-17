@@ -1,8 +1,8 @@
 import { type App, cert, getApps, initializeApp } from 'firebase-admin/app';
 import { type Auth, getAuth } from 'firebase-admin/auth';
 import { type Firestore, getFirestore } from 'firebase-admin/firestore';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import 'server-only';
 
 let app: App | undefined;
@@ -18,15 +18,41 @@ export function getAdminApp(): App {
   if (getApps().length) return getApps()[0]!;
 
   try {
-    // Try to load from service account key file first
-    const keyPath = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH;
-    if (keyPath) {
-      const fullPath = join(process.cwd(), keyPath);
-      const serviceAccount = JSON.parse(readFileSync(fullPath, 'utf8'));
-      app = initializeApp({
-        credential: cert(serviceAccount),
-      });
+    // 1) Prefer explicit ADC pointer
+    const adc = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (adc && fs.existsSync(adc)) {
+      const svc = JSON.parse(fs.readFileSync(adc, 'utf8'));
+      app = initializeApp({ credential: cert(svc) });
       return app!;
+    }
+
+    // 2) Try FIREBASE_SERVICE_ACCOUNT_KEY_PATH with robust resolution
+    const keyRel = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH;
+    const candidates: string[] = [];
+    if (keyRel) {
+      candidates.push(
+        path.join(process.cwd(), keyRel),
+        path.join(process.cwd(), '..', '..', keyRel),
+        path.join('/', 'workspaces', 'fresh', keyRel)
+      );
+    }
+    // 3) Common default location from repo root
+    candidates.push(
+      path.join(process.cwd(), 'secrets', 'firebase-admin.json'),
+      path.join(process.cwd(), '..', '..', 'secrets', 'firebase-admin.json'),
+      path.join('/', 'workspaces', 'fresh', 'secrets', 'firebase-admin.json')
+    );
+
+    for (const p of candidates) {
+      try {
+        if (p && fs.existsSync(p)) {
+          const svc = JSON.parse(fs.readFileSync(p, 'utf8'));
+          app = initializeApp({ credential: cert(svc) });
+          return app!;
+        }
+      } catch {
+        // try next
+      }
     }
 
     // Fallback to individual environment variables
