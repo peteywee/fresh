@@ -1,7 +1,5 @@
-import ClientPerformanceShell from '@/components/ClientPerformanceShell';
 import { OfflineIndicator, PWAInstallPrompt } from '@/components/PWAComponents';
 import { getServerSession } from '@/lib/session';
-import { BrandingProvider } from '@/lib/useBranding';
 
 import styles from './layout.module.css';
 
@@ -70,67 +68,63 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           margin: 0,
         }}
       >
-        <ClientPerformanceShell>
-          <BrandingProvider>
-            <OfflineIndicator />
-            {/* Global Header / Navigation */}
-            <header className={styles.header}>
-              <nav className={styles.nav}>
+        <OfflineIndicator />
+        {/* Global Header / Navigation */}
+        <header className={styles.header}>
+          <nav className={styles.nav}>
+            <div className={styles.navLinks}>
+              <a href={loggedIn && onboarded ? '/dashboard' : '/'} className={styles.logoLink}>
+                {appName}
+              </a>
+              {loggedIn && (
                 <div className={styles.navLinks}>
-                  <a href={loggedIn && onboarded ? '/dashboard' : '/'} className={styles.logoLink}>
-                    {appName}
+                  <a href="/dashboard" className={styles.navLink}>
+                    Dashboard
                   </a>
-                  {loggedIn && (
-                    <div className={styles.navLinks}>
-                      <a href="/dashboard" className={styles.navLink}>
-                        Dashboard
-                      </a>
-                      {!onboarded && (
-                        <a href="/onboarding" className={styles.navLink}>
-                          Onboarding
-                        </a>
-                      )}
-                      <a href="/team" className={styles.navLink}>
-                        Team
-                      </a>
-                      <a href="/calendar" className={styles.navLink}>
-                        Calendar
-                      </a>
-                      <a href="/settings" className={styles.navLink}>
-                        Settings
-                      </a>
-                    </div>
+                  {!onboarded && (
+                    <a href="/onboarding" className={styles.navLink}>
+                      Onboarding
+                    </a>
                   )}
+                  <a href="/team" className={styles.navLink}>
+                    Team
+                  </a>
+                  <a href="/calendar" className={styles.navLink}>
+                    Calendar
+                  </a>
+                  <a href="/settings" className={styles.navLink}>
+                    Settings
+                  </a>
                 </div>
-                <div className={styles.authButtons}>
-                  {loggedIn ? (
-                    <>
-                      {session?.role && <span className={styles.roleBadge}>{session.role}</span>}
-                      <a href="/api/session/logout" className={styles.signOutButton}>
-                        Sign out
-                      </a>
-                    </>
-                  ) : (
-                    <>
-                      <a href="/login" className={styles.loginButton}>
-                        Login
-                      </a>
-                      <a href="/register" className={styles.signUpButton}>
-                        Sign up
-                      </a>
-                    </>
-                  )}
-                </div>
-              </nav>
-            </header>
-
-            <div className={styles.mainContent}>
-              <div>{children}</div>
+              )}
             </div>
-            <PWAInstallPrompt />
-            <script src="/sw-register.js" defer />
-          </BrandingProvider>
-        </ClientPerformanceShell>
+            <div className={styles.authButtons}>
+              {loggedIn ? (
+                <>
+                  {session?.role && <span className={styles.roleBadge}>{session.role}</span>}
+                  <a href="/api/session/logout" className={styles.signOutButton}>
+                    Sign out
+                  </a>
+                </>
+              ) : (
+                <>
+                  <a href="/login" className={styles.loginButton}>
+                    Login
+                  </a>
+                  <a href="/register" className={styles.signUpButton}>
+                    Sign up
+                  </a>
+                </>
+              )}
+            </div>
+          </nav>
+        </header>
+
+        <div className={styles.mainContent}>
+          <div>{children}</div>
+        </div>
+        <PWAInstallPrompt />
+        <script src="/sw-register.js" defer />
       </body>
     </html>
   );

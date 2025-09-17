@@ -5,12 +5,15 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
+import { signInWithEmail } from '@/lib/auth-email';
 import { consumeRedirectResult, signInWithGoogle } from '@/lib/auth-google';
 
 import styles from '../auth.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [envOK, setEnvOK] = useState(true);
@@ -21,10 +24,27 @@ export default function LoginPage() {
       try {
         const res = await consumeRedirectResult();
         if (res?.ok && mounted) {
-          router.replace('/');
+          // Get the ID token and exchange it for a session
+          const idToken = await res.cred.user.getIdToken();
+
+          const response = await fetch('/api/session/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+          });
+
+          if (response.ok) {
+            router.replace('/');
+          } else {
+            const error = await response.json().catch(() => ({ error: 'Login failed' }));
+            setErr(error.error || 'Login failed after redirect');
+          }
         }
-      } catch {
-        /* ignore */
+      } catch (error) {
+        console.error('Redirect result error:', error);
+        if (mounted) {
+          setErr('Authentication failed');
+        }
       }
     })();
     return () => {
@@ -36,14 +56,52 @@ export default function LoginPage() {
     import('@/lib/firebase.client').then(m => setEnvOK(!!m.app)).catch(() => setEnvOK(false));
   }, []);
 
+  async function handleEmailLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setBusy(true);
+
+    const result = await signInWithEmail(email, password);
+
+    if (result.ok) {
+      router.replace('/');
+    } else {
+      setErr(result.error);
+      setBusy(false);
+    }
+  }
+
   async function handleGoogle() {
     setErr(null);
     setBusy(true);
-    const res = await signInWithGoogle();
-    if (res.ok) {
-      router.replace('/');
-    } else if (res.error !== 'redirecting') {
-      setErr(res.error);
+
+    try {
+      const res = await signInWithGoogle();
+
+      if (res.ok) {
+        // Get the ID token and exchange it for a session
+        const idToken = await res.cred.user.getIdToken();
+
+        const response = await fetch('/api/session/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        });
+
+        if (response.ok) {
+          router.replace('/');
+        } else {
+          const error = await response.json().catch(() => ({ error: 'Login failed' }));
+          setErr(error.error || 'Login failed');
+          setBusy(false);
+        }
+      } else if (res.error !== 'redirecting') {
+        setErr(res.error);
+        setBusy(false);
+      }
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      setErr('Google sign-in failed. Please try again.');
       setBusy(false);
     }
   }
@@ -51,6 +109,38 @@ export default function LoginPage() {
   return (
     <main className={styles.authMain}>
       <h1 className={styles.authTitle}>Sign in</h1>
+
+      <form onSubmit={handleEmailLogin} className={styles.authForm}>
+        <label className={styles.authLabel}>
+          <span>Email</span>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className={styles.authInput}
+          />
+        </label>
+
+        <label className={styles.authLabel}>
+          <span>Password</span>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className={styles.authInput}
+          />
+        </label>
+
+        <button type="submit" disabled={busy} className={styles.authPrimaryButton}>
+          {busy ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+
+      <div className={styles.authDivider}>
+        <span>or</span>
+      </div>
 
       <button
         onClick={handleGoogle}

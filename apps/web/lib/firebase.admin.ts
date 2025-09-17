@@ -1,8 +1,9 @@
-import { cert, getApps, initializeApp } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
+import { type App, cert, getApps, initializeApp } from 'firebase-admin/app';
+import { type Auth, getAuth } from 'firebase-admin/auth';
+import { type Firestore, getFirestore } from 'firebase-admin/firestore';
 import fs from 'node:fs';
 import path from 'node:path';
+import 'server-only';
 
 function resolveKeyPath(): string {
   // Highest priority: explicit ADC
@@ -26,9 +27,9 @@ function resolveKeyPath(): string {
   );
 }
 
-let app: any;
-let auth: any;
-let db: any;
+let app: App | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
 
 try {
   const keyPath = resolveKeyPath();
@@ -48,11 +49,19 @@ try {
   db = getFirestore(app);
 } catch (error) {
   console.warn('Firebase Admin initialization skipped:', error);
-  // Initialize placeholders for graceful degradation
-  app = null;
-  auth = null;
-  db = null;
+  // Graceful degradation - keep null values
 }
 
-export const adminAuth = auth;
-export const adminDb = () => db;
+export function adminAuth(): Auth {
+  if (!auth) {
+    throw new Error('Firebase Admin Auth not initialized');
+  }
+  return auth;
+}
+
+export function adminDb(): Firestore {
+  if (!db) {
+    throw new Error('Firebase Admin Firestore not initialized');
+  }
+  return db;
+}
