@@ -25,7 +25,7 @@ const nextConfig = {
   },
   // Build-time optimizations
   experimental: {
-    optimizePackageImports: ['firebase', 'firebase-admin', 'zod'],
+    optimizePackageImports: ['firebase', 'zod'],
   },
   // Reduce bundle size
   compiler: {
