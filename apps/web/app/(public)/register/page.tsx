@@ -5,20 +5,33 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
+import { onAuthStateChanged, updateProfile } from 'firebase/auth';
+
+import { emailRegister } from '@/lib/auth-email';
 import { consumeRedirectResult, signInWithGoogle } from '@/lib/auth-google';
+import { auth } from '@/lib/firebase.client';
 
 import styles from '../auth.module.css';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [envOK, setEnvOK] = useState(true);
+  const [confirm, setConfirm] = useState('');
 
+  // If already signed in, go home
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, u => {
+      if (u) router.replace('/');
+    });
+    return () => unsub();
+  }, [router]);
+
+  // Finish Google redirect, if any
   useEffect(() => {
     (async () => {
       const res = await consumeRedirectResult();
@@ -26,94 +39,81 @@ export default function RegisterPage() {
     })();
   }, [router]);
 
-  useEffect(() => {
-    import('@/lib/firebase.client').then(m => setEnvOK(!!m.app)).catch(() => setEnvOK(false));
-  }, []);
-
-  async function submitEmailPassword(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-    try {
-      setBusy(true);
-      const r = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email, password, displayName }),
-      });
-      if (!r.ok) throw new Error(`register_failed_${r.status}`);
-      router.push('/login');
-    } catch (err: any) {
-      setError(err?.message || 'Registration failed');
-    } finally {
+  async function handleGoogle() {
+    setErr(null);
+    setBusy(true);
+    const res = await signInWithGoogle();
+    if (res.ok) router.replace('/');
+    else if (res.error !== 'redirecting') {
+      setErr(res.error);
       setBusy(false);
     }
   }
 
-  async function handleGoogle() {
-    setError(null);
-    setBusy(true);
-    const res = await signInWithGoogle();
-    if (res.ok) {
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    if (password !== confirm) {
+      setErr('Passwords do not match');
+      return;
+    }
+    try {
+      setBusy(true);
+      const cred = await emailRegister(email, password);
+      if (displayName) {
+        await updateProfile(cred.user, { displayName });
+      }
       router.replace('/');
-    } else if (res.error !== 'redirecting') {
-      setError(res.error);
+    } catch (e: any) {
+      setErr(e?.code || 'auth/register-error');
       setBusy(false);
     }
   }
 
   return (
     <main className={styles.authMain}>
-      <h1 className={styles.authTitle}>Create your account</h1>
+      <h1 className={styles.authTitle}>Create account</h1>
 
-      <form onSubmit={submitEmailPassword} className={styles.authForm}>
+      <form onSubmit={handleRegister} className={styles.authForm}>
         <label className={styles.authLabel}>
           <span>Email</span>
           <input
+            className={styles.authInput}
             type="email"
             required
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className={styles.authInput}
           />
         </label>
-
         <label className={styles.authLabel}>
-          <span>Display name</span>
+          <span>Display name (optional)</span>
           <input
+            className={styles.authInput}
             type="text"
-            required
             value={displayName}
             onChange={e => setDisplayName(e.target.value)}
-            className={styles.authInput}
           />
         </label>
-
         <label className={styles.authLabel}>
           <span>Password</span>
           <input
+            className={styles.authInput}
             type="password"
             required
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className={styles.authInput}
           />
         </label>
-
         <label className={styles.authLabel}>
           <span>Confirm password</span>
           <input
+            className={styles.authInput}
             type="password"
             required
-            value={confirmPassword}
-            onChange={e => setConfirmPassword(e.target.value)}
-            className={styles.authInput}
+            value={confirm}
+            onChange={e => setConfirm(e.target.value)}
           />
         </label>
-
         <button type="submit" disabled={busy} className={styles.authPrimaryButton}>
           {busy ? 'Creating…' : 'Create account'}
         </button>
@@ -125,30 +125,23 @@ export default function RegisterPage() {
 
       <button
         onClick={handleGoogle}
-        disabled={busy || !envOK}
+        disabled={busy}
         className={styles.authProviderButton}
-        aria-disabled={busy || !envOK}
         aria-busy={busy}
       >
         <span className="inline-flex items-center gap-2">
           <Image alt="Google" src="/icons/google.svg" width={20} height={20} />
-          {busy ? 'Signing in…' : 'Continue with Google'}
+          {busy ? 'Connecting…' : 'Continue with Google'}
         </span>
       </button>
 
-      {!envOK && (
-        <p className={styles.authError}>
-          Missing Firebase env. Fill <code>apps/web/.env.local</code> and restart the dev server.
-        </p>
-      )}
+      {err && <p className={styles.authError}>{err}</p>}
 
       <div className={styles.authCtaRow}>
         <a href="/login" style={{ color: '#2563eb', textDecoration: 'none', fontSize: 14 }}>
-          Already have an account? Sign in
+          Have an account? Sign in
         </a>
       </div>
-
-      {error && <div className={styles.authError}>{error}</div>}
     </main>
   );
 }

@@ -50,3 +50,10 @@ export const AuthResponseSchema = z.object({
   token: z.string().optional(),
 });
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+
+export type PublicUser = {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+};

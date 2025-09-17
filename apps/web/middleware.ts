@@ -1,63 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+
+const PUBLIC = new Set<string>([
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/_next',
+  '/icons',
+  '/favicon.ico',
+  '/manifest.json',
+]);
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Skip middleware for static assets and API routes (ultra fast)
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/favicon') ||
-    pathname.startsWith('/manifest') ||
-    pathname.startsWith('/sw.js') ||
-    pathname.startsWith('/icons') ||
-    pathname.includes('.')
-  ) {
-    return NextResponse.next();
-  }
-
-  // Public routes that don't need auth
-  const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
-  const isPublicRoute = publicRoutes.includes(pathname);
-
-  // Check for session cookie (fast synchronous check)
-  const sessionCookie = req.cookies.get(process.env.SESSION_COOKIE_NAME || '__session');
-  const hasSession = !!sessionCookie?.value;
-
-  // Root path: redirect based on session
-  if (pathname === '/') {
-    if (hasSession) {
-      return NextResponse.redirect(new URL('/dashboard', req.url));
-    }
-    return NextResponse.next();
-  }
-
-  // Public routes: redirect if already logged in
-  if (publicRoutes.includes(pathname)) {
-    if (hasSession) {
-      return NextResponse.redirect(new URL('/dashboard', req.url));
-    }
-    return NextResponse.next();
-  }
-
-  // Onboarding: require session
-  if (pathname.startsWith('/onboarding')) {
-    if (hasSession) {
+  // Allow public paths (quick MVP; full server-side auth can be added later via cookies)
+  for (const p of PUBLIC) {
+    if (pathname === p || pathname.startsWith(`${p}/`)) {
       return NextResponse.next();
     }
-    return NextResponse.redirect(new URL('/login', req.url));
   }
-
-  // All other routes: require session (dashboard, team, etc.)
-  if (hasSession) {
-    return NextResponse.next();
-  }
-  return NextResponse.redirect(new URL('/login', req.url));
+  // For MVP we don't enforce on the edge, client guard will redirect if not authed
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    // Ultra-optimized matcher: only run on actual pages, skip everything else
-    '/((?!_next|api|favicon|manifest|sw|icons|.*\\.).*)',
-  ],
+  matcher: ['/((?!api).*)'],
 };
