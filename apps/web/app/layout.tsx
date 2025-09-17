@@ -1,4 +1,5 @@
 import { OfflineIndicator, PWAInstallPrompt } from '@/components/PWAComponents';
+import { Providers } from '@/components/Providers';
 import { getServerSession } from '@/lib/session';
 
 import styles from './layout.module.css';
@@ -121,7 +122,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </header>
 
         <div className={styles.mainContent}>
-          <div>{children}</div>
+          <Providers>
+            <div>{children}</div>
+          </Providers>
         </div>
         <PWAInstallPrompt />
         <script src="/sw-register.js" defer />
