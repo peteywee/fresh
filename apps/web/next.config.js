@@ -23,12 +23,8 @@ const nextConfig = {
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   },
-  // Build-time optimizations
-  experimental: {
-    optimizePackageImports: ['firebase', 'zod'],
-  },
-  // Reduce bundle size
   compiler: {
+    optimizePackageImports: ['firebase', 'zod'],
     removeConsole:
       process.env.NODE_ENV === 'production'
         ? {
@@ -37,7 +33,6 @@ const nextConfig = {
         : false,
   },
   // Performance optimizations
-  compress: true,
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -73,6 +68,10 @@ const nextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; style-src 'self' 'unsafe-inline';",
+          },
         ],
       },
     ];

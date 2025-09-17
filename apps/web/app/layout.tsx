@@ -3,6 +3,8 @@ import { OfflineIndicator, PWAInstallPrompt } from '@/components/PWAComponents';
 import { getServerSession } from '@/lib/session';
 import { BrandingProvider } from '@/lib/useBranding';
 
+import styles from './layout.module.css';
+
 // Defensive runtime guard: if for any reason the imported component is undefined
 // (e.g. stale HMR state), fall back to a pass-through wrapper to avoid crashes.
 const SafeClientPerformanceShell: React.ComponentType<React.PropsWithChildren> =
@@ -53,7 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-icon-180.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#2563eb" />
         {/* Meta Theming */}
         <meta name="theme-color" content="#2563eb" />
@@ -64,139 +66,53 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta name="msapplication-TileColor" content="#2563eb" />
         <meta name="msapplication-config" content="none" />
       </head>
-      <body
-        style={{
-          fontFamily:
-            'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          margin: 0,
-        }}
-      >
+      <body className={styles.body}>
         <SafeClientPerformanceShell>
           <BrandingProvider>
             <OfflineIndicator />
             {/* Global Header / Navigation */}
-            <header
-              style={{
-                position: 'sticky',
-                top: 0,
-                zIndex: 30,
-                backgroundColor: 'white',
-                borderBottom: '1px solid #e5e7eb',
-              }}
-            >
-              <nav
-                style={{
-                  maxWidth: 1200,
-                  margin: '0 auto',
-                  padding: '12px 24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 16,
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <a
-                    href={loggedIn && onboarded ? '/dashboard' : '/'}
-                    style={{
-                      color: '#111827',
-                      fontWeight: 800,
-                      textDecoration: 'none',
-                      fontSize: 18,
-                    }}
-                  >
+            <header className={styles.header}>
+              <nav className={styles.nav}>
+                <div className={styles.navLinks}>
+                  <a href={loggedIn && onboarded ? '/dashboard' : '/'} className={styles.logoLink}>
                     {appName}
                   </a>
                   {loggedIn && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <a
-                        href="/dashboard"
-                        style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                      >
+                    <div className={styles.navLinks}>
+                      <a href="/dashboard" className={styles.navLink}>
                         Dashboard
                       </a>
                       {!onboarded && (
-                        <a
-                          href="/onboarding"
-                          style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                        >
+                        <a href="/onboarding" className={styles.navLink}>
                           Onboarding
                         </a>
                       )}
-                      <a
-                        href="/team"
-                        style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                      >
+                      <a href="/team" className={styles.navLink}>
                         Team
                       </a>
-                      <a
-                        href="/calendar"
-                        style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                      >
+                      <a href="/calendar" className={styles.navLink}>
                         Calendar
                       </a>
-                      <a
-                        href="/settings"
-                        style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                      >
+                      <a href="/settings" className={styles.navLink}>
                         Settings
                       </a>
                     </div>
                   )}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div className={styles.authButtons}>
                   {loggedIn ? (
                     <>
-                      {session?.role && (
-                        <span
-                          style={{
-                            backgroundColor: '#eff6ff',
-                            color: '#1d4ed8',
-                            border: '1px solid #bfdbfe',
-                            borderRadius: 9999,
-                            padding: '4px 10px',
-                            fontSize: 12,
-                            textTransform: 'uppercase',
-                            letterSpacing: 0.5,
-                          }}
-                        >
-                          {session.role}
-                        </span>
-                      )}
-                      <a
-                        href="/api/session/logout"
-                        style={{
-                          color: '#374151',
-                          backgroundColor: '#f3f4f6',
-                          border: '1px solid #e5e7eb',
-                          padding: '6px 12px',
-                          borderRadius: 8,
-                          textDecoration: 'none',
-                          fontSize: 14,
-                        }}
-                      >
+                      {session?.role && <span className={styles.roleBadge}>{session.role}</span>}
+                      <a href="/api/session/logout" className={styles.signOutButton}>
                         Sign out
                       </a>
                     </>
                   ) : (
                     <>
-                      <a
-                        href="/login"
-                        style={{ color: '#374151', textDecoration: 'none', fontSize: 14 }}
-                      >
+                      <a href="/login" className={styles.loginButton}>
                         Login
                       </a>
-                      <a
-                        href="/register"
-                        style={{
-                          color: 'white',
-                          backgroundColor: '#2563eb',
-                          padding: '6px 12px',
-                          borderRadius: 8,
-                          textDecoration: 'none',
-                          fontSize: 14,
-                        }}
-                      >
+                      <a href="/register" className={styles.signUpButton}>
                         Sign up
                       </a>
                     </>
@@ -205,16 +121,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </nav>
             </header>
 
-            <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
-              <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>{children}</div>
+            <div className={styles.mainContent}>
+              <div>{children}</div>
             </div>
             <PWAInstallPrompt />
-            <script
-              dangerouslySetInnerHTML={{
-                __html:
-                  'if("serviceWorker" in navigator && "production" === process.env.NODE_ENV){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").then(reg=>console.log("SW registered:",reg)).catch(err=>console.log("SW registration failed:",err)));}',
-              }}
-            />
+            <script src="/sw-register.js" defer />
           </BrandingProvider>
         </SafeClientPerformanceShell>
       </body>
