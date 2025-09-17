@@ -1,6 +1,43 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Husky v10+ direct shell script
-echo "🔍 Running pre-push checks..."
+set -e
+
+# Always run from repo root
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+cd "$REPO_ROOT"
+
+# Enforce Node version parity with .nvmrc (critical for Next.js build stability)
+REQUIRED_NODE_RAW=$(cat .nvmrc | tr -d '\n\r')
+REQUIRED_NODE_V="v${REQUIRED_NODE_RAW}"
+
+# Try to load nvm if available and switch
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+	# shellcheck disable=SC1090
+	. "$NVM_DIR/nvm.sh"
+fi
+
+CURRENT_NODE_V=$(node -v 2>/dev/null || echo "v0")
+if [ "$CURRENT_NODE_V" != "$REQUIRED_NODE_V" ]; then
+	echo "⚠️  Node $CURRENT_NODE_V detected; attempting to use $REQUIRED_NODE_V via nvm for pre-push parity..."
+	if command -v nvm >/dev/null 2>&1; then
+		nvm install "$REQUIRED_NODE_RAW" >/dev/null 2>&1 || true
+		nvm use "$REQUIRED_NODE_RAW" >/dev/null 2>&1 || true
+		CURRENT_NODE_V=$(node -v 2>/dev/null || echo "v0")
+	fi
+fi
+
+if [ "$CURRENT_NODE_V" != "$REQUIRED_NODE_V" ]; then
+	if [ "${HUSKY_STRICT_NODE:-0}" = "1" ]; then
+		echo "❌ Pre-push requires Node $REQUIRED_NODE_V (see .nvmrc). Current: $CURRENT_NODE_V"
+		echo "   Please switch with: nvm install $REQUIRED_NODE_RAW && nvm use $REQUIRED_NODE_RAW"
+		exit 1
+	else
+		echo "⚠️  Proceeding with Node $CURRENT_NODE_V (expected $REQUIRED_NODE_V). Set HUSKY_STRICT_NODE=1 to enforce."
+	fi
+fi
+
+echo "🔍 Running pre-push checks with Node $CURRENT_NODE_V..."
 echo "📝 Type checking..."
 pnpm typecheck || exit 1
 echo "🧪 Running tests..."

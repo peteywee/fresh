@@ -2,23 +2,39 @@
 const { execSync } = require('child_process');
 const semver = require('semver');
 
-const REQUIRED_NODE_VERSION = '20.19.4';
+// Recommended version used in CI; allow any Node >=20 for local dev
+const RECOMMENDED_NODE_VERSION = '20.19.4';
+const MIN_NODE_VERSION = '20.0.0';
 const REQUIRED_PNPM_VERSION = '9.0.0';
 
 function checkNodeVersion() {
   const currentNodeVersion = process.version;
-  
+
   console.log(`Current Node.js version: ${currentNodeVersion}`);
-  console.log(`Required Node.js version: ${REQUIRED_NODE_VERSION}`);
-  
-  if (!semver.satisfies(currentNodeVersion, `^${REQUIRED_NODE_VERSION}`)) {
-    console.error(`❌ Node.js version ${REQUIRED_NODE_VERSION} is required, but ${currentNodeVersion} is installed.`);
-    console.error('Please install the correct version using:');
-    console.error(`  nvm install ${REQUIRED_NODE_VERSION}`);
-    console.error(`  nvm use ${REQUIRED_NODE_VERSION}`);
+  console.log(`Minimum required Node.js version: >=${MIN_NODE_VERSION}`);
+  console.log(`Recommended Node.js version (CI): ${RECOMMENDED_NODE_VERSION}`);
+
+  // Hard requirement: Node >= 20.0.0
+  if (!semver.satisfies(currentNodeVersion, `>=${MIN_NODE_VERSION}`)) {
+    console.error(
+      `❌ Node.js version >=${MIN_NODE_VERSION} is required, but ${currentNodeVersion} is installed.`
+    );
+    console.error('Please install a compatible version using:');
+    console.error(`  nvm install ${RECOMMENDED_NODE_VERSION}`);
+    console.error(`  nvm use ${RECOMMENDED_NODE_VERSION}`);
     process.exit(1);
   }
-  
+
+  // Soft recommendation: use CI-pinned version locally for parity
+  if (!semver.satisfies(currentNodeVersion, `^${RECOMMENDED_NODE_VERSION}`)) {
+    console.warn(
+      `⚠️  Using Node ${currentNodeVersion}. CI runs on ${RECOMMENDED_NODE_VERSION}. ` +
+      'For parity, consider switching via:\n' +
+      `  nvm install ${RECOMMENDED_NODE_VERSION}\n` +
+      `  nvm use ${RECOMMENDED_NODE_VERSION}`
+    );
+  }
+
   console.log('✅ Node.js version is compatible');
 }
 

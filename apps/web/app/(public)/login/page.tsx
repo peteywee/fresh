@@ -8,6 +8,8 @@ import { GoogleAuthProvider, getAuth, signInWithPopup } from 'firebase/auth';
 
 import { app } from '@/lib/firebase.client';
 
+import styles from '../auth.module.css';
+
 export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -42,8 +44,6 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto max-w-sm p-6">
-      <h1 className="text-xl font-semibold mb-4">Login</h1>
 
       <button
         onClick={signInGoogle}
@@ -57,12 +57,6 @@ export default function LoginPage() {
         </span>
       </button>
 
-      {!envOK && (
-        <p className="text-sm text-red-600">
-          Missing Firebase env. Fill apps/web/.env.local and restart dev server.
-        </p>
-      )}
-      {err && <p className="text-sm text-red-600">{err}</p>}
     </main>
   );
 }
