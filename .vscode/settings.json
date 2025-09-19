@@ -1,3 +1,6 @@
 {
-  "npm.enableRunFromFolder": true
+  "npm.enableRunFromFolder": true,
+  "github-actions.workflows.pinned.workflows": [
+    "dynamic/dependabot/dependabot-updates"
+  ]
 }

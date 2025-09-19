@@ -11,8 +11,15 @@ export async function POST(req: NextRequest) {
   if (!idToken) return NextResponse.json({ error: 'Missing idToken' }, { status: 400 });
 
   try {
+    console.log('[session-login] creating session cookie for token');
     const auth = adminAuth();
+    
+    // Verify the token first to get better error details
+    const decodedToken = await auth.verifyIdToken(idToken);
+    console.log('[session-login] token verified for user:', decodedToken.uid, decodedToken.email);
+    
     const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn: EXPIRES_MS });
+    console.log('[session-login] session cookie created successfully');
 
     const res = NextResponse.json({ success: true });
     res.cookies.set(COOKIE, sessionCookie, {
@@ -24,8 +31,21 @@ export async function POST(req: NextRequest) {
     });
 
     return res;
-  } catch (error) {
-    console.error('Session creation failed:', error);
-    return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
+  } catch (error: any) {
+    console.error('[session-login] Session creation failed:', {
+      code: error?.code,
+      message: error?.message,
+      stack: error?.stack,
+    });
+    
+    // Return more specific error information
+    const errorCode = error?.code || 'auth/session-creation-failed';
+    const errorMessage = error?.message || 'Authentication failed';
+    
+    return NextResponse.json({ 
+      error: errorMessage,
+      code: errorCode,
+      details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+    }, { status: 401 });
   }
 }

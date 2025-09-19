@@ -5,8 +5,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { onAuthStateChanged } from 'firebase/auth';
-
 import { emailSignIn } from '@/lib/auth-email';
 import { consumeRedirectResult, signInWithGoogle } from '@/lib/auth-google';
 import { auth } from '@/lib/firebase.client';
@@ -20,11 +18,14 @@ async function syncServerSession() {
     const user = auth.currentUser;
     if (!user) {
       console.log('[login] no current user for sync');
-      return;
+      throw new Error('No authenticated user');
     }
 
-    const idToken = await user.getIdToken();
-    console.log('[login] got ID token, posting to /api/session/login');
+    // Force fresh token to avoid stale token issues
+    console.log('[login] getting fresh ID token');
+    const idToken = await user.getIdToken(true); // true = force refresh
+    console.log('[login] got fresh ID token, posting to /api/session/login');
+    
     const response = await fetch('/api/session/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -34,11 +35,13 @@ async function syncServerSession() {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[login] server session sync failed:', response.status, errorText);
+      throw new Error(`Server session sync failed: ${response.status} ${errorText}`);
     } else {
       console.log('[login] server session sync success');
     }
   } catch (error) {
     console.error('[login] error syncing server session:', error);
+    throw error; // Re-throw to allow caller to handle
   }
 }
 
@@ -65,9 +68,14 @@ export default function LoginPage() {
       const res = await consumeRedirectResult();
       if (res && res.ok) {
         console.log('[login] redirect result ok, syncing server session');
-        await syncServerSession();
-        console.log('[login] redirecting to dashboard');
-        router.replace('/dashboard');
+        try {
+          await syncServerSession();
+          console.log('[login] redirecting to dashboard');
+          router.replace('/dashboard');
+        } catch (syncError) {
+          console.error('[login] server session sync failed after redirect:', syncError);
+          setErr('auth/session-sync-failed');
+        }
       } else if (res && !res.ok) {
         console.log('[login] redirect result error:', res.error);
         setErr(res.error);
@@ -83,9 +91,14 @@ export default function LoginPage() {
       console.log('[login] attempting email login');
       await emailSignIn(email, password);
       console.log('[login] email login success, syncing server session');
-      await syncServerSession();
-      console.log('[login] redirecting to dashboard');
-      router.replace('/dashboard');
+      try {
+        await syncServerSession();
+        console.log('[login] redirecting to dashboard');
+        router.replace('/dashboard');
+      } catch (syncError) {
+        console.error('[login] server session sync failed after email login:', syncError);
+        setErr('auth/session-sync-failed');
+      }
     } catch (e: any) {
       console.log('[login] email login error:', e?.code);
       setErr(e?.code || 'auth/login-error');
@@ -102,9 +115,14 @@ export default function LoginPage() {
       const result = await signInWithGoogle();
       if (result.ok) {
         console.log('[login] popup success, syncing server session');
-        await syncServerSession();
-        console.log('[login] redirecting to dashboard');
-        router.replace('/dashboard');
+        try {
+          await syncServerSession();
+          console.log('[login] redirecting to dashboard');
+          router.replace('/dashboard');
+        } catch (syncError) {
+          console.error('[login] server session sync failed after Google login:', syncError);
+          setErr('auth/session-sync-failed');
+        }
       } else if (result.error !== 'redirecting') {
         console.log('[login] popup failed:', result.error);
         setErr(result.error);

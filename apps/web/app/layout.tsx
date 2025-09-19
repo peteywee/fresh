@@ -1,8 +1,9 @@
-import { OfflineIndicator, PWAInstallPrompt } from '@/components/PWAComponents';
+// Temporarily commented PWA widgets while debugging
+// import { OfflineIndicator, PWAInstallPrompt } from '@/components/PWAComponents';
 import { Providers } from '@/components/Providers';
-import { getServerSession } from '@/lib/session';
+// import { getServerSession } from '@/lib/session';
 
-import styles from './layout.module.css';
+// import styles from './layout.module.css';
 
 export const metadata = {
   title: process.env.NEXT_PUBLIC_APP_NAME || 'Fresh Team Management',
@@ -19,9 +20,10 @@ export const viewport = {
   themeColor: '#2563eb',
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession();
-  const loggedIn = !!session?.sub;
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Temporarily simplified - comment out session and PWA widgets
+  // const session = await getServerSession();
+  // const loggedIn = !!session?.sub;
 
   return (
     <html lang="en">
@@ -30,31 +32,29 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta name="theme-color" content="#2563eb" />
       </head>
       <body style={{ fontFamily: 'system-ui', margin: 0 }}>
+        {/* Temporarily commented PWA widgets
         <OfflineIndicator />
+        */}
 
         <nav style={{ padding: '1rem', background: '#f3f4f6', borderBottom: '1px solid #e5e7eb' }}>
           <a
-            href={loggedIn ? '/dashboard' : '/login'}
+            href="/login"
             style={{ fontWeight: 'bold', fontSize: '1.2rem' }}
           >
             Fresh
           </a>
-          {loggedIn ? (
-            <a href="/api/session/logout" style={{ float: 'right', color: '#6b7280' }}>
-              Sign out
-            </a>
-          ) : (
-            <a href="/login" style={{ float: 'right', color: '#2563eb' }}>
-              Login
-            </a>
-          )}
+          <a href="/login" style={{ float: 'right', color: '#2563eb' }}>
+            Login
+          </a>
         </nav>
 
         <main style={{ padding: '2rem' }}>
           <Providers>{children}</Providers>
         </main>
 
+        {/* Temporarily commented PWA widgets
         <PWAInstallPrompt />
+        */}
       </body>
     </html>
   );

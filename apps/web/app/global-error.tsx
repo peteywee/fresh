@@ -11,12 +11,13 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     // Log error details to console and potentially to an error reporting service
-    console.error('Global Error Boundary caught:', {
+    console.error('GlobalError caught', error, error?.message, error?.stack, error?.digest);
+    console.error('Error object:', JSON.stringify({
       message: error.message,
       digest: error.digest,
       stack: error.stack,
       timestamp: new Date().toISOString(),
-    });
+    }, null, 2));
 
     // You could also send this to an error tracking service like Sentry
     // Example: Sentry.captureException(error)

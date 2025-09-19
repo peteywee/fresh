@@ -3,13 +3,12 @@
 import {
   GoogleAuthProvider,
   type UserCredential,
-  getAuth,
   getRedirectResult,
   signInWithPopup,
   signInWithRedirect,
 } from 'firebase/auth';
 
-import { app } from '@/lib/firebase.client';
+import { auth } from '@/lib/firebase.client';
 
 export type GoogleSignInResult = { ok: true; cred: UserCredential } | { ok: false; error: string };
 
@@ -19,7 +18,6 @@ provider.addScope('email');
 provider.addScope('profile');
 
 export async function signInWithGoogle(): Promise<GoogleSignInResult> {
-  const auth = getAuth(app);
   try {
     console.log('[google] attempting popup sign-in');
     const cred = await signInWithPopup(auth, provider);
@@ -53,7 +51,6 @@ export async function signInWithGoogle(): Promise<GoogleSignInResult> {
 
 /** Complete a redirect sign-in if present. Safe to call on every mount. */
 export async function consumeRedirectResult(): Promise<GoogleSignInResult | null> {
-  const auth = getAuth(app);
   try {
     console.log('[google] checking for redirect result');
     const cred = await getRedirectResult(auth);
