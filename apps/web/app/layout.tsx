@@ -1,7 +1,7 @@
 // Temporarily commented PWA widgets while debugging
 // import { OfflineIndicator, PWAInstallPrompt } from '@/components/PWAComponents';
 // import { getServerSession } from '@/lib/session';
-import Providers from '@/components/Providers.client-wrapper';
+import Providers from '@/components/Providers';
 
 // import styles from './layout.module.css';
 
