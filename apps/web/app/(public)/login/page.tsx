@@ -24,8 +24,10 @@ async function syncServerSession() {
     // Force fresh token to avoid stale token issues
     console.log('[login] getting fresh ID token');
     const idToken = await user.getIdToken(true); // true = force refresh
-    console.log('[login] got fresh ID token, posting to /api/session/login');
-    
+    console.log('[login] got fresh ID token - length:', idToken.length);
+    console.log('[login] token prefix:', idToken.substring(0, 100));
+    console.log('[login] posting to /api/session/login');
+
     const response = await fetch('/api/session/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
