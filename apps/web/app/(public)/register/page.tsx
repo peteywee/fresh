@@ -13,6 +13,27 @@ import { auth } from '@/lib/firebase.client';
 
 import styles from '../auth.module.css';
 
+// Sync Firebase client auth with server session
+async function syncServerSession() {
+  try {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const idToken = await user.getIdToken();
+    const response = await fetch('/api/session/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to sync server session:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error syncing server session:', error);
+  }
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -23,10 +44,10 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
 
-  // If already signed in, go home
+  // If already signed in, go to dashboard
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => {
-      if (u) router.replace('/');
+      if (u) router.replace('/dashboard');
     });
     return () => unsub();
   }, [router]);
@@ -35,7 +56,10 @@ export default function RegisterPage() {
   useEffect(() => {
     (async () => {
       const res = await consumeRedirectResult();
-      if (res?.ok) router.replace('/');
+      if (res && res.ok) {
+        await syncServerSession();
+        router.replace('/onboarding');
+      }
     })();
   }, [router]);
 
@@ -43,8 +67,10 @@ export default function RegisterPage() {
     setErr(null);
     setBusy(true);
     const res = await signInWithGoogle();
-    if (res.ok) router.replace('/onboarding');
-    else if (res.error !== 'redirecting') {
+    if (res.ok) {
+      await syncServerSession();
+      router.replace('/onboarding');
+    } else if (res.error !== 'redirecting') {
       setErr(res.error);
       setBusy(false);
     }
@@ -63,6 +89,7 @@ export default function RegisterPage() {
       if (displayName) {
         await updateProfile(cred.user, { displayName });
       }
+      await syncServerSession();
       router.replace('/onboarding');
     } catch (e: any) {
       setErr(e?.code || 'auth/register-error');
@@ -138,7 +165,7 @@ export default function RegisterPage() {
       {err && <p className={styles.authError}>{err}</p>}
 
       <div className={styles.authCtaRow}>
-        <a href="/login" style={{ color: '#2563eb', textDecoration: 'none', fontSize: 14 }}>
+        <a href="/" style={{ color: '#2563eb', textDecoration: 'none', fontSize: 14 }}>
           Have an account? Sign in
         </a>
       </div>

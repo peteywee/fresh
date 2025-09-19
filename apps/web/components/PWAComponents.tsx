@@ -11,8 +11,16 @@ export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure we're on the client before accessing browser APIs
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
+    if (!isClient) return;
+
     // Check if already installed
     if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
@@ -47,13 +55,13 @@ export function PWAInstallPrompt() {
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       console.log('PWA installation accepted');
     } else {
       console.log('PWA installation dismissed');
     }
-    
+
     setDeferredPrompt(null);
     setIsInstallable(false);
   };
@@ -86,9 +94,7 @@ export function PWAInstallPrompt() {
     >
       <div>
         <div style={{ marginBottom: 4 }}>Install Fresh App</div>
-        <div style={{ fontSize: 12, opacity: 0.9 }}>
-          Get faster access and offline support
-        </div>
+        <div style={{ fontSize: 12, opacity: 0.9 }}>Get faster access and offline support</div>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <button
@@ -143,13 +149,21 @@ export function useServiceWorker() {
   const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure we're on the client before accessing browser APIs
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
+    if (!isClient) return;
+
     // Register service worker
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       navigator.serviceWorker
         .register('/sw.js')
-        .then((registration) => {
+        .then(registration => {
           console.log('SW registered:', registration);
           setSwRegistration(registration);
 
@@ -165,7 +179,7 @@ export function useServiceWorker() {
             }
           });
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('SW registration failed:', error);
         });
     }
@@ -183,7 +197,7 @@ export function useServiceWorker() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [isClient]);
 
   const updateServiceWorker = () => {
     if (swRegistration && swRegistration.waiting) {

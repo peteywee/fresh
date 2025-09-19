@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
         </form>
       )}
       <div className={styles.authCtaRow}>
-        <a href="/login" style={{ color: '#2563eb', textDecoration: 'none', fontSize: 14 }}>
+        <a href="/" style={{ color: '#2563eb', textDecoration: 'none', fontSize: 14 }}>
           Back to sign in
         </a>
       </div>

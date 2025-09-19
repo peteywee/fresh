@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { useBranding, useColors, useTerminology } from '@/components/Providers';
 import { BrandingConfig, INDUSTRY_CONFIGS } from '@/lib/branding';
-import { useBranding, useColors, useTerminology } from '@/lib/useBranding';
 import { useTheme, useThemeColors } from '@/lib/useTheme';
 
 // Lightweight runtime guard so a failed branding hook doesn't crash the page.

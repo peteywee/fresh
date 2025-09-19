@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { User, getAuth, onAuthStateChanged } from 'firebase/auth';
+
 import { consumeRedirectResult, signInWithGoogle } from '@/lib/auth-google';
 import { auth } from '@/lib/firebase.client';
 
@@ -59,9 +61,16 @@ export default function AuthDebugPage() {
     addResult('Checking redirect result...');
     try {
       const result = await consumeRedirectResult();
-      addResult(`Redirect result: ${JSON.stringify(result)}`);
-      if (result && result.ok) {
-        await syncServerSession();
+      if (result === null) {
+        addResult('Redirect result: null (no redirect pending)');
+      } else {
+        addResult(`Redirect result: ${JSON.stringify(result)}`);
+        if (result && result.ok) {
+          addResult('Redirect successful, attempting server sync...');
+          await syncServerSession();
+        } else if (result && !result.ok) {
+          addResult(`Redirect failed with error: ${result.error}`);
+        }
       }
     } catch (error) {
       addResult(`Redirect result error: ${error}`);
@@ -77,6 +86,85 @@ export default function AuthDebugPage() {
       addResult(`Server session: ${JSON.stringify(data)}`);
     } catch (error) {
       addResult(`Server session error: ${error}`);
+    }
+  };
+
+  const checkAuthState = async () => {
+    const timestamp = new Date().toISOString();
+    addResult(`[${timestamp}] [auth-debug] Starting comprehensive auth state check`);
+
+    try {
+      // Get current auth instance
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      addResult(
+        `[${timestamp}] [auth-debug] Firebase Auth instance: ${auth ? 'available' : 'null'}`
+      );
+      addResult(`[${timestamp}] [auth-debug] Current user: ${user ? 'present' : 'null'}`);
+
+      if (user) {
+        addResult(`[${timestamp}] [auth-debug] User UID: ${user.uid}`);
+        addResult(`[${timestamp}] [auth-debug] User email: ${user.email}`);
+        addResult(`[${timestamp}] [auth-debug] User verified: ${user.emailVerified}`);
+        addResult(
+          `[${timestamp}] [auth-debug] Provider data: ${JSON.stringify(user.providerData)}`
+        );
+
+        // Check token validity
+        try {
+          const token = await user.getIdToken(false); // false = use cached token
+          addResult(
+            `[${timestamp}] [auth-debug] ID token (cached): ${token ? 'available' : 'null'}`
+          );
+
+          const freshToken = await user.getIdToken(true); // true = force refresh
+          addResult(
+            `[${timestamp}] [auth-debug] ID token (fresh): ${freshToken ? 'available' : 'null'}`
+          );
+
+          // Decode token payload for inspection
+          if (freshToken) {
+            const payload = JSON.parse(atob(freshToken.split('.')[1]));
+            addResult(
+              `[${timestamp}] [auth-debug] Token exp: ${new Date(payload.exp * 1000).toISOString()}`
+            );
+            addResult(
+              `[${timestamp}] [auth-debug] Token iat: ${new Date(payload.iat * 1000).toISOString()}`
+            );
+            addResult(`[${timestamp}] [auth-debug] Token aud: ${payload.aud}`);
+          }
+        } catch (tokenError) {
+          addResult(`[${timestamp}] [auth-debug] Token error: ${tokenError}`);
+        }
+      }
+
+      // Check app state
+      try {
+        // App Check might not be configured, so we'll skip this check
+        addResult(`[${timestamp}] [auth-debug] App Check: not configured (skipping)`);
+      } catch (appCheckError) {
+        addResult(`[${timestamp}] [auth-debug] App Check not configured or failed`);
+      }
+
+      // Check auth state listener
+      addResult(`[${timestamp}] [auth-debug] Setting up auth state listener...`);
+      const unsubscribe = onAuthStateChanged(auth, (authUser: User | null) => {
+        const listenerTimestamp = new Date().toISOString();
+        addResult(
+          `[${listenerTimestamp}] [auth-debug] Auth state change: ${authUser ? `user ${authUser.uid}` : 'no user'}`
+        );
+      });
+
+      // Clean up listener after 2 seconds
+      setTimeout(() => {
+        unsubscribe();
+        addResult(`[${timestamp}] [auth-debug] Auth state listener cleaned up`);
+      }, 2000);
+
+      addResult(`[${timestamp}] [auth-debug] Auth state check completed`);
+    } catch (error) {
+      addResult(`[${timestamp}] [auth-debug] Auth state check failed: ${error}`);
     }
   };
 
@@ -164,6 +252,19 @@ export default function AuthDebugPage() {
             }}
           >
             Test Server /api/session/me
+          </button>
+          <button
+            onClick={checkAuthState}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#9c27b0',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            Check Auth State
           </button>
           <button
             onClick={clearResults}

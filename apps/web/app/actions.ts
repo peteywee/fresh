@@ -36,8 +36,7 @@ export async function createScheduleAction(formData: FormData) {
     end: end ? Date.parse(end) : undefined,
   };
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-  const res = await fetch(`${baseUrl}/api/schedules`, {
+  const res = await fetch('/api/schedules', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -73,8 +72,7 @@ export async function updateScheduleAction(id: string, formData: FormData) {
     end: end ? Date.parse(end) : undefined,
   };
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-  const res = await fetch(`${baseUrl}/api/schedules/${id}`, {
+  const res = await fetch(`/api/schedules/${id}`, {
     method: 'PUT',
     headers: {
       'content-type': 'application/json',
@@ -94,8 +92,7 @@ export async function updateScheduleAction(id: string, formData: FormData) {
 export async function deleteScheduleAction(id: string) {
   const userId = await requireRole('admin');
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-  const res = await fetch(`${baseUrl}/api/schedules/${id}`, {
+  const res = await fetch(`/api/schedules/${id}`, {
     method: 'DELETE',
     headers: {
       'x-user-id': userId,
@@ -114,8 +111,7 @@ export async function deleteScheduleAction(id: string) {
 export async function updateMemberRoleAction(memberId: string, newRole: string) {
   const userId = await requireRole('admin');
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-  const res = await fetch(`${baseUrl}/api/team/roles`, {
+  const res = await fetch('/api/team/roles', {
     method: 'PUT',
     headers: {
       'content-type': 'application/json',
@@ -154,8 +150,7 @@ export async function bulkUpdateRolesAction(formData: FormData) {
     throw new Error('No updates specified');
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-  const res = await fetch(`${baseUrl}/api/team/bulk-roles`, {
+  const res = await fetch('/api/team/bulk-roles', {
     method: 'PUT',
     headers: {
       'content-type': 'application/json',
