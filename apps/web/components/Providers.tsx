@@ -95,7 +95,8 @@ export function useFeatures() {
   };
 }
 
-export function Providers({ children }: ProvidersProps) {
+// Default export to eliminate import ambiguity
+export default function Providers({ children }: ProvidersProps) {
   // Temporarily simplified - just pass through children
   // TODO: Re-add BrandingProvider after fixing the core import issue
   return <>{children}</>;
