@@ -92,6 +92,10 @@ export async function updateScheduleAction(id: string, formData: FormData) {
 }
 
 export async function deleteScheduleAction(id: string) {
+  // Validate that `id` is a UUID (edit the regex if your ID format differs)
+  if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id)) {
+    throw new Error('Invalid schedule ID');
+  }
   const userId = await requireRole('admin');
 
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
