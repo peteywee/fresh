@@ -6,6 +6,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
+    // Only include our test files, exclude everything else
+    include: ['tests/**/*.test.ts'],
+    exclude: ['node_modules/**', 'e2e/**', 'dist/**', 'build/**', '**/node_modules/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -15,7 +18,7 @@ export default defineConfig({
         'services/api/src/**/*',
         'packages/types/src/**/*',
       ],
-      exclude: ['node_modules/', 'tests/', '**/*.d.ts', '**/*.config.*', '**/coverage/**'],
+      exclude: ['node_modules/', 'tests/', 'e2e/', '**/*.d.ts', '**/*.config.*', '**/coverage/**'],
       thresholds: {
         global: {
           branches: 70,

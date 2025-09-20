@@ -48,6 +48,26 @@ Run the comprehensive pre-push validation:
 
 This validates build, typecheck, lint, route consistency, Firebase config, and code quality.
 
+## Testing
+
+### Unit Tests
+
+```bash
+pnpm test              # Run unit tests
+pnpm test:coverage     # Run with coverage
+pnpm test:watch        # Watch mode
+```
+
+### E2E Tests
+
+```bash
+pnpm test:e2e          # Run e2e tests
+pnpm test:e2e:ui       # Interactive mode
+pnpm test:e2e:headed   # See browser
+```
+
+See [E2E Testing Guide](./docs/E2E_TESTING.md) for comprehensive documentation.
+
 Or run individual checks:
 
 ```bash
