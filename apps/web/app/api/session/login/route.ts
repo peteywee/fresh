@@ -18,8 +18,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Verify the ID token and get user info
-    const decoded = await adminAuth().verifyIdToken(idToken);
+    // Verify the ID token and get user info (signature, claims, expiration)
+    const decoded = await adminAuth().verifyIdToken(idToken, true);
+    // If verification fails, an error will be thrown and caught below
 
     // Exchange short-lived ID token for a long(er) lived session cookie
     const sessionCookie = await adminAuth().createSessionCookie(idToken, {

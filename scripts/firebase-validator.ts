@@ -85,7 +85,7 @@ class FirebaseValidator {
           name: 'Service Account File',
           status: 'fail',
           message: 'Private key format invalid',
-          details: 'Private key must include BEGIN/END boundaries',
+          details: '\n🛑 Prerequisites missing. Please add the required files and run again.',
         };
       }
 
@@ -289,7 +289,8 @@ class FirebaseValidator {
               credential: admin.credential.cert({
                 projectId: env.FIREBASE_PROJECT_ID,
                 clientEmail: env.FIREBASE_CLIENT_EMAIL,
-                privateKey: env.FIREBASE_PRIVATE_KEY?.replace(/\\\\\\\\n/g, '\\n')
+                // Replace literal '\n' (escaped in .env) with actual newlines for private key
+                privateKey: env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
               })
             });
           }

@@ -167,11 +167,13 @@ NEXT_PUBLIC_FIREBASE_APP_ID="your-app-id"
 
 ### Admin SDK (Server-side)
 
+````bash
 ```bash
 FIREBASE_PROJECT_ID="your-project-id"
 FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxx@your-project.iam.gserviceaccount.com"
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-```
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
+...
+````
 
 ### Session Configuration
 

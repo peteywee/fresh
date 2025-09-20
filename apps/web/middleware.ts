@@ -18,7 +18,13 @@ export function middleware(req: NextRequest) {
   }
 
   // Check session cookie for protected routes
-  const sessionCookie = req.cookies.get(process.env.SESSION_COOKIE_NAME || '__session');
+  const sessionCookieName =
+    typeof process.env.SESSION_COOKIE_NAME === 'string' &&
+    process.env.SESSION_COOKIE_NAME.length > 0 &&
+    /^[a-zA-Z0-9_\-]+$/.test(process.env.SESSION_COOKIE_NAME)
+      ? process.env.SESSION_COOKIE_NAME
+      : '__session';
+  const sessionCookie = req.cookies.get(sessionCookieName);
 
   if (!sessionCookie?.value) {
     const loginUrl = new URL('/login', req.url);

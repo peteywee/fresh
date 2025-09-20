@@ -90,7 +90,7 @@ class FirebaseSetupAssistant {
     }
 
     if (!allGood) {
-      console.log('\\n🛑 Prerequisites missing. Please add the required files and run again.');
+      console.log('\n🛑 Prerequisites missing. Please add the required files and run again.');
       return false;
     }
 
@@ -151,17 +151,17 @@ class FirebaseSetupAssistant {
       const isHealthy = await this.performHealthCheck();
 
       if (!isHealthy && this.options.autoFix) {
-        console.log('\\n🔧 Attempting automatic fixes...');
+        console.log('\n🔧 Attempting automatic fixes...');
         await this.attemptAutoFix();
       }
 
-      console.log('\\n3️⃣ Testing development environment...');
+      console.log('\n3️⃣ Testing development environment...');
       await this.testDevEnvironment();
     } catch (error) {
       console.error('❌ Guided setup failed:', error instanceof Error ? error.message : error);
 
       if (this.options.autoFix) {
-        console.log('\\n🔄 Attempting recovery...');
+        console.log('\n🔄 Attempting recovery...');
         await this.attemptRecovery();
       }
     }
@@ -280,15 +280,15 @@ SESSION_COOKIE_DAYS="5"
       console.log('   ✅ Build successful');
 
       // Suggest next steps
-      console.log('\\n🎉 Setup completed successfully!');
-      console.log('\\n📝 Next steps:');
+      console.log('\n🎉 Setup completed successfully!');
+      console.log('\n📝 Next steps:');
       console.log('   1. Start development servers:');
       console.log('      pnpm dev:web   # (or use VS Code task: 🌐 Start Web Only)');
       console.log('      PORT=3333 pnpm dev:api   # (or use VS Code task: 🔧 Start API Only)');
-      console.log('\\n   2. Test authentication:');
+      console.log('\n   2. Test authentication:');
       console.log('      🌐 Login page: http://localhost:3000/login');
       console.log('      🧪 Auth simulator: http://localhost:3000/auth-sim');
-      console.log('\\n   3. Debug with VS Code:');
+      console.log('\n   3. Debug with VS Code:');
       console.log('      🐛 Set breakpoints in app/api/session/login/route.ts');
       console.log('      🔍 Use "JavaScript Debug Terminal" for server debugging');
     } catch (error) {
@@ -307,7 +307,7 @@ SESSION_COOKIE_DAYS="5"
 
     if (report.overall === 'healthy') {
       console.log('✅ Configuration already healthy - no changes needed');
-      console.log('\\n🚀 Ready to start development:');
+      console.log('\n🚀 Ready to start development:');
       console.log('   pnpm dev:web');
       console.log('   PORT=3333 pnpm dev:api');
       return;
@@ -338,10 +338,10 @@ SESSION_COOKIE_DAYS="5"
    */
   public async run(mode: 'guided' | 'quick' = 'guided'): Promise<void> {
     console.log('🔥 Firebase Setup Assistant');
-    console.log('============================\\n');
+    console.log('============================\n');
 
     if (this.options.dryRun) {
-      console.log('🔍 DRY RUN MODE - No files will be modified\\n');
+      console.log('🔍 DRY RUN MODE - No files will be modified\n');
     }
 
     try {
@@ -358,8 +358,8 @@ SESSION_COOKIE_DAYS="5"
         await this.guidedSetup();
       }
     } catch (error) {
-      console.error('\\n❌ Setup failed:', error instanceof Error ? error.message : error);
-      console.log('\\n🆘 Need help?');
+      console.error('\n❌ Setup failed:', error instanceof Error ? error.message : error);
+      console.log('\n🆘 Need help?');
       console.log('   📚 Check the documentation in docs/');
       console.log('   🔍 Run diagnosis: npx tsx scripts/firebase-validator.ts');
       console.log('   🛠️  Manual setup: Follow .github/copilot-instructions.md');

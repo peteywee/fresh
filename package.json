@@ -70,7 +70,7 @@
     "server-only": "^0.0.1",
     "sharp": "^0.33.4",
     "supertest": "^7.1.4",
-    "tsx": "4.20.5",
+    "tsx": "^4.20.5",
     "typedoc": "^0.28.12",
     "vitest": "^3.2.4",
     "webpack-bundle-analyzer": "^4.10.2"

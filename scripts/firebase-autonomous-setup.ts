@@ -438,7 +438,7 @@ class AutonomousFirebaseSetup {
     if (type === 'client' || type === 'full') {
       content += '# Firebase Client SDK Configuration (Public)\n';
       Object.entries(config.clientConfig).forEach(([key, value]) => {
-        content += `${key}="${value}"\\n`;
+        content += `${key}="${value}"\n`;
       });
       content += '\\n';
     }
@@ -556,7 +556,7 @@ npx tsx scripts/firebase-autonomous-setup.ts --update
 
     updatedContent = updatedContent.replace(
       /FIREBASE_PRIVATE_KEY="\\[REQUIRED\\][^"]*"/,
-      `FIREBASE_PRIVATE_KEY="${serviceAccount.private_key.replace(/\\n/g, '\\\\n')}"`
+      `FIREBASE_PRIVATE_KEY="${serviceAccount.private_key.replace(/\n/g, '\\n')}"`
     );
 
     if (content !== updatedContent) {
