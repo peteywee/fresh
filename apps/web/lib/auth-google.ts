@@ -2,15 +2,16 @@
 
 import {
   GoogleAuthProvider,
-  type UserCredential,
   getRedirectResult,
   signInWithPopup,
   signInWithRedirect,
+  type UserCredential,
 } from 'firebase/auth';
+import { auth } from './firebase.client';
 
-import { auth } from '@/lib/firebase.client';
-
-export type GoogleSignInResult = { ok: true; cred: UserCredential } | { ok: false; error: string };
+export type GoogleSignInResult =
+  | { ok: true; cred: UserCredential }
+  | { ok: false; error: string };
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
@@ -28,32 +29,19 @@ export async function signInWithGoogle(): Promise<GoogleSignInResult> {
     if (!auth) {
       return { ok: false, error: 'auth/not-initialized' };
     }
-    const code = err?.code || '';
-    const message = err?.message || '';
-    console.log('[google] popup error:', { code, message });
-
-    // Treat auth/internal-error like a popup blocker - this is Firebase's catch-all
-    // for various popup issues including third-party cookies, wrong authDomain, etc.
-    if (
+    const code = String(err?.code || '');
+    const popupBlocked =
       code === 'auth/popup-blocked' ||
       code === 'auth/popup-closed-by-user' ||
-      code === 'auth/operation-not-supported-in-this-environment' ||
-      code === 'auth/internal-error'
-    ) {
-      try {
-        console.log('[google] falling back to redirect due to:', code);
-        await signInWithRedirect(auth, provider);
-        return { ok: false, error: 'redirecting' };
-      } catch (e: any) {
-        console.log('[google] redirect also failed:', e?.code);
-        return { ok: false, error: e?.code || 'auth/redirect-error' };
-      }
+      code === 'auth/cancelled-popup-request';
+    if (popupBlocked) {
+      await signInWithRedirect(auth, provider);
+      return { ok: false, error: 'redirecting' };
     }
-    return { ok: false, error: code || 'auth/popup-error' };
+    return { ok: false, error: code || 'auth/unknown' };
   }
 }
 
-/** Complete a redirect sign-in if present. Safe to call on every mount. */
 export async function consumeRedirectResult(): Promise<GoogleSignInResult | null> {
   try {
     if (!auth) return { ok: false, error: 'auth/not-initialized' };
@@ -66,9 +54,6 @@ export async function consumeRedirectResult(): Promise<GoogleSignInResult | null
     console.log('[google] redirect result success:', cred.user.email);
     return { ok: true, cred };
   } catch (err: any) {
-    const code = err?.code || '';
-    const message = err?.message || '';
-    console.log('[google] redirect result error:', { code, message });
-    return { ok: false, error: code || 'auth/redirect-error' };
+    return { ok: false, error: String(err?.code || 'auth/redirect-error') };
   }
 }

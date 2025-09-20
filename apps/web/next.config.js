@@ -2,19 +2,23 @@
 const nextConfig = {
   reactStrictMode: true,
   eslint: { ignoreDuringBuilds: true },
+  eslint: { ignoreDuringBuilds: true },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
-      { protocol: 'https', hostname: 'fonts.gstatic.com' },
+      { protocol: 'https', hostname: 'fonts.gstatic.com' }
     ],
   },
   async headers() {
     return [
       {
         source: '/:path*',
+        source: '/:path*',
         headers: [
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           {
@@ -26,12 +30,12 @@ const nextConfig = {
               "img-src 'self' data: blob:",
               "font-src 'self' https://fonts.gstatic.com data:",
               "connect-src 'self' https: http:",
-              "frame-src 'self' https://accounts.google.com https://www.google.com",
-            ].join('; '),
-          },
-        ],
-      },
+              "frame-src 'self' https://accounts.google.com https://www.google.com"
+            ].join('; ')
+          }
+        ]
+      }
     ];
-  },
+  }
 };
 module.exports = nextConfig;
