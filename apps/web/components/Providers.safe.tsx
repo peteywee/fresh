@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 
 // Use Next.js dynamic import with proper error handling
 const Providers = dynamic<{ children: React.ReactNode }>(
-  () => import('./Providers').then(m => m.default),
+  () => import('./Providers').then(m => ({ default: m.Providers })),
   {
     loading: () => <div className="providers-loading">Loading...</div>,
     ssr: false,
