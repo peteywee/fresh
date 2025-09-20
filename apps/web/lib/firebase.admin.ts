@@ -1,67 +1,28 @@
-import { type App, cert, getApps, initializeApp } from 'firebase-admin/app';
-import { type Auth, getAuth } from 'firebase-admin/auth';
-import { type Firestore, getFirestore } from 'firebase-admin/firestore';
-import fs from 'node:fs';
-import path from 'node:path';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 import 'server-only';
 
-function resolveKeyPath(): string {
-  // Highest priority: explicit ADC
-  if (
-    process.env.GOOGLE_APPLICATION_CREDENTIALS &&
-    fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)
-  ) {
-    return process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  }
-  // Repo-root secrets/firebase-admin.json
-  const repoRoot = process.cwd();
-  const fromRoot = path.join(repoRoot, 'secrets', 'firebase-admin.json');
-  if (fs.existsSync(fromRoot)) return fromRoot;
+const projectId = process.env.FIREBASE_PROJECT_ID;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-  // When running from apps/web/, step up to repo root
-  const fromWeb = path.join(repoRoot, '..', '..', 'secrets', 'firebase-admin.json');
-  if (fs.existsSync(fromWeb)) return path.resolve(fromWeb);
-
+if (!projectId || !clientEmail || !privateKey) {
   throw new Error(
-    'firebase-admin.json not found. Set GOOGLE_APPLICATION_CREDENTIALS or place secrets/firebase-admin.json at repo root.'
+    'Missing FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY env for Admin SDK'
   );
 }
 
-let app: App | null = null;
-let auth: Auth | null = null;
-let db: Firestore | null = null;
+// Handle common copy/paste: escaped \n characters
+if (privateKey.includes('\\n')) privateKey = privateKey.replace(/\\n/g, '\n');
 
-try {
-  const keyPath = resolveKeyPath();
-  const svc = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
-
-  app = getApps().length
-    ? getApps()[0]!
-    : initializeApp({
-        credential: cert({
-          projectId: svc.project_id,
-          clientEmail: svc.client_email,
-          privateKey: svc.private_key,
-        }),
-      });
-
-  auth = getAuth(app);
-  db = getFirestore(app);
-} catch (error) {
-  console.warn('Firebase Admin initialization skipped:', error);
-  // Graceful degradation - keep null values
+// Initialize Admin app once
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({ projectId, clientEmail, privateKey }),
+    projectId,
+  });
 }
 
-export function adminAuth(): Auth {
-  if (!auth) {
-    throw new Error('Firebase Admin Auth not initialized');
-  }
-  return auth;
-}
-
-export function adminDb(): Firestore {
-  if (!db) {
-    throw new Error('Firebase Admin Firestore not initialized');
-  }
-  return db;
-}
+export const adminAuth = () => getAuth();
+export const adminDb = () => getFirestore();

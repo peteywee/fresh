@@ -1,84 +1,71 @@
-# Firebase Setup Instructions for Fresh App
+# Firebase Setup for Fresh
 
-## 1. Firebase Console Setup
+This guide covers both manual setup and the new autonomous setup flow. Use autonomous first; fall back to manual if needed.
 
-### Step 1: Enable Google Authentication
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select your project: `fresh-8990`
-3. Go to **Authentication** → **Sign-in method**
-4. Click on **Google** provider
-5. Click **Enable**
-6. Set support email (your email)
-7. Click **Save**
+## Quick Start (Recommended)
 
-### Step 2: Configure Authorized Domains
-1. In Firebase Console → **Authentication** → **Settings** → **Authorized domains**
-2. Make sure these domains are added:
-   - `localhost` (for development)
-   - `fresh-8990.firebaseapp.com` (default)
-   - Add your production domain when ready
+- pnpm firebase:auto — Auto-detects project structure and generates client/server configs
+- pnpm firebase:auto-update — Updates configs using service account details if available
+- pnpm firebase:init — Interactive mode with prompts
+- pnpm firebase:bootstrap — Full bootstrap helper (shell script)
 
-### Step 3: Web App Configuration
-1. Go to **Project Settings** (gear icon)
-2. Scroll to **Your apps** section
-3. Your web app should already be configured with:
-   - App ID: `1:652857829524:web:39eb695057eaad243d6c81`
+See also:
+- docs/AUTONOMOUS_FIREBASE_SETUP.md — Zero-config walkthrough
+- docs/FIREBASE_CONFIG_ENGINE.md — Advanced diagnostics and tooling
 
-## 2. Current Configuration Status
+## Manual Console Setup
 
-✅ **Firebase Project**: `fresh-8990`
-✅ **Web App Configured**: Yes
-✅ **Environment Variables**: Set in `/apps/web/.env.local`
+1) Enable Google Authentication
+- Go to Firebase Console → Authentication → Sign-in method
+- Click Google → Enable → choose support email → Save
 
-## 3. Verification Steps
+2) Configure Authorized Domains
+- Firebase Console → Authentication → Settings → Authorized domains
+- Add: localhost, your Firebase default domain, and your production domain when ready
 
-### Check if Google Auth is enabled:
-1. Go to Firebase Console → Authentication → Sign-in method
-2. Google should show as "Enabled"
+3) Web App Configuration
+- Settings (gear) → Your apps → Ensure your Web app exists
 
-### Test Firebase connection:
-```bash
-# From your project root
-curl -s "https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=AIzaSyDI-ayH74k14hCNsLXWIWNAoUhWe9YuM0M"
-```
+## Current Configuration Status
 
-## 4. Common Issues & Solutions
+- Firebase Project: fresh-8990
+- Web App: configured
+- Environment variables: apps/web/.env.local
 
-### Google Auth Not Working:
-- **Check**: Google provider enabled in Firebase Console
-- **Check**: Authorized domains include `localhost`
-- **Check**: App is running on correct domain (localhost:3001)
+## Verification
 
-### Session Failed After Email Login:
-- **Issue**: Server-side session management conflict
-- **Solution**: Use client-side only authentication (already implemented)
+- Google Auth enabled: Firebase Console → Authentication → Sign-in method → Google = Enabled
+- API connectivity (optional): curl the public config endpoint if you have a valid API key
 
-### Popup Blocked:
-- **Solution**: Already implemented redirect fallback
+## Common Issues & Solutions
 
-## 5. Development Testing
+- Google Auth not working:
+   - Ensure Google provider is enabled
+   - Ensure localhost is authorized
+   - Confirm you’re using the correct domain/port
 
-### Test with Demo Account:
-- **Email**: `admin@fresh.com`
-- **Password**: `demo123`
+- Session failures after login:
+   - Verify session cookie name via SESSION_COOKIE_NAME (defaults to __session)
+   - Use the diagnostics tool: pnpm firebase:diagnose
 
-### Test Google Auth:
-1. Click "Sign in with Google"
-2. Should open Google OAuth popup
-3. If blocked, automatically redirects to Google
-4. After auth, redirects to `/dashboard`
+- Popup blocked:
+   - Use redirect fallback; browser settings may block popups
 
-## 6. Next Steps if Issues Persist
+## Development Testing
 
-1. **Verify Google Auth in Firebase Console**
-2. **Check browser console for errors**
-3. **Test API endpoints** (if using server-side auth)
-4. **Check Firebase project permissions**
+- Demo account (if seeded): admin@fresh.com / demo123
+- Google sign-in → should reach dashboard after auth
 
-## 7. Production Checklist
+## Production Checklist
 
-When deploying to production:
 - [ ] Add production domain to Firebase authorized domains
-- [ ] Update CORS settings if needed
+- [ ] Update CORS if applicable
 - [ ] Verify environment variables in production
 - [ ] Test OAuth redirect URLs with production domain
+
+## If Issues Persist
+
+1. Verify Google Auth enabled in the console
+2. Check browser console/network tab
+3. Test relevant API endpoints
+4. Confirm Firebase project permissions and service account configuration

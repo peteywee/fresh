@@ -8,26 +8,31 @@ const EXPIRES_MS = DAYS * 24 * 60 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
   const { idToken } = await req.json().catch(() => ({}));
-  if (!idToken) return NextResponse.json({ error: 'Missing idToken' }, { status: 400 });
 
-  console.log('[session-login] Received token for processing');
-  console.log('[session-login] Token type:', typeof idToken);
-  console.log('[session-login] Token length:', idToken.length);
-  console.log('[session-login] Token prefix:', idToken.substring(0, 100));
-  console.log('[session-login] Token contains dots:', (idToken.match(/\./g) || []).length);
+  // Validate presence and basic JWT shape: xxx.yyy.zzz
+  if (typeof idToken !== 'string' || idToken.split('.').length !== 3) {
+    return NextResponse.json(
+      { error: 'Invalid idToken (expected a JWT string with 3 segments)' },
+      { status: 400 }
+    );
+  }
 
   try {
-    console.log('[session-login] creating session cookie for token');
-    const auth = adminAuth();
+    // Verify the ID token and get user info
+    const decoded = await adminAuth().verifyIdToken(idToken);
 
-    // Verify the token first to get better error details
-    const decodedToken = await auth.verifyIdToken(idToken);
-    console.log('[session-login] token verified for user:', decodedToken.uid, decodedToken.email);
+    // Exchange short-lived ID token for a long(er) lived session cookie
+    const sessionCookie = await adminAuth().createSessionCookie(idToken, {
+      expiresIn: EXPIRES_MS,
+    });
 
-    const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn: EXPIRES_MS });
-    console.log('[session-login] session cookie created successfully');
+    const res = NextResponse.json({
+      ok: true,
+      uid: decoded.uid,
+      email: decoded.email ?? null,
+      expiresAt: Date.now() + EXPIRES_MS,
+    });
 
-    const res = NextResponse.json({ success: true });
     res.cookies.set(COOKIE, sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
@@ -44,7 +49,10 @@ export async function POST(req: NextRequest) {
       stack: error?.stack,
     });
 
-    // Return more specific error information
+    // Common "JWT" failures bubble up here:
+    // - Decoding Firebase ID token failed. Make sure you passed the entire string JWT
+    // - Error while making request: getaddrinfo ENOTFOUND www.googleapis.com (no network)
+    // - certificate / private key malformed
     const errorCode = error?.code || 'auth/session-creation-failed';
     const errorMessage = error?.message || 'Authentication failed';
 
