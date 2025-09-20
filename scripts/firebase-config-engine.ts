@@ -204,7 +204,10 @@ class FirebaseConfigEngine {
 
     const envContent =
       Object.entries(config)
-        .map(([key, value]) => `${key}="${value}"`)
+        .map(
+          ([key, value]) =>
+            `${key}="${typeof value === 'string' ? value.replace(/\\n/g, '\n') : value}"`
+        )
         .join('\n') + '\n';
 
     writeFileSync(envPath, envContent, 'utf-8');
@@ -357,43 +360,196 @@ class FirebaseConfigEngine {
   public async diagnose(): Promise<void> {
     console.log('🔧 Firebase Configuration Diagnostics\n');
 
-    const issues: string[] = [];
-    const fixes: string[] = [];
+    type Diag = { code: string; message: string; suggestion: string };
+    const diags: Diag[] = [];
+
+    // Util: read .env.local into a map
+    const readEnvLocal = () => {
+      const envPath = join(this.webAppPath, '.env.local');
+      if (!existsSync(envPath)) return undefined;
+      const raw = readFileSync(envPath, 'utf-8');
+      const map = new Map<string, string>();
+      for (const line of raw.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const idx = trimmed.indexOf('=');
+        if (idx === -1) continue;
+        const key = trimmed.slice(0, idx);
+        // Remove surrounding quotes and preserve newlines
+        let val = trimmed.slice(idx + 1).replace(/^\s*"|"\s*$/g, '');
+        map.set(key, val);
+      }
+      return map;
+    };
 
     // Check service account
     const serviceAccountPath = join(this.secretsPath, 'firebase-admin.json');
     if (!existsSync(serviceAccountPath)) {
-      issues.push('❌ Service account file missing');
-      fixes.push(
-        '📥 Download service account JSON from Firebase Console → Project Settings → Service Accounts'
-      );
+      diags.push({
+        code: 'E-FB-001',
+        message: 'Service account file missing (secrets/firebase-admin.json)'.trim(),
+        suggestion:
+          'Download service account JSON from Firebase Console → Project Settings → Service Accounts, and save to secrets/firebase-admin.json',
+      });
+    } else {
+      try {
+        const content = readFileSync(serviceAccountPath, 'utf-8');
+        const sa = JSON.parse(content) as Partial<ServiceAccount>;
+        const missing: string[] = [];
+        for (const f of ['project_id', 'client_email', 'private_key'] as const) {
+          if (!sa[f]) missing.push(f);
+        }
+        if (missing.length) {
+          diags.push({
+            code: 'E-FB-002',
+            message: `Service account is missing fields: ${missing.join(', ')}`,
+            suggestion: 'Re-download a complete service account JSON from Firebase Console',
+          });
+        }
+        if (
+          sa.private_key &&
+          (!sa.private_key.includes('BEGIN PRIVATE KEY') ||
+            !sa.private_key.includes('END PRIVATE KEY'))
+        ) {
+          diags.push({
+            code: 'E-FB-003',
+            message: 'Service account private_key appears malformed (missing BEGIN/END boundaries)',
+            suggestion:
+              'Ensure you copied the full PEM, including -----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY-----',
+          });
+        }
+      } catch (e) {
+        diags.push({
+          code: 'E-FB-004',
+          message: `Failed to parse service account JSON: ${e instanceof Error ? e.message : 'Unknown error'}`,
+          suggestion: 'Verify the JSON file is valid and not truncated',
+        });
+      }
     }
 
-    // Check .env.local
-    const envPath = join(this.webAppPath, '.env.local');
-    if (!existsSync(envPath)) {
-      issues.push('❌ .env.local file missing');
-      fixes.push('🔧 Create .env.local with Firebase Web App config from Firebase Console');
+    // Check .env.local presence and required keys
+    const envMap = readEnvLocal();
+    if (!envMap) {
+      diags.push({
+        code: 'E-FB-010',
+        message: '.env.local file missing under apps/web',
+        suggestion:
+          'Create apps/web/.env.local with Firebase Web App (NEXT_PUBLIC_*) and Admin (FIREBASE_*) variables',
+      });
+    } else {
+      const requiredClient = [
+        'NEXT_PUBLIC_FIREBASE_API_KEY',
+        'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+        'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+      ];
+      const requiredAdmin = [
+        'FIREBASE_PROJECT_ID',
+        'FIREBASE_CLIENT_EMAIL',
+        'FIREBASE_PRIVATE_KEY',
+      ];
+      const missingClient = requiredClient.filter(k => !envMap.get(k));
+      const missingAdmin = requiredAdmin.filter(k => !envMap.get(k));
+      if (missingClient.length) {
+        diags.push({
+          code: 'E-FB-011',
+          message: `Missing client env vars in .env.local: ${missingClient.join(', ')}`,
+          suggestion:
+            'Copy Firebase Web App config from Firebase Console → Project Settings → General',
+        });
+      }
+      if (missingAdmin.length) {
+        diags.push({
+          code: 'E-FB-012',
+          message: `Missing admin env vars in .env.local: ${missingAdmin.join(', ')}`,
+          suggestion:
+            'Populate FIREBASE_* from your service account JSON (project_id, client_email, private_key)',
+        });
+      }
+      const pk = envMap.get('FIREBASE_PRIVATE_KEY');
+      if (pk) {
+        const hasBoundaries = pk.includes('BEGIN PRIVATE KEY') && pk.includes('END PRIVATE KEY');
+        if (!hasBoundaries) {
+          diags.push({
+            code: 'E-FB-013',
+            message:
+              'FIREBASE_PRIVATE_KEY in .env.local appears malformed (missing BEGIN/END boundaries)',
+            suggestion:
+              'Ensure the value is quoted and contains the full PEM. If stored with escaped newlines (\\n), apps/web/lib/firebase.admin.ts will unescape at runtime.',
+          });
+        }
+      }
     }
 
-    // Check dependencies
+    // Check dependency installation
     try {
       execSync('pnpm list firebase-admin', { cwd: this.rootPath, stdio: 'pipe' });
     } catch {
-      issues.push('❌ firebase-admin dependency missing');
-      fixes.push('📦 Run: pnpm install');
+      diags.push({
+        code: 'E-FB-020',
+        message: 'firebase-admin dependency missing',
+        suggestion: 'Run: pnpm install',
+      });
     }
 
-    if (issues.length === 0) {
+    // Shallow Admin init validation (no network): attempt to create credential
+    try {
+      const env = envMap ? Object.fromEntries(envMap.entries()) : ({} as Record<string, string>);
+      const p = env.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY || '';
+      const c = env.FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL || '';
+      const pr = env.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || '';
+      if (p && c && pr) {
+        // Dynamically require to avoid ESM complications in tsx
+         
+        const admin = require('firebase-admin');
+        if (!admin.apps.length) {
+          admin.initializeApp({
+            credential: admin.credential.cert({
+              projectId: pr,
+              clientEmail: c,
+              privateKey: p.includes('\\n') ? p.replace(/\\n/g, '\n') : p,
+            }),
+            projectId: pr,
+          });
+        }
+        // If private key is malformed, initializeApp throws synchronously
+      }
+    } catch (e) {
+      diags.push({
+        code: 'E-FB-030',
+        message: `Failed to initialize Admin SDK with provided env: ${e instanceof Error ? e.message : String(e)}`,
+        suggestion:
+          'Verify FIREBASE_PRIVATE_KEY content and newlines. Ensure BEGIN/END boundaries and avoid accidental whitespace alterations.',
+      });
+    }
+
+    // Optional deep validation using Admin API (listUsers) if requested via CLI flag --deep
+    const deepRequested = process.argv.includes('--deep');
+    if (deepRequested && envMap) {
+      const envObj = Object.fromEntries(envMap.entries()) as unknown as EnvConfig;
+      const ok = await this.validateAdminSDK(envObj).catch(() => false);
+      if (!ok) {
+        diags.push({
+          code: 'E-FB-031',
+          message: 'Admin SDK deep validation failed (listUsers returned error)',
+          suggestion:
+            'Confirm service account permissions for Firebase Auth (Viewer is sufficient for listUsers) and that the project ID matches.',
+        });
+      }
+    }
+
+    if (diags.length === 0) {
       console.log('✅ No configuration issues detected');
       return;
     }
 
-    console.log('Issues found:');
-    issues.forEach(issue => console.log(`  ${issue}`));
+    console.log('❌ Issues found:');
+    for (const d of diags) {
+      console.log(`  [${d.code}] ${d.message}`);
+      console.log(`      ↳ Fix: ${d.suggestion}`);
+    }
 
-    console.log('\nSuggested fixes:');
-    fixes.forEach(fix => console.log(`  ${fix}`));
+    // Non-zero exit to signal problems in CI or scripts
+    process.exitCode = 1;
   }
 }
 
