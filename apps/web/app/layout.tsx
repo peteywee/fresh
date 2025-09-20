@@ -2,6 +2,7 @@
 // import { OfflineIndicator, PWAInstallPrompt } from '@/components/PWAComponents';
 // import { getServerSession } from '@/lib/session';
 import Providers from '@/components/Providers';
+import AppShell from '@/components/AppShell';
 
 // import styles from './layout.module.css';
 
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Temporarily simplified - comment out session and PWA widgets
   // const session = await getServerSession();
   // const loggedIn = !!session?.sub;
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Fresh';
 
   return (
     <html lang="en">
@@ -35,26 +37,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Temporarily commented PWA widgets
         <OfflineIndicator />
         */}
-
-        <nav style={{ padding: '1rem', background: '#f3f4f6', borderBottom: '1px solid #e5e7eb' }}>
-          <a
-            href="/login"
-            style={{ fontWeight: 'bold', fontSize: '1.2rem' }}
+        <Providers>
+          <AppShell
+            appName={appName}
+            role={null}
+            loggedIn={false}
+            navItems={[
+              { href: '/dashboard', label: 'Home' },
+              { href: '/login', label: 'Login' },
+              { href: '/register', label: 'Sign up' },
+            ]}
           >
-            Fresh
-          </a>
-          <a href="/login" style={{ float: 'right', color: '#2563eb' }}>
-            Login
-          </a>
-        </nav>
-
-        <main style={{ padding: '2rem' }}>
-          <Providers>{children}</Providers>
-        </main>
-
-        {/* Temporarily commented PWA widgets
-        <PWAInstallPrompt />
-        */}
+            {children}
+          </AppShell>
+        </Providers>
+        {/* PWAInstallPrompt temporarily disabled */}
       </body>
     </html>
   );
