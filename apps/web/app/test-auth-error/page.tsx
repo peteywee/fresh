@@ -12,6 +12,7 @@ export default function AuthErrorTestPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = auth.onAuthStateChanged(user => {
       setUser(user);
       console.log('Auth state:', user ? `Logged in as ${user.email}` : 'Not logged in');
@@ -28,6 +29,7 @@ export default function AuthErrorTestPage() {
       provider.setCustomParameters({ prompt: 'select_account' });
 
       console.log('Attempting Google sign-in...');
+      if (!auth) throw new Error('Firebase auth not initialized');
       const result = await signInWithPopup(auth, provider);
       console.log('Sign-in successful:', result.user.email);
     } catch (err: any) {

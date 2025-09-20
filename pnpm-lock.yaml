@@ -83,7 +83,7 @@ importers:
         specifier: ^7.1.4
         version: 7.1.4
       tsx:
-        specifier: 4.20.5
+        specifier: ^4.20.5
         version: 4.20.5
       typedoc:
         specifier: ^0.28.12

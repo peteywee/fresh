@@ -26,6 +26,7 @@ export default function NewEventPage() {
   // Lightweight guard: if user is signed out while here, kick back to /login
   // (Keeps MVP simple; you can wrap the whole page with your RequireAuth later)
   useEffect(() => {
+    if (!auth) return;
     const unsub = onAuthStateChanged(auth, u => {
       if (!u) router.replace('/login');
     });

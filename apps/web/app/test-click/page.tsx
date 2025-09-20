@@ -44,6 +44,7 @@ export default function ClickTestPage() {
       addLog('✅ signInWithPopup imported');
 
       addLog('🚀 About to call signInWithPopup...');
+      if (!auth) throw new Error('Firebase auth not initialized');
       const result = await signInWithPopup(auth, provider);
       addLog(`✅ Sign-in successful: ${result.user.email}`);
     } catch (error: any) {

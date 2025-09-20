@@ -19,6 +19,10 @@ export default function AuthDebugPage() {
   const syncServerSession = async () => {
     try {
       addResult('Starting server session sync...');
+      if (!auth) {
+        addResult('Firebase auth not initialized');
+        return;
+      }
       const user = auth.currentUser;
       if (!user) {
         addResult('No current user for sync');

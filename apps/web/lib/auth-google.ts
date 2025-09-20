@@ -19,11 +19,15 @@ provider.addScope('profile');
 
 export async function signInWithGoogle(): Promise<GoogleSignInResult> {
   try {
+    if (!auth) throw new Error('Firebase auth not initialized');
     console.log('[google] attempting popup sign-in');
     const cred = await signInWithPopup(auth, provider);
     console.log('[google] popup success:', cred.user.email);
     return { ok: true, cred };
   } catch (err: any) {
+    if (!auth) {
+      return { ok: false, error: 'auth/not-initialized' };
+    }
     const code = err?.code || '';
     const message = err?.message || '';
     console.log('[google] popup error:', { code, message });
@@ -52,6 +56,7 @@ export async function signInWithGoogle(): Promise<GoogleSignInResult> {
 /** Complete a redirect sign-in if present. Safe to call on every mount. */
 export async function consumeRedirectResult(): Promise<GoogleSignInResult | null> {
   try {
+    if (!auth) return { ok: false, error: 'auth/not-initialized' };
     console.log('[google] checking for redirect result');
     const cred = await getRedirectResult(auth);
     if (!cred) {
