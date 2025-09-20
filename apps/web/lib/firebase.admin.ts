@@ -14,7 +14,7 @@ if (!projectId || !clientEmail || !privateKey) {
 }
 
 // Handle common copy/paste: escaped \n characters
-if (privateKey.includes('\\n')) privateKey = privateKey.replace(/\\n/g, '\n');
+if (privateKey && privateKey.includes('\\n')) privateKey = privateKey.replace(/\\n/g, '\n');
 
 // Initialize Admin app once
 if (!getApps().length) {
