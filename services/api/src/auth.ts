@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
 

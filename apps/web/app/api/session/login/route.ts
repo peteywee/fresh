@@ -8,13 +8,31 @@ const EXPIRES_MS = DAYS * 24 * 60 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
   const { idToken } = await req.json().catch(() => ({}));
-  if (!idToken) return NextResponse.json({ error: 'Missing idToken' }, { status: 400 });
+
+  // Validate presence and basic JWT shape: xxx.yyy.zzz
+  if (typeof idToken !== 'string' || idToken.split('.').length !== 3) {
+    return NextResponse.json(
+      { error: 'Invalid idToken (expected a JWT string with 3 segments)' },
+      { status: 400 }
+    );
+  }
 
   try {
-    const auth = adminAuth();
-    const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn: EXPIRES_MS });
+    // Verify the ID token and get user info
+    const decoded = await adminAuth().verifyIdToken(idToken);
 
-    const res = NextResponse.json({ success: true });
+    // Exchange short-lived ID token for a long(er) lived session cookie
+    const sessionCookie = await adminAuth().createSessionCookie(idToken, {
+      expiresIn: EXPIRES_MS,
+    });
+
+    const res = NextResponse.json({
+      ok: true,
+      uid: decoded.uid,
+      email: decoded.email ?? null,
+      expiresAt: Date.now() + EXPIRES_MS,
+    });
+
     res.cookies.set(COOKIE, sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
@@ -24,8 +42,17 @@ export async function POST(req: NextRequest) {
     });
 
     return res;
-  } catch (error) {
-    console.error('Session creation failed:', error);
-    return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
+  } catch (error: any) {
+    // Common "JWT" failures bubble up here:
+    // - Decoding Firebase ID token failed. Make sure you passed the entire string JWT
+    // - Error while making request: getaddrinfo ENOTFOUND www.googleapis.com (no network)
+    // - certificate / private key malformed
+    return NextResponse.json(
+      {
+        error: error?.message || 'auth/session-creation-failed',
+        code: error?.code || 'auth/error',
+      },
+      { status: 401 }
+    );
   }
 }

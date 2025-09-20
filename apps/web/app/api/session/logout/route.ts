@@ -17,3 +17,15 @@ export async function GET(req: NextRequest) {
 
   return response;
 }
+
+export async function POST() {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(COOKIE, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== 'development',
+    sameSite: 'lax',
+    path: '/',
+    expires: new Date(0),
+  });
+  return res;
+}
