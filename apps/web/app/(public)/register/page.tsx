@@ -16,6 +16,7 @@ import styles from '../auth.module.css';
 // Sync Firebase client auth with server session
 async function syncServerSession() {
   try {
+    if (!auth) return;
     const user = auth.currentUser;
     if (!user) return;
 
@@ -46,6 +47,7 @@ export default function RegisterPage() {
 
   // If already signed in, go to dashboard
   useEffect(() => {
+    if (!auth) return;
     const unsub = onAuthStateChanged(auth, u => {
       if (u) router.replace('/dashboard');
     });

@@ -15,6 +15,10 @@ import styles from '../auth.module.css';
 async function syncServerSession() {
   try {
     console.log('[login] syncing server session');
+    if (!auth) {
+      console.log('[login] Firebase auth not initialized');
+      throw new Error('Firebase auth not initialized');
+    }
     const user = auth.currentUser;
     if (!user) {
       console.log('[login] no current user for sync');

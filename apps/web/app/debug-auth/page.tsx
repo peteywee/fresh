@@ -40,6 +40,11 @@ export default function DebugPage() {
 
   useEffect(() => {
     addDebug('Setting up auth state listener...');
+    if (!auth) {
+      addDebug('Auth not initialized');
+      setReady(true);
+      return;
+    }
     const unsub = onAuthStateChanged(auth, u => {
       addDebug(`Auth state changed: ${u ? `USER: ${u.email}` : 'NO USER'}`);
       setUser(u);
@@ -130,7 +135,7 @@ export default function DebugPage() {
           <button
             onClick={() => {
               addDebug('Sign out clicked');
-              signOut(auth);
+              if (auth) signOut(auth);
             }}
             style={{ padding: '8px 16px', cursor: 'pointer' }}
           >

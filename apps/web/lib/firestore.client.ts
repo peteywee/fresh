@@ -4,7 +4,13 @@ import { Timestamp, addDoc, collection, getFirestore, serverTimestamp } from 'fi
 
 import { app, auth } from '@/lib/firebase.client';
 
-export const db = getFirestore(app);
+let db: ReturnType<typeof getFirestore> | null = null;
+
+if (app) {
+  db = getFirestore(app);
+}
+
+export { db };
 
 export type NewEvent = {
   title: string;
@@ -32,6 +38,9 @@ export function toISO(date: string, time: string): string {
 }
 
 export async function createEvent(input: NewEvent): Promise<string> {
+  if (!auth) throw new Error('auth/not-initialized');
+  if (!db) throw new Error('firestore/not-initialized');
+
   const user = auth.currentUser;
   if (!user) throw new Error('auth/required');
 

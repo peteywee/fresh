@@ -29,11 +29,15 @@ export default function FirebaseTestPage() {
 
       // Test 2: Firebase Config
       try {
-        const config = auth.app.options;
-        if (config.apiKey && config.authDomain && config.projectId) {
-          addTest('Firebase Config', 'pass', `API Key: ${config.apiKey?.substring(0, 10)}...`);
+        if (!auth) {
+          addTest('Firebase Config', 'fail', 'Auth not initialized');
         } else {
-          addTest('Firebase Config', 'fail', 'Missing required config fields');
+          const config = auth.app.options;
+          if (config.apiKey && config.authDomain && config.projectId) {
+            addTest('Firebase Config', 'pass', `API Key: ${config.apiKey?.substring(0, 10)}...`);
+          } else {
+            addTest('Firebase Config', 'fail', 'Missing required config fields');
+          }
         }
       } catch (err: any) {
         addTest('Firebase Config', 'fail', err.message);
@@ -54,13 +58,17 @@ export default function FirebaseTestPage() {
 
       // Test 4: Auth State Ready
       try {
-        await new Promise<void>(resolve => {
-          const unsub = auth.onAuthStateChanged(() => {
-            unsub();
-            resolve();
+        if (!auth) {
+          addTest('Auth State Listener', 'fail', 'Auth not initialized');
+        } else {
+          await new Promise<void>(resolve => {
+            const unsub = auth!.onAuthStateChanged(() => {
+              unsub();
+              resolve();
+            });
           });
-        });
-        addTest('Auth State Listener', 'pass', 'Auth state listener working');
+          addTest('Auth State Listener', 'pass', 'Auth state listener working');
+        }
       } catch (err: any) {
         addTest('Auth State Listener', 'fail', err.message);
       }
@@ -102,6 +110,7 @@ export default function FirebaseTestPage() {
 
       addTest('Google Popup Test', 'pending', 'Testing popup...');
 
+      if (!auth) throw new Error('Firebase auth not initialized');
       const result = await signInWithPopup(auth, provider);
       if (result.user) {
         addTest('Google Popup Test', 'pass', `Signed in as: ${result.user.email}`);

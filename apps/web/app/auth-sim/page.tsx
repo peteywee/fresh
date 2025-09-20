@@ -18,7 +18,9 @@ export default function AuthSim() {
   const [idToken, setIdToken] = useState<string | null>(null);
   const [serverMsg, setServerMsg] = useState<string | null>(null);
 
-  useEffect(() => onAuthStateChanged(auth, setUser), []);
+  useEffect(() => {
+    if (auth) return onAuthStateChanged(auth, setUser);
+  }, []);
   useEffect(() => {
     (async () => {
       await consumeRedirectResult();
@@ -26,7 +28,7 @@ export default function AuthSim() {
   }, []);
 
   async function refreshIdToken() {
-    const token = await auth.currentUser?.getIdToken(true);
+    const token = await auth?.currentUser?.getIdToken(true);
     setIdToken(token ?? null);
   }
 
@@ -82,7 +84,7 @@ export default function AuthSim() {
       setBusy(true);
       setErr(null);
       setServerMsg(null);
-      const token = await auth.currentUser?.getIdToken(true);
+      const token = await auth?.currentUser?.getIdToken(true);
       if (!token) throw new Error('No client user / idToken');
       await createServerSession(token);
       setServerMsg('Server session cookie set ✅');
@@ -162,7 +164,7 @@ export default function AuthSim() {
             Send Reset
           </button>
           <button
-            onClick={() => signOut(auth)}
+            onClick={() => auth && signOut(auth)}
             style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #d1d5db' }}
           >
             Sign out (client)

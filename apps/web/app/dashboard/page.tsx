@@ -14,6 +14,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
     const unsub = onAuthStateChanged(auth, user => {
       setLoading(false);
       if (user) {
@@ -73,7 +77,7 @@ export default function Dashboard() {
           />
           <button
             onClick={() => {
-              auth.signOut();
+              auth?.signOut();
               router.replace('/');
             }}
             style={{

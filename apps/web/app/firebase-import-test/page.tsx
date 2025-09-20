@@ -36,6 +36,7 @@ export default function FirebaseImportTestPage() {
       const provider = new GoogleAuthProvider();
       setResult('About to call signInWithPopup...');
 
+      if (!auth) throw new Error('Firebase auth not initialized');
       const result = await signInWithPopup(auth, provider);
       setResult(`Sign-in successful: ${result.user.email}`);
     } catch (error: any) {
