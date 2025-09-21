@@ -204,10 +204,7 @@ class FirebaseConfigEngine {
 
     const envContent =
       Object.entries(config)
-        .map(
-          ([key, value]) =>
-            `${key}="${typeof value === 'string' ? value.replace(/\\n/g, '\n') : value}"`
-        )
+        .map(([key, value]) => `${key}="${typeof value === 'string' ? value.replace(/\\n/g, '\n') : value}"`)
         .join('\n') + '\n';
 
     writeFileSync(envPath, envContent, 'utf-8');
@@ -406,16 +403,11 @@ class FirebaseConfigEngine {
             suggestion: 'Re-download a complete service account JSON from Firebase Console',
           });
         }
-        if (
-          sa.private_key &&
-          (!sa.private_key.includes('BEGIN PRIVATE KEY') ||
-            !sa.private_key.includes('END PRIVATE KEY'))
-        ) {
+        if (sa.private_key && (!sa.private_key.includes('BEGIN PRIVATE KEY') || !sa.private_key.includes('END PRIVATE KEY'))) {
           diags.push({
             code: 'E-FB-003',
             message: 'Service account private_key appears malformed (missing BEGIN/END boundaries)',
-            suggestion:
-              'Ensure you copied the full PEM, including -----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY-----',
+            suggestion: 'Ensure you copied the full PEM, including -----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY-----',
           });
         }
       } catch (e) {
@@ -433,8 +425,7 @@ class FirebaseConfigEngine {
       diags.push({
         code: 'E-FB-010',
         message: '.env.local file missing under apps/web',
-        suggestion:
-          'Create apps/web/.env.local with Firebase Web App (NEXT_PUBLIC_*) and Admin (FIREBASE_*) variables',
+        suggestion: 'Create apps/web/.env.local with Firebase Web App (NEXT_PUBLIC_*) and Admin (FIREBASE_*) variables',
       });
     } else {
       const requiredClient = [
@@ -442,27 +433,21 @@ class FirebaseConfigEngine {
         'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
         'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
       ];
-      const requiredAdmin = [
-        'FIREBASE_PROJECT_ID',
-        'FIREBASE_CLIENT_EMAIL',
-        'FIREBASE_PRIVATE_KEY',
-      ];
+      const requiredAdmin = ['FIREBASE_PROJECT_ID', 'FIREBASE_CLIENT_EMAIL', 'FIREBASE_PRIVATE_KEY'];
       const missingClient = requiredClient.filter(k => !envMap.get(k));
       const missingAdmin = requiredAdmin.filter(k => !envMap.get(k));
       if (missingClient.length) {
         diags.push({
           code: 'E-FB-011',
           message: `Missing client env vars in .env.local: ${missingClient.join(', ')}`,
-          suggestion:
-            'Copy Firebase Web App config from Firebase Console → Project Settings → General',
+          suggestion: 'Copy Firebase Web App config from Firebase Console → Project Settings → General',
         });
       }
       if (missingAdmin.length) {
         diags.push({
           code: 'E-FB-012',
           message: `Missing admin env vars in .env.local: ${missingAdmin.join(', ')}`,
-          suggestion:
-            'Populate FIREBASE_* from your service account JSON (project_id, client_email, private_key)',
+          suggestion: 'Populate FIREBASE_* from your service account JSON (project_id, client_email, private_key)',
         });
       }
       const pk = envMap.get('FIREBASE_PRIVATE_KEY');
@@ -471,8 +456,7 @@ class FirebaseConfigEngine {
         if (!hasBoundaries) {
           diags.push({
             code: 'E-FB-013',
-            message:
-              'FIREBASE_PRIVATE_KEY in .env.local appears malformed (missing BEGIN/END boundaries)',
+            message: 'FIREBASE_PRIVATE_KEY in .env.local appears malformed (missing BEGIN/END boundaries)',
             suggestion:
               'Ensure the value is quoted and contains the full PEM. If stored with escaped newlines (\\n), apps/web/lib/firebase.admin.ts will unescape at runtime.',
           });
@@ -493,13 +477,13 @@ class FirebaseConfigEngine {
 
     // Shallow Admin init validation (no network): attempt to create credential
     try {
-      const env = envMap ? Object.fromEntries(envMap.entries()) : ({} as Record<string, string>);
+      const env = envMap ? Object.fromEntries(envMap.entries()) : {} as Record<string, string>;
       const p = env.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY || '';
       const c = env.FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL || '';
       const pr = env.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || '';
       if (p && c && pr) {
         // Dynamically require to avoid ESM complications in tsx
-         
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const admin = require('firebase-admin');
         if (!admin.apps.length) {
           admin.initializeApp({
@@ -517,8 +501,7 @@ class FirebaseConfigEngine {
       diags.push({
         code: 'E-FB-030',
         message: `Failed to initialize Admin SDK with provided env: ${e instanceof Error ? e.message : String(e)}`,
-        suggestion:
-          'Verify FIREBASE_PRIVATE_KEY content and newlines. Ensure BEGIN/END boundaries and avoid accidental whitespace alterations.',
+        suggestion: 'Verify FIREBASE_PRIVATE_KEY content and newlines. Ensure BEGIN/END boundaries and avoid accidental whitespace alterations.',
       });
     }
 
@@ -531,8 +514,7 @@ class FirebaseConfigEngine {
         diags.push({
           code: 'E-FB-031',
           message: 'Admin SDK deep validation failed (listUsers returned error)',
-          suggestion:
-            'Confirm service account permissions for Firebase Auth (Viewer is sufficient for listUsers) and that the project ID matches.',
+          suggestion: 'Confirm service account permissions for Firebase Auth (Viewer is sufficient for listUsers) and that the project ID matches.',
         });
       }
     }

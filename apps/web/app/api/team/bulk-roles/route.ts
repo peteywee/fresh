@@ -8,10 +8,10 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession();
   // Only management (admin+) can change roles
   const guard = ensureRole(session, 'admin');
-  if (guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  if (guard) return NextResponse.json({ error: guard.error, code: 'api/team-bulk-roles/guard-error' }, { status: guard.status });
 
   const body = await req.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: 'Bad JSON' }, { status: 400 });
+  if (!body) return NextResponse.json({ error: 'Bad JSON', code: 'api/team-bulk-roles/bad-json' }, { status: 400 });
 
   const { userIds, role } = body as { userIds?: string[]; role?: string };
   if (
@@ -19,10 +19,10 @@ export async function POST(req: NextRequest) {
     !role ||
     !['owner', 'admin', 'member', 'staff', 'viewer'].includes(role)
   ) {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  return NextResponse.json({ error: 'Invalid payload', code: 'api/team-bulk-roles/invalid-payload' }, { status: 400 });
   }
 
-  if (!session?.orgId) return NextResponse.json({ error: 'No organization' }, { status: 400 });
+  if (!session?.orgId) return NextResponse.json({ error: 'No organization', code: 'api/team-bulk-roles/no-org' }, { status: 400 });
 
   const db = adminDb();
   const auth = adminAuth();
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession();
-  if (!session?.sub) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!session?.sub) return NextResponse.json({ error: 'Unauthorized', code: 'api/team-bulk-roles/unauthorized' }, { status: 401 });
   if (!session.orgId) return NextResponse.json({ members: [] });
 
   const { searchParams } = new URL(req.url);

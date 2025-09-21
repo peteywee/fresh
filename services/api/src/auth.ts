@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcryptjs';
+import { hashSync, compareSync } from 'bcryptjs';
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
 
@@ -75,7 +75,7 @@ export const seedData = (users: Map<string, any>, orgs: Map<string, any>) => {
     users.set(seedEmail, {
       id: seedUserId,
       email: seedEmail,
-      password: bcrypt.hashSync(process.env.ADMIN_SEED_PASSWORD || 'demo123', 10),
+  password: hashSync(process.env.ADMIN_SEED_PASSWORD || 'demo123', 10),
       displayName: 'Admin User',
       firstName: 'Admin',
       lastName: 'User',
@@ -128,7 +128,7 @@ export const createAuthRouter = (users: Map<string, any>, orgs: Map<string, any>
     const u: UserRecord = {
       id: randomUUID(),
       email,
-      password: bcrypt.hashSync(password, 10),
+  password: hashSync(password, 10),
       displayName: displayName || `${firstName} ${lastName}`.trim() || email.split('@')[0],
       firstName: firstName || undefined,
       lastName: lastName || undefined,
@@ -157,7 +157,7 @@ export const createAuthRouter = (users: Map<string, any>, orgs: Map<string, any>
     const password = String(req.body?.password ?? '');
     const u = email ? users.get(email) : null;
 
-    if (!u || !bcrypt.compareSync(password, u.password)) {
+  if (!u || !compareSync(password, u.password)) {
       return res.status(401).json({ error: 'invalid credentials' });
     }
 

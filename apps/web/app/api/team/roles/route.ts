@@ -8,16 +8,16 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession();
   // Only management (admin+) can change roles
   const guard = ensureRole(session, 'admin');
-  if (guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  if (guard) return NextResponse.json({ error: guard.error, code: 'api/team-roles/guard-error' }, { status: guard.status });
 
   const body = await req.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: 'Bad JSON' }, { status: 400 });
+  if (!body) return NextResponse.json({ error: 'Bad JSON', code: 'api/team-roles/bad-json' }, { status: 400 });
   const { userId, role } = body as { userId?: string; role?: string };
   if (!userId || !role || !['admin', 'member', 'staff', 'viewer'].includes(role)) {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  return NextResponse.json({ error: 'Invalid payload', code: 'api/team-roles/invalid-payload' }, { status: 400 });
   }
 
-  if (!session?.orgId) return NextResponse.json({ error: 'No organization' }, { status: 400 });
+  if (!session?.orgId) return NextResponse.json({ error: 'No organization', code: 'api/team-roles/no-org' }, { status: 400 });
 
   const db = adminDb();
   await db
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   const session = await getServerSession();
-  if (!session?.sub) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!session?.sub) return NextResponse.json({ error: 'Unauthorized', code: 'api/team-roles/unauthorized' }, { status: 401 });
   if (!session.orgId) return NextResponse.json({ members: [] });
   const db = adminDb();
   const snap = await db.collection('orgs').doc(session.orgId).collection('members').get();

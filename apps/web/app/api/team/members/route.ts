@@ -8,18 +8,18 @@ import { getServerSession } from '@/lib/session';
 export async function POST(req: NextRequest) {
   const session = await getServerSession();
   const guard = ensureRole(session, 'admin');
-  if (guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
-  if (!session?.orgId) return NextResponse.json({ error: 'No organization' }, { status: 400 });
+  if (guard) return NextResponse.json({ error: guard.error, code: 'api/team-members/guard-error' }, { status: guard.status });
+  if (!session?.orgId) return NextResponse.json({ error: 'No organization', code: 'api/team-members/no-org' }, { status: 400 });
 
   const body = await req.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: 'Bad JSON' }, { status: 400 });
+  if (!body) return NextResponse.json({ error: 'Bad JSON', code: 'api/team-members/bad-json' }, { status: 400 });
   const { email, displayName, role } = body as {
     email?: string;
     displayName?: string;
     role?: string;
   };
   if (!email || !role || !['owner','admin','member','staff','viewer'].includes(role)) {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  return NextResponse.json({ error: 'Invalid payload', code: 'api/team-members/invalid-payload' }, { status: 400 });
   }
 
   const db = adminDb();

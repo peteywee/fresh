@@ -85,12 +85,12 @@ app.use((err: any, req: any, res: any, _next: any) => {
   const path = req?.path;
   const msg = err?.message || 'error';
   console.error('[api-error]', { path, msg });
-  res.status(500).json({ error: 'Internal server error', timestamp: new Date().toISOString() });
+  res.status(500).json({ error: 'Internal server error', code: 'api/internal-server-error', timestamp: new Date().toISOString() });
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Not found', path: req.path, timestamp: new Date().toISOString() });
+  res.status(404).json({ error: 'Not found', code: 'api/not-found', path: req.path, timestamp: new Date().toISOString() });
 });
 
 // Start server
