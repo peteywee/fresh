@@ -116,10 +116,10 @@ router.post('/register', (req, res) => {
   const lastName = String(req.body?.lastName ?? '');
 
   if (!email || !password) {
-    return res.status(400).json({ error: 'email and password are required' });
+  return res.status(400).json({ error: 'email and password are required', code: 'auth/email-password-required' });
   }
   if (users.has(email)) {
-    return res.status(409).json({ error: 'email already registered' });
+  return res.status(409).json({ error: 'email already registered', code: 'auth/email-already-registered' });
   }
 
   const u: UserRecord = {
@@ -155,7 +155,7 @@ router.post('/login', (req, res) => {
   const u = email ? users.get(email) : null;
 
   if (!u || u.password !== password) {
-    return res.status(401).json({ error: 'invalid credentials' });
+  return res.status(401).json({ error: 'invalid credentials', code: 'auth/invalid-credentials' });
   }
 
   // Update last login
@@ -214,17 +214,17 @@ router.post('/reset-password', (req, res) => {
   const newPassword = String(req.body?.newPassword ?? '');
 
   if (!token || !newPassword) {
-    return res.status(400).json({ error: 'token and newPassword are required' });
+  return res.status(400).json({ error: 'token and newPassword are required', code: 'auth/token-password-required' });
   }
 
   const email = resetTokens.get(token);
   if (!email) {
-    return res.status(400).json({ error: 'invalid or expired token' });
+  return res.status(400).json({ error: 'invalid or expired token', code: 'auth/invalid-expired-token' });
   }
 
   const u = users.get(email);
   if (!u) {
-    return res.status(400).json({ error: 'invalid state' });
+  return res.status(400).json({ error: 'invalid state', code: 'auth/invalid-state' });
   }
 
   u.password = newPassword;
@@ -241,7 +241,7 @@ router.post('/onboarding/complete', (req, res) => {
   const { user: userInfo, org: orgInfo, type = 'create' } = req.body || {};
 
   if (!userInfo?.displayName || !orgInfo?.name) {
-    return res.status(400).json({ error: 'user displayName and org name are required' });
+  return res.status(400).json({ error: 'user displayName and org name are required', code: 'auth/displayname-org-required' });
   }
 
   if (type === 'create') {
@@ -318,7 +318,7 @@ router.post('/onboarding/complete', (req, res) => {
       },
     });
   } else {
-    return res.status(400).json({ error: 'invalid onboarding type' });
+  return res.status(400).json({ error: 'invalid onboarding type', code: 'auth/invalid-onboarding-type' });
   }
 });
 
@@ -327,27 +327,27 @@ router.post('/onboarding/join', (req, res) => {
   const { user: userInfo, inviteCode } = req.body || {};
 
   if (!userInfo?.displayName || !inviteCode) {
-    return res.status(400).json({ error: 'user displayName and inviteCode are required' });
+  return res.status(400).json({ error: 'user displayName and inviteCode are required', code: 'auth/displayname-invitecode-required' });
   }
 
   const invite = invites.get(inviteCode);
   if (!invite) {
-    return res.status(404).json({ error: 'invalid invite code' });
+  return res.status(404).json({ error: 'invalid invite code', code: 'auth/invalid-invite-code' });
   }
 
   // Check if invite is expired
   if (new Date(invite.expiresAt) < new Date()) {
-    return res.status(400).json({ error: 'invite code has expired' });
+  return res.status(400).json({ error: 'invite code has expired', code: 'auth/invite-code-expired' });
   }
 
   // Check if invite is already used
   if (invite.usedAt) {
-    return res.status(400).json({ error: 'invite code has already been used' });
+  return res.status(400).json({ error: 'invite code has already been used', code: 'auth/invite-code-used' });
   }
 
   const organization = organizations.get(invite.orgId);
   if (!organization) {
-    return res.status(404).json({ error: 'organization not found for invite' });
+  return res.status(404).json({ error: 'organization not found for invite', code: 'auth/org-not-found-for-invite' });
   }
 
   // Update or create user

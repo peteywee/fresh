@@ -9,7 +9,7 @@ export async function GET(_req: NextRequest) {
   try {
     ensureRole(session, 'owner');
   } catch (e) {
-    return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  return NextResponse.json({ error: 'forbidden', code: 'api/admin-users/forbidden' }, { status: 403 });
   }
   return NextResponse.json({ ok: true, users: [] });
 }
